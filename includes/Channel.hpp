@@ -32,6 +32,8 @@ public:
 	const std::string& getName() const;
 	void addMember(Client* client);
 	bool isMember(Client* client) const;
+	void join(Client* client);
+	void part(Client* client);
 };
 
 #endif
