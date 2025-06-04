@@ -139,6 +139,10 @@ Client* Server::getClientByNick(const std::string& nickname) {
 }
 
 void Server::handleCommand(int clientFd, const std::string& line) {
+    // Client& client = _clients[clientFd];
+
+	std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
+
     Client* client = _clients[clientFd];
     std::istringstream iss(line);
     std::string command, arg;
@@ -157,7 +161,11 @@ void Server::handleCommand(int clientFd, const std::string& line) {
         if (_commandLine.empty())
             space = 0;
     }
-    if (command == "PASS") {
+	if (command == "CAP") {
+        // Ignorer CAP pour ne pas fermer la connexion trop tôt
+        return;
+	}
+    else if (command == "PASS") {
         if (arg.empty()) {
             sendToClient(clientFd, "461 PASS :Not enough parameters\n");
             return;
@@ -234,6 +242,44 @@ void Server::handleCommand(int clientFd, const std::string& line) {
         sendToClient(target->getFd(), fullMsg);
         // sendToClient(clientFd, ":" + client->getPrefix() + " PRIVMSG " + target->getNickname() + " :" + message);
         _commandLine.erase(0, _commandLine.size());
+    }
+    else if (command == "JOIN") {
+		if (arg.empty() || arg[0] != '#') {
+			sendToClient(clientFd, "ERROR :Invalid channel name\r\n");
+			return;
+		}
+		std::pair<std::map<std::string, Channel>::iterator, bool> result = _channels.insert(std::make_pair(arg, Channel(arg)));
+		Channel& chan = result.first->second;
+		if (!chan.isMember(client)) {
+			chan.join(client);
+			sendToClient(clientFd, ":" + client->getNickname() + " JOIN " + arg + "\n");
+		}
+	}
+	else if (command == "PART") {
+        if (arg.empty() || arg[0] != '#') {
+            sendToClient(clientFd, "ERROR :Invalid channel name\r\n");
+            return;
+        }
+        std::map<std::string, Channel>::iterator it = _channels.find(arg);
+        if (it == _channels.end()) {
+            sendToClient(clientFd, "ERROR :No such channel\r\n");
+            return;
+        }
+
+        Channel& chan = it->second;
+        if (!chan.isMember(client)) {
+            sendToClient(clientFd, "ERROR :You're not in that channel\r\n");
+            return;
+        }
+
+        chan.part(client); // ta fonction dans Channel
+        sendToClient(clientFd, ":" + client->getNickname() + " PART " + arg + "\r\n");
+
+        // (Optionnel) Supprimer le channel s’il est vide
+        if (chan.getMemberCount() == 0) {
+            _channels.erase(arg);
+            std::cout << RED << "Channel supprimé car vide : " << arg << RESET << std::endl;
+        }
     }
     else {
         sendToClient(clientFd, "421 " + command + " :Unknown command\n");
