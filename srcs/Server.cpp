@@ -11,7 +11,7 @@ Server::~Server()
 {
     close(_serverSocket);
     close(_epollFd);
-    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
         close(it->first);
 }
 

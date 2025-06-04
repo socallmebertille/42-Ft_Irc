@@ -30,21 +30,6 @@ int main(int ac, char** av)
         std::cerr << RED << "Error: " << e.what() << RESET << std::endl;
         return 1;
     }
-	
-		// Test temporaire de la classe Client
-	Client testClient(5); // fd fictif
-	if (!testClient.setNickname("helloWorld"))
-		std::cerr << RED << "Nickname invalid" << RESET << std::endl;
-	else
-		std::cout << GREEN << "Nickname set: " << testClient.getNickname() << RESET << std::endl;
-
-	testClient.setUsername("melina");
-	testClient.setRealname("Melina Motylewski");
-
-	testClient.authenticate();
-
-	if (testClient.isAuthenticated())
-		std::cout << CYAN << "Client authenticated!" << RESET << std::endl;
 
     return 0;
 }

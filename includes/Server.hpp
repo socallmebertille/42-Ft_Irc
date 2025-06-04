@@ -11,6 +11,8 @@
 # include <netinet/in.h>
 # include <sys/epoll.h>
 # include <arpa/inet.h>
+# include <algorithm>
+# include <unistd.h>
 # include <cerrno>
 # include "Client.hpp"
 
@@ -28,7 +30,7 @@ private:
 	std::string _password;
 	int _serverSocket;
 	int _epollFd;
-	std::map<int, Client> _clients;
+	std::map<int, Client*> _clients;
 
     void initServerSocket();
     void handleNewConnection();
