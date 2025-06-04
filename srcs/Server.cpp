@@ -92,6 +92,10 @@ void Server::run() {
             int fd = events[i].data.fd;
             if (fd == _serverSocket) {
                 handleNewConnection();
+				for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+				{
+					std::cout << "Client fd: " << it->first << ", nickname: " << it->second->getNickname() << std::endl;
+				}
             } else {
                 char buffer[512];
                 ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
@@ -106,6 +110,10 @@ void Server::run() {
 
                 // 💡 couper par lignes si tu veux gérer plusieurs commandes à la suite
                 handleCommand(fd, line);
+				for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+				{
+					std::cout << "Client fd: " << it->first << ", nickname: " << it->second->getNickname() << std::endl;
+				}
             }
         }
     }
@@ -117,7 +125,7 @@ void Server::sendToClient(int fd, const std::string& msg) {
 
 void Server::handleCommand(int clientFd, const std::string& line) {
     // Client& client = _clients[clientFd];
-    Client* client = &_clients[clientFd];
+    Client* client = _clients[clientFd];
     std::istringstream iss(line);
     std::string command;
     iss >> command;
@@ -141,8 +149,8 @@ void Server::handleCommand(int clientFd, const std::string& line) {
         }
 
         // Check nickname uniqueness
-        for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-            if (it->second.getNickname() == nick && it->first != clientFd) {
+        for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+            if (it->second->getNickname() == nick && it->first != clientFd) {
                 sendToClient(clientFd, "ERROR :Nickname already in use\r\n");
                 return;
             }
