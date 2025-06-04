@@ -18,17 +18,17 @@
 
 class Server {
 public:
-    Server(int port, const std::string& password);
-    ~Server();
+	Server(int port, const std::string& password);
+	~Server();
 
-    void run();
+	void run();
 
 private:
-    int _port;
-    std::string _password;
-    int _serverSocket;
-    int _epollFd;
-    std::map<int, Client> _clients;
+	int _port;
+	std::string _password;
+	int _serverSocket;
+	int _epollFd;
+	std::map<int, Client> _clients;
 
     void initServerSocket();
     void handleNewConnection();
