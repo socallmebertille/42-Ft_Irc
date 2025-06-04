@@ -36,3 +36,5 @@ void Channel::part(Client* client) {
 	_members.erase(client);
 	std::cout << RED << "A member left the channel" << RESET << std::endl; //a replace par methode broadcats?
 }
+//Prévoir clairement comment notifier les clients via le réseau lorsque
+// des événements se produisent (rejoindre/quitter channel, etc.)
