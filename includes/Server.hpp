@@ -11,6 +11,7 @@
 # include <netinet/in.h>
 # include <sys/epoll.h>
 # include <arpa/inet.h>
+# include <cerrno>
 # include "Client.hpp"
 
 # define MAX_EVENTS 64
@@ -31,7 +32,7 @@ private:
 
     void initServerSocket();
     void handleNewConnection();
-    void setNonBlocking();
+    void setNonBlocking(int fd);
 };
 
 #endif

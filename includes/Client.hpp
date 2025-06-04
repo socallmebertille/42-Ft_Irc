@@ -7,6 +7,7 @@ class Client
 {
 private:
 	int _fd;//pr savoir quand et ou le client a besoin de communiquer(util pour poll)
+	std::string _ip; // IP address of the client
 	bool _authenticated;
 	std::string _username;
 	std::string _nickname;
@@ -14,10 +15,11 @@ private:
 	std::string _password; //pr rej un channel protege
 
 public:
-	Client(int fd);
+	Client(int fd, const std::string& ip);
 	~Client();
 
 	int getFd() const;
+	std::string getIp() const;
 	bool isAuthenticated() const;
 	void authenticate();
 
