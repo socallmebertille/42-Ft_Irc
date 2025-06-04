@@ -34,6 +34,7 @@ public:
 	bool isMember(Client* client) const;
 	void join(Client* client);
 	void part(Client* client);
+	size_t getMemberCount() const;
 };
 
 #endif

@@ -16,6 +16,8 @@
 # include <unistd.h>
 # include <cerrno>
 # include "Client.hpp"
+# include "Channel.hpp"
+# include "colors.hpp"
 
 # define MAX_EVENTS 64
 
@@ -32,6 +34,7 @@ private:
 	int _serverSocket;
 	int _epollFd;
 	std::map<int, Client*> _clients;
+	std::map<std::string, Channel> _channels;
 
     void initServerSocket();
     void handleNewConnection();

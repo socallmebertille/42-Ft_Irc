@@ -38,3 +38,6 @@ void Channel::part(Client* client) {
 }
 //Prévoir clairement comment notifier les clients via le réseau lorsque
 // des événements se produisent (rejoindre/quitter channel, etc.)
+size_t Channel::getMemberCount() const {
+    return _members.size();
+}

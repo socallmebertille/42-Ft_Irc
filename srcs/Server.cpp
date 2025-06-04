@@ -125,12 +125,19 @@ void Server::sendToClient(int fd, const std::string& msg) {
 
 void Server::handleCommand(int clientFd, const std::string& line) {
     // Client& client = _clients[clientFd];
+
+	std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
+
     Client* client = _clients[clientFd];
     std::istringstream iss(line);
     std::string command;
     iss >> command;
+	if (command == "CAP") {
+    // Ignorer CAP pour ne pas fermer la connexion trop tôt
+    return;
+	}
 
-    if (command == "PASS") {
+    else if (command == "PASS") {
         std::string password;
         iss >> password;
         if (password.empty()) {
@@ -169,6 +176,55 @@ void Server::handleCommand(int clientFd, const std::string& line) {
         client->setUsername(username);
         client->markUser();
     }
+	else if (command == "JOIN") {
+		std::string chanName;
+		iss >> chanName;
+
+		if (chanName.empty() || chanName[0] != '#') {
+			sendToClient(clientFd, "ERROR :Invalid channel name\r\n");
+			return;
+		}
+
+		std::pair<std::map<std::string, Channel>::iterator, bool> result = _channels.insert(std::make_pair(chanName, Channel(chanName)));
+		Channel& chan = result.first->second;
+
+
+		if (!chan.isMember(client)) {
+			chan.join(client);
+			sendToClient(clientFd, ":" + client->getNickname() + " JOIN " + chanName + "\r\n");
+		}
+	}
+
+	else if (command == "PART") {
+    std::string chanName;
+    iss >> chanName;
+
+    if (chanName.empty() || chanName[0] != '#') {
+        sendToClient(clientFd, "ERROR :Invalid channel name\r\n");
+        return;
+    }
+
+    std::map<std::string, Channel>::iterator it = _channels.find(chanName);
+    if (it == _channels.end()) {
+        sendToClient(clientFd, "ERROR :No such channel\r\n");
+        return;
+    }
+
+    Channel& chan = it->second;
+    if (!chan.isMember(client)) {
+        sendToClient(clientFd, "ERROR :You're not in that channel\r\n");
+        return;
+    }
+
+    chan.part(client); // ta fonction dans Channel
+    sendToClient(clientFd, ":" + client->getNickname() + " PART " + chanName + "\r\n");
+
+    // (Optionnel) Supprimer le channel s’il est vide
+    if (chan.getMemberCount() == 0) {
+        _channels.erase(chanName);
+        std::cout << RED << "Channel supprimé car vide : " << chanName << RESET << std::endl;
+    }
+}
 
     // Try authentication if everything is set
     if (client->hasPassword() && client->hasNick() && client->hasUser() && !client->isAuthenticated()) {
