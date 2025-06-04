@@ -3,27 +3,20 @@
 #include "Channel.hpp"
 #include <cstdlib>
 #include <sstream>
-
-#define WHITE   "\033[0;37m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[38;5;220m"
-#define CYAN    "\033[38;5;45m"
-#define RED     "\033[38;5;196m"
-#define RESET   "\033[0m"
-
+#include <colors.hpp>
 
 bool isValidPort(const char* str, int& port) {
-    std::istringstream iss(str);
-    iss >> port;
-    return !(iss.fail() || !iss.eof());
+	std::istringstream iss(str);
+	iss >> port;
+	return !(iss.fail() || !iss.eof());
 }
 
 int main(int ac, char** av)
 {
-    if (ac != 3) {
-        std::cerr << RED << "Error: ./ircserv <port> <password>" << RESET << std::endl;
-        return 1;
-    }
+	if (ac != 3) {
+		std::cerr << RED << "Error: ./ircserv <port> <password>" << RESET << std::endl;
+		return 1;
+	}
     int port;
     if (!isValidPort(av[1], port) || port <= 0 || port > 65535) {
         std::cerr << RED << "Error: port should be a valid integer between 1 and 65535." << RESET << std::endl;
@@ -37,5 +30,21 @@ int main(int ac, char** av)
         std::cerr << RED << "Error: " << e.what() << RESET << std::endl;
         return 1;
     }
+	
+		// Test temporaire de la classe Client
+	Client testClient(5); // fd fictif
+	if (!testClient.setNickname("helloWorld"))
+		std::cerr << RED << "Nickname invalid" << RESET << std::endl;
+	else
+		std::cout << GREEN << "Nickname set: " << testClient.getNickname() << RESET << std::endl;
+
+	testClient.setUsername("melina");
+	testClient.setRealname("Melina Motylewski");
+
+	testClient.authenticate();
+
+	if (testClient.isAuthenticated())
+		std::cout << CYAN << "Client authenticated!" << RESET << std::endl;
+
     return 0;
 }

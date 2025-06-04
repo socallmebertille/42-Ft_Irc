@@ -27,10 +27,10 @@ public:
 	const std::string& getPassword() const;
 
 	void setUsername(const std::string& user);
-	void setNickname(const std::string& nick);
+	bool setNickname(const std::string& nick);
 	void setRealname(const std::string& real);
 	void setPassword(const std::string& passW);
-
+	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
 };
 
 #endif
