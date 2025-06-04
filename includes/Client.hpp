@@ -33,6 +33,7 @@ public:
 	bool hasPassword() const;
 	bool hasNick() const;
 	bool hasUser() const;
+	std::string getPrefix() const; // format "nickname!username@localhost"
 
 	void setUsername(const std::string& user);
 	bool setNickname(const std::string& nick);

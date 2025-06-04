@@ -17,6 +17,8 @@
 # include <cerrno>
 # include "Client.hpp"
 
+# include "colors.hpp"
+
 # define MAX_EVENTS 64
 
 class Server {
@@ -32,12 +34,14 @@ private:
 	int _serverSocket;
 	int _epollFd;
 	std::map<int, Client*> _clients;
+	std::string _commandLine;
 
     void initServerSocket();
     void handleNewConnection();
     void setNonBlocking(int fd);
 
     void sendToClient(int fd, const std::string& msg);
+	Client* getClientByNick(const std::string& nickname);
     void handleCommand(int clientFd, const std::string& line);
 };
 

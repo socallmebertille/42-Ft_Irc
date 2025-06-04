@@ -13,6 +13,7 @@ const std::string& Client::getPassword() const { return _password; }
 bool Client::hasPassword() const { return _hasPassword; }
 bool Client::hasNick() const { return _hasNick; }
 bool Client::hasUser() const { return _hasUser; }
+std::string Client::getPrefix() const { return _nickname + "!" + _username + "@localhost"; }
 
 bool Client::setNickname(const std::string& nick){
 	if (nick.empty())

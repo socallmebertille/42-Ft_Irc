@@ -12,7 +12,10 @@ Server::~Server()
     close(_serverSocket);
     close(_epollFd);
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
         close(it->first);
+        delete it->second; // Free the Client object
+    }
 }
 
 void Server::setNonBlocking(int fd) {
@@ -75,8 +78,9 @@ void Server::handleNewConnection() {
 		Client* newClient = new Client(clientFd, ip);
 		_clients.insert(std::make_pair(clientFd, newClient));
 
-
-        std::cout << "New client connected: " << ip << " [fd: " << clientFd << "]" << std::endl;
+        // std::cout << "New client connected: " << ip << " [fd: " << clientFd << "]" << std::endl;
+        std::cout << GREEN << "ENTER of client : " << RESET;
+        std::cout << "fd[" << clientFd << "], nickname[" << newClient->getNickname() << "]" << std::endl;
     }
 }
 
@@ -92,28 +96,31 @@ void Server::run() {
             int fd = events[i].data.fd;
             if (fd == _serverSocket) {
                 handleNewConnection();
-				for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-				{
-					std::cout << "Client fd: " << it->first << ", nickname: " << it->second->getNickname() << std::endl;
-				}
             } else {
                 char buffer[512];
                 ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
                 if (bytesRead <= 0) {
                     // Client disconnected or error
+                    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+                    {
+                        if (fd == it->first) {
+                            std::cout << RED << "QUITTING of client : " << RESET;
+                            std::cout << "fd[" << it->first << "], nickname[" << it->second->getNickname() << "]" << std::endl;
+                            break;
+                        }
+                    }
                     close(fd);
                     _clients.erase(fd);
                     continue;
                 }
                 buffer[bytesRead] = '\0';
-                std::string line(buffer);
-
-                // 💡 couper par lignes si tu veux gérer plusieurs commandes à la suite
-                handleCommand(fd, line);
-				for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-				{
-					std::cout << "Client fd: " << it->first << ", nickname: " << it->second->getNickname() << std::endl;
-				}
+                _commandLine = buffer;
+                while (_commandLine[0] != '\n' && !_commandLine.empty()) {
+                    handleCommand(fd, _commandLine);
+                }
+                if (!_commandLine.empty()) {
+                    _commandLine.erase(0, _commandLine.size());
+                }
             }
         }
     }
@@ -123,57 +130,117 @@ void Server::sendToClient(int fd, const std::string& msg) {
     send(fd, msg.c_str(), msg.length(), 0);
 }
 
+Client* Server::getClientByNick(const std::string& nickname) {
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (it->second->getNickname() == nickname)
+            return it->second;
+    }
+    return NULL;
+}
+
 void Server::handleCommand(int clientFd, const std::string& line) {
-    // Client& client = _clients[clientFd];
     Client* client = _clients[clientFd];
     std::istringstream iss(line);
-    std::string command;
-    iss >> command;
-
+    std::string command, arg;
+    int space(0);
+    iss >> command >> arg;
+    _commandLine.erase(0, command.size());
+    if (_commandLine[0] == ' ') {
+        _commandLine.erase(0, 1);
+    }
+    if (!arg.empty()) {
+        if (arg[arg.size() - 1] != ' ' || arg[arg.size() - 1] != ':')
+            space = 1;
+        _commandLine.erase(0, arg.size());
+        if (_commandLine[0] == ' ')
+            _commandLine.erase(0, 1);
+        if (_commandLine.empty())
+            space = 0;
+    }
     if (command == "PASS") {
-        std::string password;
-        iss >> password;
-        if (password.empty()) {
-            sendToClient(clientFd, "ERROR :Password required\r\n");
+        if (arg.empty()) {
+            sendToClient(clientFd, "461 PASS :Not enough parameters\n");
             return;
         }
-        client->setPassword(password);
+        client->setPassword(arg);
         client->markPassword();
+        sendToClient(clientFd, MAGENTA "NOTICE * :Password accepted\n" RESET);
     }
     else if (command == "NICK") {
-        std::string nick;
-        iss >> nick;
-        if (nick.empty()) {
-            sendToClient(clientFd, "ERROR :Nickname required\r\n");
+        if (arg.empty()) {
+            sendToClient(clientFd, "431 :No nickname given\n");
             return;
         }
-
         // Check nickname uniqueness
         for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-            if (it->second->getNickname() == nick && it->first != clientFd) {
-                sendToClient(clientFd, "ERROR :Nickname already in use\r\n");
+            if (it->second->getNickname() == arg && it->first != clientFd) {
+                sendToClient(clientFd, "433 * " + arg + " :Nickname is already in use\n");
                 return;
             }
         }
-
-        client->setNickname(nick);
+        client->setNickname(arg);
         client->markNick();
+        sendToClient(clientFd, MAGENTA "NOTICE * :Nickname ");
+        sendToClient(clientFd, arg);
+        sendToClient(clientFd, " save\n" RESET);
     }
     else if (command == "USER") {
-        std::string username;
-        iss >> username;
-        if (username.empty()) {
-            sendToClient(clientFd, "ERROR :Username required\r\n");
+        if (arg.empty()) {
+            sendToClient(clientFd, "461 USER :Not enough parameters\n");
             return;
         }
-        client->setUsername(username);
+        client->setUsername(arg);
         client->markUser();
+        sendToClient(clientFd, MAGENTA "NOTICE * :User ");
+        sendToClient(clientFd, arg);
+        sendToClient(clientFd, " save\n" RESET);
     }
-
-    // Try authentication if everything is set
+    else if (command == "PRIVMSG") {
+        if (arg.empty()) {
+            sendToClient(clientFd, "411 :No recipient given\n");
+            _commandLine.erase(0, _commandLine.size());
+            return;
+        }
+        std::string message;
+        size_t pos = arg.find(":");
+        if (pos != std::string::npos) {
+            std::string part1(arg.substr(pos + 1)), part2(_commandLine);
+            if (space == 1)
+                part1 += " ";
+            message = part1 + part2;
+            arg = arg.substr(0, pos);
+        }
+        else {
+            std::istringstream iss(_commandLine);
+            std::getline(iss, message);
+            if (message.empty() || message[0] != ':') {
+                sendToClient(clientFd, "412 :No text to send\n");
+                _commandLine.erase(0, _commandLine.size());
+                return;
+            }
+            message.erase(0, 1);
+        }
+        Client* target = getClientByNick(arg);
+        if (!target) {
+            sendToClient(clientFd, "401 " + arg + " :No such nick/channel\n");
+            _commandLine.erase(0, _commandLine.size());
+            return;
+        }
+        if (message[message.size() - 1] != '\n')
+            message += "\n";
+        if (message[0] == ' ')
+            message.erase(0, 1);
+        std::string fullMsg = ":" + client->getPrefix() + " PRIVMSG " + client->getNickname() + " :" + PINK + message + RESET;
+        sendToClient(target->getFd(), fullMsg);
+        // sendToClient(clientFd, ":" + client->getPrefix() + " PRIVMSG " + target->getNickname() + " :" + message);
+        _commandLine.erase(0, _commandLine.size());
+    }
+    else {
+        sendToClient(clientFd, "421 " + command + " :Unknown command\n");
+        _commandLine.erase(0, _commandLine.size());
+    }
     if (client->hasPassword() && client->hasNick() && client->hasUser() && !client->isAuthenticated()) {
         client->authenticate();
-        sendToClient(clientFd, "001 " + client->getNickname() + " :Welcome to the IRC server!\r\n");
+        sendToClient(clientFd, "001 " + client->getNickname() + " :Welcome to the IRC server!\n");
     }
 }
-
