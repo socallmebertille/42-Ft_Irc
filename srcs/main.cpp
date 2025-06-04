@@ -30,6 +30,5 @@ int main(int ac, char** av)
         std::cerr << RED << "Error: " << e.what() << RESET << std::endl;
         return 1;
     }
-
     return 0;
 }

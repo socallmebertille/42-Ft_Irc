@@ -89,12 +89,83 @@ void Server::run() {
             throw std::runtime_error("epoll_wait() failed");
         }
         for (int i = 0; i < nfds; ++i) {
-            if (events[i].data.fd == _serverSocket) {
+            int fd = events[i].data.fd;
+            if (fd == _serverSocket) {
                 handleNewConnection();
             } else {
-                // Handle client events here
-                // For example, read data from the client
+                char buffer[512];
+                ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
+                if (bytesRead <= 0) {
+                    // Client disconnected or error
+                    close(fd);
+                    _clients.erase(fd);
+                    continue;
+                }
+                buffer[bytesRead] = '\0';
+                std::string line(buffer);
+
+                // 💡 couper par lignes si tu veux gérer plusieurs commandes à la suite
+                handleCommand(fd, line);
             }
         }
     }
 }
+
+void Server::sendToClient(int fd, const std::string& msg) {
+    send(fd, msg.c_str(), msg.length(), 0);
+}
+
+void Server::handleCommand(int clientFd, const std::string& line) {
+    // Client& client = _clients[clientFd];
+    Client* client = &_clients[clientFd];
+    std::istringstream iss(line);
+    std::string command;
+    iss >> command;
+
+    if (command == "PASS") {
+        std::string password;
+        iss >> password;
+        if (password.empty()) {
+            sendToClient(clientFd, "ERROR :Password required\r\n");
+            return;
+        }
+        client->setPassword(password);
+        client->markPassword();
+    }
+    else if (command == "NICK") {
+        std::string nick;
+        iss >> nick;
+        if (nick.empty()) {
+            sendToClient(clientFd, "ERROR :Nickname required\r\n");
+            return;
+        }
+
+        // Check nickname uniqueness
+        for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+            if (it->second.getNickname() == nick && it->first != clientFd) {
+                sendToClient(clientFd, "ERROR :Nickname already in use\r\n");
+                return;
+            }
+        }
+
+        client->setNickname(nick);
+        client->markNick();
+    }
+    else if (command == "USER") {
+        std::string username;
+        iss >> username;
+        if (username.empty()) {
+            sendToClient(clientFd, "ERROR :Username required\r\n");
+            return;
+        }
+        client->setUsername(username);
+        client->markUser();
+    }
+
+    // Try authentication if everything is set
+    if (client->hasPassword() && client->hasNick() && client->hasUser() && !client->isAuthenticated()) {
+        client->authenticate();
+        sendToClient(clientFd, "001 " + client->getNickname() + " :Welcome to the IRC server!\r\n");
+    }
+}
+

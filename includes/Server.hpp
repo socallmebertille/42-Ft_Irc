@@ -2,6 +2,7 @@
 # define SERVER_HPP
 
 # include <iostream>
+# include <sstream>
 # include <unistd.h>
 # include <map>
 # include <string>
@@ -35,6 +36,9 @@ private:
     void initServerSocket();
     void handleNewConnection();
     void setNonBlocking(int fd);
+
+    void sendToClient(int fd, const std::string& msg);
+    void handleCommand(int clientFd, const std::string& line);
 };
 
 #endif

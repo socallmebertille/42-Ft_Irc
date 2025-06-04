@@ -10,9 +10,12 @@ private:
 	std::string _ip; // IP address of the client
 	bool _authenticated;
 	std::string _username;
+	bool _hasUser;
 	std::string _nickname;
+	bool _hasNick;
 	std::string _realName;
 	std::string _password; //pr rej un channel protege
+	bool _hasPassword;
 
 public:
 	Client(int fd, const std::string& ip);
@@ -27,11 +30,17 @@ public:
 	const std::string& getNickname() const;
 	const std::string& getRealname() const;
 	const std::string& getPassword() const;
+	bool hasPassword() const;
+	bool hasNick() const;
+	bool hasUser() const;
 
 	void setUsername(const std::string& user);
 	bool setNickname(const std::string& nick);
 	void setRealname(const std::string& real);
 	void setPassword(const std::string& passW);
+	void markPassword();
+	void markNick();
+	void markUser();
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
 };
 
