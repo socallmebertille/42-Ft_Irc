@@ -72,7 +72,9 @@ void Server::handleNewConnection() {
         if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) // add the new client fd to epoll with EPOLLIN and EPOLLET
             throw std::runtime_error("epoll_ctl() failed on new client");
         std::string ip = inet_ntoa(clientAddr.sin_addr); // convert the client IP address from binary to string format
-        _clients.insert(std::make_pair(clientFd, Client(clientFd, ip)));
+		Client* newClient = new Client(clientFd, ip);
+		_clients.insert(std::make_pair(clientFd, newClient));
+
 
         std::cout << "New client connected: " << ip << " [fd: " << clientFd << "]" << std::endl;
     }
