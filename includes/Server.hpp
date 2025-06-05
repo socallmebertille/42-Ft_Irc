@@ -17,7 +17,6 @@
 # include <cerrno>
 # include "Client.hpp"
 # include "Channel.hpp"
-// # include "Command.hpp"
 # include "colors.hpp"
 
 # define MAX_EVENTS 64
@@ -47,7 +46,7 @@ private:
 
     void sendToClient(int fd, const std::string& msg);
     Client* getClientByNick(const std::string& nickname);
-    void handleCommand(int clientFd, const std::string& line);
+    void handleCommand(int clientFd);
 
     void parseLine();
     void execCommand();

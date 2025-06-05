@@ -115,7 +115,7 @@ void Server::run() {
                 }
                 buffer[bytesRead] = '\0';
                 _commandLine = buffer;
-                handleCommand(fd, buffer);
+                handleCommand(fd);
             }
         }
     }
@@ -133,7 +133,7 @@ Client* Server::getClientByNick(const std::string& nickname) {
     return NULL;
 }
 
-void Server::handleCommand(int clientFd, const std::string& line) {
+void Server::handleCommand(int clientFd) {
 
 	// std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
     _client = _clients[clientFd];
