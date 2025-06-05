@@ -1,6 +1,7 @@
 #include "Server.hpp"
 
-Server::Server(int port, const std::string& password): _port(port), _password(password), _serverSocket(-1), _epollFd(-1)
+Server::Server(int port, const std::string& password):
+_port(port), _password(password), _serverSocket(-1), _epollFd(-1)
 {
     std::cout << "Serveur IRC créé sur le port " << _port
               << " avec mot de passe : " << _password << std::endl << std::endl;
@@ -99,7 +100,16 @@ void Server::run() {
             } else {
                 char buffer[512];
                 ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
-                if (bytesRead <= 0) {
+                
+                if (bytesRead < 0) {
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+                    else
+                    {
+                        // erreur
+                    }
+                }
+                else if (bytesRead == 0)
+                {
                     // Client disconnected or error
                     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
                     {
@@ -115,6 +125,7 @@ void Server::run() {
                 }
                 buffer[bytesRead] = '\0';
                 _commandLine = buffer;
+                _client->setBuf(_commandLine, bytesRead);
                 handleCommand(fd);
             }
         }
@@ -122,7 +133,12 @@ void Server::run() {
 }
 
 void Server::sendToClient(int fd, const std::string& msg) {
-    send(fd, msg.c_str(), msg.length(), 0);
+    std::string formattedMsg = msg;
+    if (_client->getClientType() == false)
+        formattedMsg += "\r\n";
+    else
+        formattedMsg += "\n";
+    send(fd, formattedMsg.c_str(), formattedMsg.length(), 0);
 }
 
 Client* Server::getClientByNick(const std::string& nickname) {

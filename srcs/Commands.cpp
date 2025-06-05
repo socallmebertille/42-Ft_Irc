@@ -2,6 +2,14 @@
 
 void Server::parseLine() {
     std::istringstream iss(_commandLine);
+    if (_commandLine.find("\r\n", _commandLine.size() - 3) != std::string::npos) {
+        _commandLine.erase(_commandLine.find("\r\n", _commandLine.size() - 3), 2);
+        _client->setClientType(false);
+    }
+    else if (_commandLine.find("\n", _commandLine.size() - 2) != std::string::npos) {
+        _commandLine.erase(_commandLine.find("\n", _commandLine.size() - 2), 1);
+        _client->setClientType(true);
+    }
     iss >> _command >> _arg;
     _commandLine.erase(0, _command.size());
     if (_commandLine[0] == ' ') {
@@ -29,12 +37,12 @@ void Server::execCommand()
 			(this->*function[i])();
             if (_client->hasPassword() && _client->hasNick() && _client->hasUser() && !_client->isAuthenticated()) {
                 _client->authenticate();
-                sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!\n");
+                sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!");
             }
             return ;
 		}
 	}
-	sendToClient(_clientFd, "421 " + _command + " :Unknown command\n");
+	sendToClient(_clientFd, "421 " + _command + " :Unknown command");
     _commandLine.erase(0, _commandLine.size());
 }
 
@@ -45,48 +53,48 @@ void Server::cap() {
 
 void Server::pass() {
     if (_arg.empty()) {
-        sendToClient(_clientFd, "461 PASS :Not enough parameters\n");
+        sendToClient(_clientFd, "461 PASS :Not enough parameters");
         return;
     }
     _client->setPassword(_arg);
     _client->markPassword();
-    sendToClient(_clientFd, MAGENTA "NOTICE * :Password accepted\n" RESET);
+    sendToClient(_clientFd, MAGENTA "NOTICE * :Password accepted" RESET);
 }
 
 void Server::nick() {
     if (_arg.empty()) {
-        sendToClient(_clientFd, "431 :No nickname given\n");
+        sendToClient(_clientFd, "431 :No nickname given");
         return;
     }
     // Check nickname uniqueness
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->second->getNickname() == _arg && it->first != _clientFd) {
-            sendToClient(_clientFd, "433 * " + _arg + " :Nickname is already in use\n");
+            sendToClient(_clientFd, "433 * " + _arg + " :Nickname is already in use");
             return;
         }
     }
     _client->setNickname(_arg);
     _client->markNick();
-    sendToClient(_clientFd, MAGENTA "NOTICE * :Nickname ");
-    sendToClient(_clientFd, _arg);
-    sendToClient(_clientFd, " save\n" RESET);
+    std::string message;
+    message = MAGENTA "NOTICE * :Nickname " + _arg + " save" RESET;
+    sendToClient(_clientFd, message);
 }
 
 void Server::user() {
     if (_arg.empty()) {
-        sendToClient(_clientFd, "461 USER :Not enough parameters\n");
+        sendToClient(_clientFd, "461 USER :Not enough parameters");
         return;
     }
     _client->setUsername(_arg);
     _client->markUser();
-    sendToClient(_clientFd, MAGENTA "NOTICE * :User ");
-    sendToClient(_clientFd, _arg);
-    sendToClient(_clientFd, " save\n" RESET);
+    std::string message;
+    message = MAGENTA "NOTICE * :User " + _arg + " save" RESET;
+    sendToClient(_clientFd, message);
 }
 
 void Server::privmsg() {
     if (_arg.empty()) {
-        sendToClient(_clientFd, "411 :No recipient given\n");
+        sendToClient(_clientFd, "411 :No recipient given");
         _commandLine.erase(0, _commandLine.size());
         return;
     }
@@ -103,7 +111,7 @@ void Server::privmsg() {
         std::istringstream iss(_commandLine);
         std::getline(iss, message);
         if (message.empty() || message[0] != ':') {
-            sendToClient(_clientFd, "412 :No text to send\n");
+            sendToClient(_clientFd, "412 :No text to send");
             _commandLine.erase(0, _commandLine.size());
             return;
         }
@@ -111,12 +119,10 @@ void Server::privmsg() {
     }
     Client* target = getClientByNick(_arg);
     if (!target) {
-        sendToClient(_clientFd, "401 " + _arg + " :No such nick/channel\n");
+        sendToClient(_clientFd, "401 " + _arg + " :No such nick/channel");
         _commandLine.erase(0, _commandLine.size());
         return;
     }
-    if (message[message.size() - 1] != '\n')
-        message += "\n";
     if (message[0] == ' ')
         message.erase(0, 1);
     std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + _client->getNickname() + " :" + PINK + message + RESET;
@@ -127,36 +133,36 @@ void Server::privmsg() {
 
 void Server::join() {
     if (_arg.empty() || _arg[0] != '#') {
-        sendToClient(_clientFd, "ERROR :Invalid channel name\r\n");
+        sendToClient(_clientFd, "ERROR :Invalid channel name");
         return;
     }
     std::pair<std::map<std::string, Channel>::iterator, bool> result = _channels.insert(std::make_pair(_arg, Channel(_arg)));
     Channel& chan = result.first->second;
     if (!chan.isMember(_client)) {
         chan.join(_client);
-        sendToClient(_clientFd, ":" + _client->getNickname() + " JOIN " + _arg + "\n");
+        sendToClient(_clientFd, ":" + _client->getNickname() + " JOIN " + _arg);
     }
 }
 
 void Server::part() {
     if (_arg.empty() || _arg[0] != '#') {
-        sendToClient(_clientFd, "ERROR :Invalid channel name\r\n");
+        sendToClient(_clientFd, "ERROR :Invalid channel name");
         return;
     }
     std::map<std::string, Channel>::iterator it = _channels.find(_arg);
     if (it == _channels.end()) {
-        sendToClient(_clientFd, "ERROR :No such channel\r\n");
+        sendToClient(_clientFd, "ERROR :No such channel");
         return;
     }
 
     Channel& chan = it->second;
     if (!chan.isMember(_client)) {
-        sendToClient(_clientFd, "ERROR :You're not in that channel\r\n");
+        sendToClient(_clientFd, "ERROR :You're not in that channel");
         return;
     }
 
     chan.part(_client); // ta fonction dans Channel
-    sendToClient(_clientFd, ":" + _client->getNickname() + " PART " + _arg + "\r\n");
+    sendToClient(_clientFd, ":" + _client->getNickname() + " PART " + _arg);
 
     // (Optionnel) Supprimer le channel s’il est vide
     if (chan.getMemberCount() == 0) {

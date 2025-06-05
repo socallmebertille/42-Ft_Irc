@@ -14,6 +14,8 @@ bool Client::hasPassword() const { return _hasPassword; }
 bool Client::hasNick() const { return _hasNick; }
 bool Client::hasUser() const { return _hasUser; }
 std::string Client::getPrefix() const { return _nickname + "!" + _username + "@localhost"; }
+std::string Client::getBuffer() const { return _readBuf; }
+bool Client::getClientType() const { return _clientType; }
 
 bool Client::setNickname(const std::string& nick){
 	if (nick.empty())
@@ -29,6 +31,11 @@ void Client::setPassword(const std::string& passW) { _password = passW;}
 void Client::markPassword() { _hasPassword = true; }
 void Client::markNick() { _hasNick = true; }
 void Client::markUser() { _hasUser = true; }
+void Client::setBuf(const std::string& buf, ssize_t bytesRead)
+{
+	_readBuf.append(buf, bytesRead);
+}
+void Client::setClientType(bool type) { _clientType = type; }
 
 bool Client::isAuthenticated() const { return _authenticated; }
 
