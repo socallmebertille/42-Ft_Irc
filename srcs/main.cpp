@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
+#include "Command.hpp"
 #include <cstdlib>
 #include <sstream>
 #include <colors.hpp>

@@ -115,12 +115,7 @@ void Server::run() {
                 }
                 buffer[bytesRead] = '\0';
                 _commandLine = buffer;
-                while (_commandLine[0] != '\n' && !_commandLine.empty()) {
-                    handleCommand(fd, _commandLine);
-                }
-                if (!_commandLine.empty()) {
-                    _commandLine.erase(0, _commandLine.size());
-                }
+                handleCommand(fd, buffer);
             }
         }
     }
@@ -139,154 +134,16 @@ Client* Server::getClientByNick(const std::string& nickname) {
 }
 
 void Server::handleCommand(int clientFd, const std::string& line) {
-    // Client& client = _clients[clientFd];
 
-	std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
-
-    Client* client = _clients[clientFd];
-    std::istringstream iss(line);
-    std::string command, arg;
-    int space(0);
-    iss >> command >> arg;
-    _commandLine.erase(0, command.size());
-    if (_commandLine[0] == ' ') {
-        _commandLine.erase(0, 1);
+	// std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
+    _client = _clients[clientFd];
+    _clientFd = clientFd;
+    while (_commandLine[0] != '\n' && !_commandLine.empty()) {
+        parseLine();
+        execCommand();
+        // std::cout << "Command executed: " << _command << " " << _arg << std::endl;
     }
-    if (!arg.empty()) {
-        if (arg[arg.size() - 1] != ' ' || arg[arg.size() - 1] != ':')
-            space = 1;
-        _commandLine.erase(0, arg.size());
-        if (_commandLine[0] == ' ')
-            _commandLine.erase(0, 1);
-        if (_commandLine.empty())
-            space = 0;
-    }
-	if (command == "CAP") {
-        // Ignorer CAP pour ne pas fermer la connexion trop tôt
-        return;
-	}
-    else if (command == "PASS") {
-        if (arg.empty()) {
-            sendToClient(clientFd, "461 PASS :Not enough parameters\n");
-            return;
-        }
-        client->setPassword(arg);
-        client->markPassword();
-        sendToClient(clientFd, MAGENTA "NOTICE * :Password accepted\n" RESET);
-    }
-    else if (command == "NICK") {
-        if (arg.empty()) {
-            sendToClient(clientFd, "431 :No nickname given\n");
-            return;
-        }
-        // Check nickname uniqueness
-        for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-            if (it->second->getNickname() == arg && it->first != clientFd) {
-                sendToClient(clientFd, "433 * " + arg + " :Nickname is already in use\n");
-                return;
-            }
-        }
-        client->setNickname(arg);
-        client->markNick();
-        sendToClient(clientFd, MAGENTA "NOTICE * :Nickname ");
-        sendToClient(clientFd, arg);
-        sendToClient(clientFd, " save\n" RESET);
-    }
-    else if (command == "USER") {
-        if (arg.empty()) {
-            sendToClient(clientFd, "461 USER :Not enough parameters\n");
-            return;
-        }
-        client->setUsername(arg);
-        client->markUser();
-        sendToClient(clientFd, MAGENTA "NOTICE * :User ");
-        sendToClient(clientFd, arg);
-        sendToClient(clientFd, " save\n" RESET);
-    }
-    else if (command == "PRIVMSG") {
-        if (arg.empty()) {
-            sendToClient(clientFd, "411 :No recipient given\n");
-            _commandLine.erase(0, _commandLine.size());
-            return;
-        }
-        std::string message;
-        size_t pos = arg.find(":");
-        if (pos != std::string::npos) {
-            std::string part1(arg.substr(pos + 1)), part2(_commandLine);
-            if (space == 1)
-                part1 += " ";
-            message = part1 + part2;
-            arg = arg.substr(0, pos);
-        }
-        else {
-            std::istringstream iss(_commandLine);
-            std::getline(iss, message);
-            if (message.empty() || message[0] != ':') {
-                sendToClient(clientFd, "412 :No text to send\n");
-                _commandLine.erase(0, _commandLine.size());
-                return;
-            }
-            message.erase(0, 1);
-        }
-        Client* target = getClientByNick(arg);
-        if (!target) {
-            sendToClient(clientFd, "401 " + arg + " :No such nick/channel\n");
-            _commandLine.erase(0, _commandLine.size());
-            return;
-        }
-        if (message[message.size() - 1] != '\n')
-            message += "\n";
-        if (message[0] == ' ')
-            message.erase(0, 1);
-        std::string fullMsg = ":" + client->getPrefix() + " PRIVMSG " + client->getNickname() + " :" + PINK + message + RESET;
-        sendToClient(target->getFd(), fullMsg);
-        // sendToClient(clientFd, ":" + client->getPrefix() + " PRIVMSG " + target->getNickname() + " :" + message);
+    if (!_commandLine.empty()) {
         _commandLine.erase(0, _commandLine.size());
-    }
-    else if (command == "JOIN") {
-		if (arg.empty() || arg[0] != '#') {
-			sendToClient(clientFd, "ERROR :Invalid channel name\r\n");
-			return;
-		}
-		std::pair<std::map<std::string, Channel>::iterator, bool> result = _channels.insert(std::make_pair(arg, Channel(arg)));
-		Channel& chan = result.first->second;
-		if (!chan.isMember(client)) {
-			chan.join(client);
-			sendToClient(clientFd, ":" + client->getNickname() + " JOIN " + arg + "\n");
-		}
-	}
-	else if (command == "PART") {
-        if (arg.empty() || arg[0] != '#') {
-            sendToClient(clientFd, "ERROR :Invalid channel name\r\n");
-            return;
-        }
-        std::map<std::string, Channel>::iterator it = _channels.find(arg);
-        if (it == _channels.end()) {
-            sendToClient(clientFd, "ERROR :No such channel\r\n");
-            return;
-        }
-
-        Channel& chan = it->second;
-        if (!chan.isMember(client)) {
-            sendToClient(clientFd, "ERROR :You're not in that channel\r\n");
-            return;
-        }
-
-        chan.part(client); // ta fonction dans Channel
-        sendToClient(clientFd, ":" + client->getNickname() + " PART " + arg + "\r\n");
-
-        // (Optionnel) Supprimer le channel s’il est vide
-        if (chan.getMemberCount() == 0) {
-            _channels.erase(arg);
-            std::cout << RED << "Channel supprimé car vide : " << arg << RESET << std::endl;
-        }
-    }
-    else {
-        sendToClient(clientFd, "421 " + command + " :Unknown command\n");
-        _commandLine.erase(0, _commandLine.size());
-    }
-    if (client->hasPassword() && client->hasNick() && client->hasUser() && !client->isAuthenticated()) {
-        client->authenticate();
-        sendToClient(clientFd, "001 " + client->getNickname() + " :Welcome to the IRC server!\n");
     }
 }

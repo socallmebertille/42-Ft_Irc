@@ -17,33 +17,56 @@
 # include <cerrno>
 # include "Client.hpp"
 # include "Channel.hpp"
+// # include "Command.hpp"
 # include "colors.hpp"
 
 # define MAX_EVENTS 64
 
 class Server {
 public:
-	Server(int port, const std::string& password);
-	~Server();
+    Server(int port, const std::string& password);
+    ~Server();
 
-	void run();
+    void run();
 
 private:
-	int _port;
-	std::string _password;
-	int _serverSocket;
-	int _epollFd;
-	std::map<int, Client*> _clients;
-	std::map<std::string, Channel> _channels;
-	std::string _commandLine;
+    int _port;
+    std::string _password;
+    int _serverSocket;
+    int _epollFd;
+
+    std::string _commandLine, _command, _arg;
+    std::map<std::string, Channel> _channels;
+    std::map<int, Client*> _clients;
+    int _space, _clientFd;
+    Client* _client;
 
     void initServerSocket();
     void handleNewConnection();
     void setNonBlocking(int fd);
 
     void sendToClient(int fd, const std::string& msg);
-	Client* getClientByNick(const std::string& nickname);
+    Client* getClientByNick(const std::string& nickname);
     void handleCommand(int clientFd, const std::string& line);
+
+    void parseLine();
+    void execCommand();
+    void cap();
+    void pass();
+    void nick();
+    void user();
+    void privmsg();
+    void join();
+    void part();
+    void quit();
+    void mode();
+    void topic();
+    void list();
+    void invite();
+    void kick();
+    void notice();
+    void ping();
+    void pong();
 };
 
 #endif
