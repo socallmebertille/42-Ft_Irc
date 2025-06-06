@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Replies.hpp"
 
 void Server::parseLine() {
     std::istringstream iss(_commandLine);
@@ -32,6 +33,10 @@ void Server::execCommand()
     void (Server::*function[16])() = {&Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg, &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic, &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong};
 	for (int i(0); i < 16; i++)
 	{
+		if (_command.empty()) {
+			sendToClient(_clientFd, "421 * :Empty command\r\n");
+			return;
+		}
 		if (_command == type[i])
 		{
 			(this->*function[i])();
@@ -140,8 +145,18 @@ void Server::join() {
     Channel& chan = result.first->second;
     if (!chan.isMember(_client)) {
         chan.join(_client);
-        sendToClient(_clientFd, ":" + _client->getNickname() + " JOIN " + _arg);
-    }
+        std::string joinMsg = ":" + _client->getPrefix() + " JOIN :" + _arg + "\r\n";
+        const std::set<Client*>& members = chan.getMembers();
+        for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+            sendToClient((*it)->getFd(), joinMsg);
+        }
+        std::string nickList;
+        for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+            nickList += (*it)->getNickname() + " ";
+        }
+		sendReply(353, _client, "=", _arg, nickList);
+		sendReply(366, _client, _arg, "", "End of /NAMES list.");
+    }	//Ces codes ne sont pas des erreurs, mais des codes de réponse standards IRC.
 }
 
 void Server::part() {
@@ -154,22 +169,24 @@ void Server::part() {
         sendToClient(_clientFd, "ERROR :No such channel");
         return;
     }
-
     Channel& chan = it->second;
     if (!chan.isMember(_client)) {
         sendToClient(_clientFd, "ERROR :You're not in that channel");
         return;
     }
-
-    chan.part(_client); // ta fonction dans Channel
-    sendToClient(_clientFd, ":" + _client->getNickname() + " PART " + _arg);
-
-    // (Optionnel) Supprimer le channel s’il est vide
+    std::string partMsg = ":" + _client->getPrefix() + " PART " + _arg + "\r\n";
+    // Notifier tous les membres AVANT de retirer le client
+    const std::set<Client*>& members = chan.getMembers();
+    for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+        sendToClient((*it)->getFd(), partMsg);
+    }
+    chan.part(_client);
     if (chan.getMemberCount() == 0) {
         _channels.erase(_arg);
         std::cout << RED << "Channel supprimé car vide : " << _arg << RESET << std::endl;
     }
 }
+
 
 void Server::quit() {
     std::cout << "Executing QUIT command." << std::endl;
@@ -215,3 +232,4 @@ void Server::pong() {
     std::cout << "Executing PONG command." << std::endl;
     // Implementation for PONG command
 }
+

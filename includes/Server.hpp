@@ -48,6 +48,8 @@ private:
     Client* getClientByNick(const std::string& nickname);
     void handleCommand(int clientFd);
 
+	void sendReply(int code, Client* client, const std::string& arg1 = "", const std::string& arg2 = "", const std::string& trailing = "");
+
     void parseLine();
     void execCommand();
     void cap();

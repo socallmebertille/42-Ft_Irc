@@ -2,9 +2,6 @@
 #include "Client.hpp"
 #include "colors.hpp"
 
-//A VERIF DEMAIN AVEC SARAH
-	//membre qui se connecte, ds channel j'ai choisi de gerer avc ptr
-
 Channel::Channel(std::string name):
 	_name(name), _topic(""), _password(""),
 	_userLimit(0), _inviteOnly(false),
@@ -23,9 +20,7 @@ Channel::Channel(std::string name):
 		_members.clear(); // Si le channel a une limite d'utilisateurs, on vide la liste des membres
 }
 
-Channel::~Channel() {
-
-}
+Channel::~Channel() {}
 
 const std::string& Channel::getName() const {
 	return _name;
@@ -41,15 +36,21 @@ bool Channel::isMember(Client* client) const{
 
 void Channel::join(Client* client) {
 	_members.insert(client);
-	std::cout << GREEN << "New member added the channel" << RESET << std::endl;//a replace par methode broadcats?
+	std::cout << GREEN << client->getNickname() << " added the channel " << getName() << RESET << std::endl;
+	std::cout << "There are currently " << getMemberCount() << " members in the channel : " << getName() << "." << std::endl;
 }
 
 void Channel::part(Client* client) {
 	_members.erase(client);
-	std::cout << RED << "A member left the channel" << RESET << std::endl; //a replace par methode broadcats?
+	std::cout << RED << client->getNickname() << " left the channel " << getName() << RESET << std::endl;
+	std::cout << "There are currently " << getMemberCount() << " members in the channel : " << getName() << "." << std::endl;
 }
 //Prévoir clairement comment notifier les clients via le réseau lorsque
 // des événements se produisent (rejoindre/quitter channel, etc.)
 size_t Channel::getMemberCount() const {
     return _members.size();
+}
+
+const std::set<Client*>& Channel::getMembers() const {
+	return _members;
 }

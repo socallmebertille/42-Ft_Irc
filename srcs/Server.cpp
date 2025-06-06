@@ -1,7 +1,6 @@
 #include "Server.hpp"
 
-Server::Server(int port, const std::string& password):
-_port(port), _password(password), _serverSocket(-1), _epollFd(-1)
+Server::Server(int port, const std::string& password): _port(port), _password(password), _serverSocket(-1), _epollFd(-1), _command("")
 {
     std::cout << "Serveur IRC créé sur le port " << _port
               << " avec mot de passe : " << _password << std::endl << std::endl;
