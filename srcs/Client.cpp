@@ -50,7 +50,7 @@ void Client::setArg(const std::string& arg)
 void Client::setClientType(bool type) { _clientType = type; }
 
 bool Client::isRegistered() const {
-    return !_nickname.empty() && !_username.empty(); 
+    return !_nickname.empty() && !_username.empty() && !_password.empty(); 
 }
 
 void Client::registerUser(const std::string& nick, const std::string& user, const std::string& real) {

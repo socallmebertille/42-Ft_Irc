@@ -8,17 +8,17 @@ void Server::cap() {
 
 void Server::pass() {
 	if (_client->isRegistered()) {
-		sendToClient(_clientFd, "462 :You may not reregister\r\n");
+		sendToClient(_clientFd, "462 :You may not reregister");
 		return;
 	}
 	if (_client->getArg().empty()) {
-		sendToClient(_clientFd, "461 PASS :Not enough parameters\r\n");
+		sendToClient(_clientFd, "461 PASS :Not enough parameters");
 		return;
 	}
 	if (_client->getArg() == _password) {
 		setPasswordOk(true);
 	} else {
-		sendToClient(_clientFd, "464 :Password incorrect\r\n");
+		sendToClient(_clientFd, "464 :Password incorrect");
 	}
 }
 

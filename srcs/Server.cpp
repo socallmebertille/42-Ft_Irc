@@ -12,7 +12,7 @@ Server::CommandFunc Server::_function[16] = {
 };
 
 Server::Server(int port, const std::string& password):
-_port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password)
+_port(port), _password(password), _serverSocket(-1), _epollFd(-1), _clientFd(-1)
 {
     std::cout << "Serveur IRC créé sur le port " << _port
               << " avec mot de passe : " << _password << std::endl << std::endl;
@@ -154,12 +154,12 @@ void Server::closeAndRemoveClient(int fd)
 void Server::handleCommand(int clientFd) {
     // std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
     _clientFd = clientFd;
-    while (_client->getBuffer()[0] != '\n' && ! _client->getBuffer().empty()) {
+    while (! _client->getBuffer().empty() && _client->getBuffer()[0] != '\n') {
         _client->parseLine();
         execCommand();
         // std::cout << "Command executed: " << _client->getCmd() << " " << _arg << std::endl;
     }
-    if (! _client->getBuffer().empty()) {
+    if (!_client->getBuffer().empty()) {
         _client->eraseBuf();
     }
 }
@@ -194,6 +194,3 @@ void Server::execCommand()
     sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command");
     _client->eraseBuf();
 }
-
-void Server::setPasswordOk(bool ok) { _passOk = ok; }
-bool Server::hasPassword() const { return _passOk; }
