@@ -12,7 +12,7 @@ Server::CommandFunc Server::_function[16] = {
 };
 
 Server::Server(int port, const std::string& password):
-_port(port), _password(password), _serverSocket(-1), _epollFd(-1), _clientFd(-1)
+_port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password)
 {
     std::cout << "Serveur IRC créé sur le port " << _port
               << " avec mot de passe : " << _password << std::endl << std::endl;
@@ -193,3 +193,6 @@ void Server::execCommand()
 	sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command\n");
 	_client->getBuffer().erase(0, _client->getBuffer().size());
 }
+
+void Server::setPasswordOk(bool ok) { _passOk = ok; }
+bool Server::hasPassword() const { return _passOk; }

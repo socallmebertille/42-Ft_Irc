@@ -30,13 +30,13 @@ public:
 
 private:
     int _port;
-    std::string _password;
     int _serverSocket;
     int _epollFd;
+    int _clientFd;
+    std::string _password;
 
     std::map<std::string, Channel> _channels;
     std::map<int, Client*> _clients;
-    int _clientFd;
     Client* _client;
     static const std::string _type[16];
     static CommandFunc _function[16];
@@ -69,6 +69,10 @@ private:
     void notice();
     void ping();
     void pong();
+
+	bool _passOk;
+	void setPasswordOk(bool ok);
+	bool hasPassword() const;
 };
 
 #endif

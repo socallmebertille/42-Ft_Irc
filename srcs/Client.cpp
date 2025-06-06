@@ -38,10 +38,10 @@ void Client::setPassword(const std::string& passW) { _password = passW;}
 void Client::markPassword() { _hasPassword = true; }
 void Client::markNick() { _hasNick = true; }
 void Client::markUser() { _hasUser = true; }
-void Client::setBuf(const std::string& buf)
-{
+void Client::setBuf(const std::string& buf) {
 	_readBuf.append(buf);
 }
+
 void Client::setClientType(bool type) { _clientType = type; }
 
 bool Client::isRegistered() const {
