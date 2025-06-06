@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(int fd, const std::string& ip) : _fd(fd), _ip(ip), _authenticated(false) {}
+Client::Client(int fd, const std::string& ip) : _fd(fd), _ip(ip), _isRegistered(false) {}
 
 Client::~Client() {}
 
@@ -30,18 +30,13 @@ void Client::markPassword() { _hasPassword = true; }
 void Client::markNick() { _hasNick = true; }
 void Client::markUser() { _hasUser = true; }
 
-bool Client::isAuthenticated() const { return _authenticated; }
-
-void Client::authenticate() {
-	if (!_password.empty() && !_nickname.empty() && !_username.empty())
-    	_authenticated = true;
-	else
-		_authenticated = false;
+bool Client::isRegistered() const {
+    return !_nickname.empty() && !_username.empty(); 
 }
 
 void Client::registerUser(const std::string& nick, const std::string& user, const std::string& real) {
 	setNickname(nick);
 	setUsername(user);
 	setRealname(real);
-	_authenticated = true;
+	_isRegistered = true;
 }

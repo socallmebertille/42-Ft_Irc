@@ -8,7 +8,7 @@ class Client
 private:
 	int _fd;//pr savoir quand et ou le client a besoin de communiquer(util pour poll)
 	std::string _ip; // IP address of the client
-	bool _authenticated;
+	bool _isRegistered;
 	std::string _username;
 	bool _hasUser;
 	std::string _nickname;
@@ -23,8 +23,7 @@ public:
 
 	int getFd() const;
 	std::string getIp() const;
-	bool isAuthenticated() const;
-	void authenticate();
+	bool isRegistered() const;
 
 	const std::string& getUsername() const;
 	const std::string& getNickname() const;

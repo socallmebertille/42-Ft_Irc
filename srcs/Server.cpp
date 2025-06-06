@@ -134,7 +134,6 @@ Client* Server::getClientByNick(const std::string& nickname) {
 }
 
 void Server::handleCommand(int clientFd) {
-
 	// std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
     _client = _clients[clientFd];
     _clientFd = clientFd;
@@ -146,4 +145,55 @@ void Server::handleCommand(int clientFd) {
     if (!_commandLine.empty()) {
         _commandLine.erase(0, _commandLine.size());
     }
+}
+
+void Server::parseLine() {
+    std::istringstream iss(_commandLine);
+    iss >> _command >> _arg;
+    _commandLine.erase(0, _command.size());
+    if (_commandLine[0] == ' ') {
+        _commandLine.erase(0, 1);
+    }
+    if (!_arg.empty()) {
+        if (_arg[_arg.size() - 1] != ' ' || _arg[_arg.size() - 1] != ':')
+            _space = 1;
+        _commandLine.erase(0, _arg.size());
+        if (_commandLine[0] == ' ')
+            _commandLine.erase(0, 1);
+        if (_commandLine.empty())
+            _space = 0;
+    }
+}
+
+void Server::execCommand()
+{
+	std::string type[16] = {"CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT", "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG"};
+    void (Server::*function[16])() = {&Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg, &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic, &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong};
+	if (_command.empty()) {
+		sendToClient(_clientFd, "421 * :Empty command\r\n");
+		return;
+	}
+	static const std::string allowedArray[4] = { "CAP", "PASS", "NICK", "USER" };
+	static const std::set<std::string> allowedBeforeRegister(allowedArray, allowedArray + 4);
+	if (!_client->isRegistered() && allowedBeforeRegister.find(_command) == allowedBeforeRegister.end()) {
+		sendToClient(_clientFd, "451 :You have not registered\r\n");
+		return;
+	}
+	for (int i(0); i < 16; i++)
+	{
+		if (_command == type[i]) {
+			(this->*function[i])();
+            if (_client->hasPassword() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
+				_client->registerUser(
+					_client->getNickname(),
+					_client->getUsername(),
+					_client->getRealname()
+				);
+                sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!\n");
+            }
+            return ;
+		}
+	}
+	sendToClient(_clientFd, "421 " + _command + " :Unknown command\n");
+	_commandLine.erase(0, _commandLine.size());
 }
