@@ -26,6 +26,7 @@ public:
     ~Server();
 
     void run();
+    typedef void (Server::*CommandFunc)();
 
 private:
     int _port;
@@ -35,17 +36,20 @@ private:
 
     std::map<std::string, Channel> _channels;
     std::map<int, Client*> _clients;
-    int _space, _clientFd;
+    int _clientFd;
     Client* _client;
+    static const std::string _type[16];
+    static CommandFunc _function[16];
 
     void initServerSocket();
     void handleNewConnection();
     void setNonBlocking(int fd);
 
-    void sendToClient(int fd, const std::string& msg);
     Client* getClientByNick(const std::string& nickname);
+    void closeAndRemoveClient(int fd);
     void handleCommand(int clientFd);
 
+    void sendToClient(int fd, const std::string& msg);
 	void sendReply(int code, Client* client, const std::string& arg1 = "", const std::string& arg2 = "", const std::string& trailing = "");
 
     void execCommand();

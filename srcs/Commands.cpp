@@ -1,27 +1,38 @@
 #include "Server.hpp"
 #include "Replies.hpp"
 
+const std::string Server::_type[16] = {
+    "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
+    "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG"
+};
+
+Server::CommandFunc Server::_function[16] = {
+    &Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg,
+    &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic,
+    &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong
+};
+
 void Server::execCommand()
 {
-	std::string type[16] = {"CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT", "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG"};
-    void (Server::*function[16])() = {&Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg, &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic, &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong};
-	for (int i(0); i < 16; i++)
-	{
-		if (_client->getCmd().empty()) {
-			sendToClient(_clientFd, "421 * :Empty command\r\n");
-			return;
-		}
-		if (_client->getCmd() == type[i])
-		{
-			(this->*function[i])();
+    // std::string type[16] = {"CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT", "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG"};
+    // void (Server::*function[16])() = {&Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg, &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic, &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong};
+    for (int i(0); i < 16; i++)
+    {
+        if (_client->getCmd().empty()) {
+            sendToClient(_clientFd, "421 * :Empty command\r\n");
+            return;
+        }
+        if (_client->getCmd() == _type[i])
+        {
+            (this->*_function[i])();
             if (_client->hasPassword() && _client->hasNick() && _client->hasUser() && !_client->isAuthenticated()) {
                 _client->authenticate();
                 sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!");
             }
             return ;
-		}
-	}
-	sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command");
+        }
+    }
+    sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command");
     _client->getBuffer().erase(0, _client->getBuffer().size());
 }
 
@@ -81,7 +92,7 @@ void Server::privmsg() {
     size_t pos = _client->getArg().find(":");
     if (pos != std::string::npos) {
         std::string part1(_client->getArg().substr(pos + 1)), part2(_client->getBuffer());
-        if (_space == 1)
+        if (_client->getSpace() == 1)
             part1 += " ";
         message = part1 + part2;
         _client->getArg() = _client->getArg().substr(0, pos);
@@ -128,8 +139,8 @@ void Server::join() {
         for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
             nickList += (*it)->getNickname() + " ";
         }
-		sendReply(353, _client, "=", _client->getArg(), nickList);
-		sendReply(366, _client, _client->getArg(), "", "End of /NAMES list.");
+        sendReply(353, _client, "=", _client->getArg(), nickList);
+        sendReply(366, _client, _client->getArg(), "", "End of /NAMES list.");
     }	//Ces codes ne sont pas des erreurs, mais des codes de réponse standards IRC.
 }
 
