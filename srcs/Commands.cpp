@@ -48,67 +48,42 @@ void Server::user() {
 }
 
 void Server::privmsg() {
-	if (_arg.empty()) {
-		sendToClient(_clientFd, "411 :No recipient given\r\n");
-		_commandLine.clear();
-		return;
-	}
-	std::string message;
-	size_t pos = _arg.find(":");
-	if (pos != std::string::npos) {
-		std::string part1(_arg.substr(pos + 1));
-		std::string part2(_commandLine);
-		if (_space == 1)
-			part1 += " ";
-		message = part1 + part2;
-		_arg = _arg.substr(0, pos);
-	} 
-	else {
-		std::istringstream iss(_commandLine);
-		std::getline(iss, message);
-		if (message.empty() || message[0] != ':') {
-			sendToClient(_clientFd, "412 :No text to send\r\n");
-			_commandLine.clear();
-			return;
-		}
-		message.erase(0, 1);
-	}
-	if (message.size() < 2 || message.substr(message.size() - 2) != "\r\n")
-		message += "\r\n";
-	if (message[0] == ' ')
-		message.erase(0, 1);
-	std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + _arg + " :" + BOLD + message;
-
-	// channel
-	if (_arg[0] == '#') {
-		std::map<std::string, Channel>::iterator it = _channels.find(_arg);
-		if (it == _channels.end()) {
-			sendToClient(_clientFd, "401 " + _arg + " :No such nick/channel\r\n");
-			_commandLine.clear();
-			return;
-		}
-		Channel& chan = it->second;
-		if (!chan.isMember(_client)) {
-			sendToClient(_clientFd, "404 " + _arg + " :Cannot send to channel\r\n");
-			_commandLine.clear();
-			return;
-		}
-		const std::set<Client*>& members = chan.getMembers();
-		for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-			if ((*it)->getFd() != _clientFd)
-				sendToClient((*it)->getFd(), fullMsg);
-		}
-	} 
-	else {
-		Client* target = getClientByNick(_arg);
-		if (!target) {
-			sendToClient(_clientFd, "401 " + _arg + " :No such nick/channel\r\n");
-		} 
-		else {
-			sendToClient(target->getFd(), fullMsg);
-		}
-	}
-	_commandLine.clear();
+    if (_client->getArg().empty()) {
+        sendToClient(_clientFd, "411 :No recipient given");
+        _client->getBuffer().erase(0, _client->getBuffer().size());
+        return;
+    }
+    std::string message;
+    size_t pos = _client->getArg().find(":");
+    if (pos != std::string::npos) {
+        std::string part1(_client->getArg().substr(pos + 1)), part2(_client->getBuffer());
+        if (_client->getSpace() == 1)
+            part1 += " ";
+        message = part1 + part2;
+        _client->getArg() = _client->getArg().substr(0, pos);
+    }
+    else {
+        std::istringstream iss(_client->getBuffer());
+        std::getline(iss, message);
+        if (message.empty() || message[0] != ':') {
+            sendToClient(_clientFd, "412 :No text to send");
+            _client->getBuffer().erase(0, _client->getBuffer().size());
+            return;
+        }
+        message.erase(0, 1);
+    }
+    Client* target = getClientByNick(_client->getArg());
+    if (!target) {
+        sendToClient(_clientFd, "401 " + _client->getArg() + " :No such nick/channel");
+        _client->getBuffer().erase(0, _client->getBuffer().size());
+        return;
+    }
+    if (message[0] == ' ')
+        message.erase(0, 1);
+    std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + _client->getNickname() + " :" + PINK + message + RESET;
+    sendToClient(target->getFd(), fullMsg);
+    // sendToClient(_clientFd, ":" + client->getPrefix() + " PRIVMSG " + target->getNickname() + " :" + message);
+    _client->getBuffer().erase(0, _client->getBuffer().size());
 }
 
 void Server::join() {
@@ -162,6 +137,7 @@ void Server::part() {
     }
 }
 
+
 void Server::quit() {
     std::cout << "Executing QUIT command." << std::endl;
     // Implementation for QUIT command
@@ -169,81 +145,41 @@ void Server::quit() {
 
 void Server::mode() {
     std::cout << "Executing MODE command." << std::endl;
+    // Implementation for MODE command
 }
 
 void Server::topic() {
     std::cout << "Executing TOPIC command." << std::endl;
+    // Implementation for TOPIC command
 }
 
 void Server::list() {
     std::cout << "Executing LIST command." << std::endl;
+    // Implementation for LIST command
 }
 
 void Server::invite() {
     std::cout << "Executing INVITE command." << std::endl;
+    // Implementation for INVITE command
 }
 
 void Server::kick() {
     std::cout << "Executing KICK command." << std::endl;
+    // Implementation for KICK command
 }
 
 void Server::notice() {
-	if (_arg.empty()) {
-		_commandLine.clear();
-		return;
-	}
-	std::string message;
-	size_t pos = _arg.find(":");
-	if (pos != std::string::npos) {
-		std::string part1(_arg.substr(pos + 1));
-		std::string part2(_commandLine);
-		if (_space == 1)
-			part1 += " ";
-		message = part1 + part2;
-		_arg = _arg.substr(0, pos);
-	} 
-	else {
-		std::istringstream iss(_commandLine);
-		std::getline(iss, message);
-		if (!message.empty() && message[0] == ':')
-			message.erase(0, 1);
-		else {
-			_commandLine.clear();
-			return;
-		}
-	}
-	if (message.size() < 2 || message.substr(message.size() - 2) != "\r\n")
-		message += "\r\n";
-	if (!message.empty() && message[0] == ' ')
-		message.erase(0, 1);
-	std::string fullMsg = ":" + _client->getPrefix() + " NOTICE " + _arg + " :" + BOLD + message;
-	if (_arg[0] == '#') {
-		std::map<std::string, Channel>::iterator it = _channels.find(_arg);
-		if (it != _channels.end()) {
-			Channel& chan = it->second;
-			const std::set<Client*>& members = chan.getMembers();
-			for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-				if ((*it)->getFd() != _clientFd)
-					sendToClient((*it)->getFd(), fullMsg);
-			}
-		}
-	} 
-	else {
-		Client* target = getClientByNick(_arg);
-		if (target)
-			sendToClient(target->getFd(), fullMsg);
-	}
-	_commandLine.clear();
+    std::cout << "Executing NOTICE command." << std::endl;
+    // Implementation for NOTICE command
 }
-
 
 void Server::ping() {
     std::cout << "Executing PING command." << std::endl;
-
+    // Implementation for PING command
 }
 
 void Server::pong() {
     std::cout << "Executing PONG command." << std::endl;
-
+    // Implementation for PONG command
 }
 
