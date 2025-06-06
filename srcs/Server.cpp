@@ -1,6 +1,7 @@
 #include "Server.hpp"
 
-Server::Server(int port, const std::string& password): _port(port), _password(password), _serverSocket(-1), _epollFd(-1), _command("")
+Server::Server(int port, const std::string& password):
+_port(port), _password(password), _serverSocket(-1), _epollFd(-1), _clientFd(-1)
 {
     std::cout << "Serveur IRC créé sur le port " << _port
               << " avec mot de passe : " << _password << std::endl << std::endl;
@@ -99,7 +100,16 @@ void Server::run() {
             } else {
                 char buffer[512];
                 ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
-                if (bytesRead <= 0) {
+                
+                if (bytesRead < 0) {
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+                    else
+                    {
+                        // erreur
+                    }
+                }
+                else if (bytesRead == 0)
+                {
                     // Client disconnected or error
                     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
                     {
@@ -114,15 +124,12 @@ void Server::run() {
                     continue;
                 }
                 buffer[bytesRead] = '\0';
-                _commandLine = buffer;
+                _client = _clients[fd];
+                _client->setBuf(std::string(buffer, bytesRead));
                 handleCommand(fd);
             }
         }
     }
-}
-
-void Server::sendToClient(int fd, const std::string& msg) {
-    send(fd, msg.c_str(), msg.length(), 0);
 }
 
 Client* Server::getClientByNick(const std::string& nickname) {
@@ -135,15 +142,14 @@ Client* Server::getClientByNick(const std::string& nickname) {
 
 void Server::handleCommand(int clientFd) {
 	// std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
-    _client = _clients[clientFd];
     _clientFd = clientFd;
-    while (_commandLine[0] != '\n' && !_commandLine.empty()) {
-        parseLine();
+    while ( _client->getBuffer()[0] != '\n' && ! _client->getBuffer().empty()) {
+        _client->parseLine();
         execCommand();
         // std::cout << "Command executed: " << _command << " " << _arg << std::endl;
     }
-    if (!_commandLine.empty()) {
-        _commandLine.erase(0, _commandLine.size());
+    if (! _client->getBuffer().empty()) {
+         _client->getBuffer().erase(0,  _client->getBuffer().size());
     }
 }
 
