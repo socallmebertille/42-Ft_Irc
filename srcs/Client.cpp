@@ -22,6 +22,7 @@ std::string Client::getBuffer() const { return _readBuf; }
 std::string Client::getCmd() const { return _command; }
 std::string Client::getArg() const { return _arg; }
 bool Client::getClientType() const { return _clientType; }
+int Client::getSpace() const { return _space; }
 
 bool Client::setNickname(const std::string& nick){
 	if (nick.empty())

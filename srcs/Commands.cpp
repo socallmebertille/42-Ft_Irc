@@ -129,8 +129,8 @@ void Server::join() {
         for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
             nickList += (*it)->getNickname() + " ";
         }
-		sendReply(353, _client, "=", _client->getArg(), nickList);
-		sendReply(366, _client, _client->getArg(), "", "End of /NAMES list.");
+        sendReply(353, _client, "=", _client->getArg(), nickList);
+        sendReply(366, _client, _client->getArg(), "", "End of /NAMES list.");
     }	//Ces codes ne sont pas des erreurs, mais des codes de réponse standards IRC.
 }
 

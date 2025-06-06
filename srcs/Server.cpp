@@ -90,41 +90,25 @@ void Server::run() {
     while (true) {
         // nb_events = wait_for_events (fd_to_monitor, events, max_events, infinite timeout)
         int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
-        if (nfds < 0) {
-            throw std::runtime_error("epoll_wait() failed");
-        }
+        if (nfds < 0) throw std::runtime_error("epoll_wait() failed");
         for (int i = 0; i < nfds; ++i) {
             int fd = events[i].data.fd;
             if (fd == _serverSocket) {
                 handleNewConnection();
-            } else {
-                char buffer[512];
+                continue;
+            }
+            char buffer[512];
+            _client = _clients[fd];
+            while (true) {
                 ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
                 
-                if (bytesRead < 0) {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK) break;
-                    else
-                    {
-                        // erreur
-                    }
-                }
-                else if (bytesRead == 0)
-                {
-                    // Client disconnected or error
-                    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-                    {
-                        if (fd == it->first) {
-                            std::cout << RED << "QUITTING of client : " << RESET;
-                            std::cout << "fd[" << it->first << "], nickname[" << it->second->getNickname() << "]" << std::endl;
-                            break;
-                        }
-                    }
-                    close(fd);
-                    _clients.erase(fd);
-                    continue;
+                if (bytesRead <= 0) {
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) break; // nothing to read & still non-blockant mode
+                    if (errno == EINTR) continue; // signal => retry
+                    closeAndRemoveClient(fd);
+                    break;
                 }
                 buffer[bytesRead] = '\0';
-                _client = _clients[fd];
                 _client->setBuf(std::string(buffer, bytesRead));
                 handleCommand(fd);
             }
@@ -140,10 +124,23 @@ Client* Server::getClientByNick(const std::string& nickname) {
     return NULL;
 }
 
+void Server::closeAndRemoveClient(int fd)
+{
+    std::map<int, Client*>::iterator it = _clients.find(fd);
+    if (it != _clients.end())
+    {
+        std::cout << RED << "QUITTING of client : " << RESET;
+        std::cout << "fd[" << it->first << "], nickname[" << it->second->getNickname() << "]" << std::endl;
+        delete it->second;
+        _clients.erase(it);
+    }
+    ::close(fd);
+}
+
 void Server::handleCommand(int clientFd) {
 	// std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
     _clientFd = clientFd;
-    while ( _client->getBuffer()[0] != '\n' && ! _client->getBuffer().empty()) {
+    while (_client->getBuffer()[0] != '\n' && ! _client->getBuffer().empty()) {
         _client->parseLine();
         execCommand();
         // std::cout << "Command executed: " << _command << " " << _arg << std::endl;

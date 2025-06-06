@@ -42,6 +42,7 @@ public:
 	std::string getCmd() const;
 	std::string getArg() const;
 	bool getClientType() const;
+	int getSpace() const;
 
 	void setUsername(const std::string& user);
 	bool setNickname(const std::string& nick);
