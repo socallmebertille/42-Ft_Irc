@@ -21,6 +21,7 @@ private:
 	std::string _readBuf, _command, _arg;   // tampons entrants et CMD + ARG
     bool _clientType; // true if netcat (msg without \r)
 	int _space;
+	bool _passOk;
 
 public:
 	Client(int fd, const std::string& ip);
@@ -58,6 +59,8 @@ public:
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
 
 	void parseLine();
+	
+	void setPasswordOk(bool ok);
 };
 
 #endif

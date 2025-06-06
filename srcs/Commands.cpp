@@ -7,21 +7,21 @@ void Server::cap() {
 }
 
 void Server::pass() {
-	if (_client->isRegistered()) {
-		sendToClient(_clientFd, "462 :You may not reregister\r\n");
-		return;
-	}
 	if (_client->getArg().empty()) {
 		sendToClient(_clientFd, "461 PASS :Not enough parameters\r\n");
 		return;
 	}
+	if (_client->isRegistered()) {
+		sendToClient(_clientFd, "462 :You may not reregister\r\n");
+		return;
+	}
 	if (_client->getArg() == _password) {
-		setPasswordOk(true);
+		std::cout << "[DEBUG] mot de passe correct, on setPasswordOk(true)\n";
+		_client->setPasswordOk(true);
 	} else {
 		sendToClient(_clientFd, "464 :Password incorrect\r\n");
 	}
 }
-
 
 void Server::nick() {
     if (_client->getArg().empty()) {
@@ -146,7 +146,6 @@ void Server::part() {
     }
 }
 
-
 void Server::quit() {
     std::cout << "Executing QUIT command." << std::endl;
     // Implementation for QUIT command
@@ -191,4 +190,3 @@ void Server::pong() {
     std::cout << "Executing PONG command." << std::endl;
     // Implementation for PONG command
 }
-

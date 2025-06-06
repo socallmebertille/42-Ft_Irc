@@ -166,34 +166,49 @@ void Server::handleCommand(int clientFd) {
 
 void Server::execCommand()
 {
-    if (_client->getCmd().empty()) {
-        sendToClient(_clientFd, "421 * :Empty command");
-        return;
-    }
-    static const std::string allowedArray[4] = { "CAP", "PASS", "NICK", "USER" };
-    static const std::set<std::string> allowedBeforeRegister(allowedArray, allowedArray + 4);
-    if (!_client->isRegistered() && allowedBeforeRegister.find(_client->getCmd()) == allowedBeforeRegister.end()) {
-        sendToClient(_clientFd, "451 :You have not registered");
-        return;
-    }
-    for (int i(0); i < 16; i++)
-    {
-        if (_client->getCmd() == _type[i]) {
-            (this->*_function[i])();
-            if (_client->hasPassword() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
-                _client->registerUser(
-                    _client->getNickname(),
-                    _client->getUsername(),
-                    _client->getRealname()
-                );
-                sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!");
-            }
-            return ;
-        }
-    }
-    sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command");
-    _client->eraseBuf();
+	if (_client->getCmd().empty()) {
+		sendToClient(_clientFd, "421 * :Empty command\r\n");
+		return;
+	}
+	// Commandes autorisées sans être identifié (auth)
+	static const std::string allowedPrePass[] = { "CAP", "PASS" };
+	bool isAllowedPrePass = false;
+	for (int i = 0; i < 2; ++i) {
+		if (_client->getCmd() == allowedPrePass[i]) {
+			isAllowedPrePass = true;
+			break;
+		}
+	}
+	if (!_client->hasPassword() && !isAllowedPrePass) {
+		sendToClient(_clientFd, "464 :Password incorrect\r\n");
+		return;
+	}
+	static const std::string allowedPreRegister[] = { "CAP", "PASS", "NICK", "USER" };
+	bool isAllowedPreReg = false;
+	for (int i = 0; i < 4; ++i) {
+		if (_client->getCmd() == allowedPreRegister[i]) {
+			isAllowedPreReg = true;
+			break;
+		}
+	}
+	if (!_client->isRegistered() && !isAllowedPreReg) {
+		sendToClient(_clientFd, "451 :You have not registered\r\n");
+		return;
+	}
+	for (int i = 0; i < 16; i++) {
+		if (_client->getCmd() == _type[i]) {
+			(this->*_function[i])();
+			if (_client->hasPassword() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
+				_client->registerUser(
+					_client->getNickname(),
+					_client->getUsername(),
+					_client->getRealname()
+				);
+				sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!\r\n");
+			}
+			return;
+		}
+	}
+	sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command\r\n");
+	_client->eraseBuf();
 }
-
-void Server::setPasswordOk(bool ok) { _passOk = ok; }
-bool Server::hasPassword() const { return _passOk; }

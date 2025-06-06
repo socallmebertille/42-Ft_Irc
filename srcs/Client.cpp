@@ -3,7 +3,7 @@
 Client::Client(int fd, const std::string& ip):
 _fd(fd), _ip(ip), _isRegistered(false), _username(""), _hasUser(false), _nickname(""),
 _hasNick(false), _realName(""), _password(""), _hasPassword(false), _readBuf(""),
-_command(""), _arg(""), _clientType(false), _space(0)
+_command(""), _arg(""), _clientType(false), _space(0), _passOk(false)
 {}
 
 Client::~Client() {}
@@ -14,7 +14,9 @@ const std::string& Client::getUsername() const{ return _username; }
 const std::string& Client::getNickname() const{ return _nickname; }
 const std::string& Client::getRealname() const{ return _realName; }
 const std::string& Client::getPassword() const { return _password; }
-bool Client::hasPassword() const { return _hasPassword; }
+// bool Client::hasPassword() const { return _hasPassword; }
+bool Client::hasPassword() const { return _passOk; }
+
 bool Client::hasNick() const { return _hasNick; }
 bool Client::hasUser() const { return _hasUser; }
 std::string Client::getPrefix() const { return _nickname + "!" + _username + "@localhost"; }
@@ -49,9 +51,7 @@ void Client::setArg(const std::string& arg)
 }
 void Client::setClientType(bool type) { _clientType = type; }
 
-bool Client::isRegistered() const {
-    return !_nickname.empty() && !_username.empty(); 
-}
+bool Client::isRegistered() const { return _isRegistered; }
 
 void Client::registerUser(const std::string& nick, const std::string& user, const std::string& real) {
 	setNickname(nick);
@@ -85,3 +85,5 @@ void Client::parseLine() {
             _space = 0;
     }
 }
+
+void Client::setPasswordOk(bool ok) { _passOk = ok; }

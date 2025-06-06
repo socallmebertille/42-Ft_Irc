@@ -69,10 +69,6 @@ private:
     void notice();
     void ping();
     void pong();
-
-	bool _passOk;
-	void setPasswordOk(bool ok);
-	bool hasPassword() const;
 };
 
 #endif
