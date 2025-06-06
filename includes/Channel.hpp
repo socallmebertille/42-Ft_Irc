@@ -35,6 +35,10 @@ public:
 	void join(Client* client);
 	void part(Client* client);
 	size_t getMemberCount() const;
+	
+	const std::set<Client*>& getMembers() const;
+
+
 };
 
 #endif
