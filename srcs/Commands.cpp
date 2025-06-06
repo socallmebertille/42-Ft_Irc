@@ -19,7 +19,7 @@ void Server::pass() {
 		std::cout << "[DEBUG] mot de passe correct, on setPasswordOk(true)\n";
 		_client->setPasswordOk(true);
 	} else {
-		sendToClient(_clientFd, "464 :Password incorrect\r\n");
+		sendToClient(_clientFd, "464 :Password incorrect");
 	}
 }
 
