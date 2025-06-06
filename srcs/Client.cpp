@@ -42,6 +42,12 @@ void Client::setBuf(const std::string& buf)
 {
 	_readBuf.append(buf);
 }
+void Client::eraseBuf() { _readBuf.erase(0, _readBuf.size()); }
+void Client::setArg(const std::string& arg)
+{
+	_arg.erase(0, _arg.size());
+	_arg = arg;
+}
 void Client::setClientType(bool type) { _clientType = type; }
 
 bool Client::isRegistered() const {

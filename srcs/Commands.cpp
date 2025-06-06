@@ -50,24 +50,26 @@ void Server::user() {
 void Server::privmsg() {
     if (_client->getArg().empty()) {
         sendToClient(_clientFd, "411 :No recipient given");
-        _client->getBuffer().erase(0, _client->getBuffer().size());
+        _client->eraseBuf();
         return;
     }
     std::string message;
     size_t pos = _client->getArg().find(":");
     if (pos != std::string::npos) {
-        std::string part1(_client->getArg().substr(pos + 1)), part2(_client->getBuffer());
+        std::string argCpy(_client->getArg());
+        std::string part1(argCpy.substr(pos + 1)), part2(_client->getBuffer());
         if (_client->getSpace() == 1)
             part1 += " ";
         message = part1 + part2;
-        _client->getArg() = _client->getArg().substr(0, pos);
+        argCpy = argCpy.substr(0, pos);
+        _client->setArg(argCpy);
     }
     else {
         std::istringstream iss(_client->getBuffer());
         std::getline(iss, message);
         if (message.empty() || message[0] != ':') {
             sendToClient(_clientFd, "412 :No text to send");
-            _client->getBuffer().erase(0, _client->getBuffer().size());
+            _client->eraseBuf();
             return;
         }
         message.erase(0, 1);
@@ -75,7 +77,7 @@ void Server::privmsg() {
     Client* target = getClientByNick(_client->getArg());
     if (!target) {
         sendToClient(_clientFd, "401 " + _client->getArg() + " :No such nick/channel");
-        _client->getBuffer().erase(0, _client->getBuffer().size());
+        _client->eraseBuf();
         return;
     }
     if (message[0] == ' ')
@@ -83,7 +85,7 @@ void Server::privmsg() {
     std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + _client->getNickname() + " :" + PINK + message + RESET;
     sendToClient(target->getFd(), fullMsg);
     // sendToClient(_clientFd, ":" + client->getPrefix() + " PRIVMSG " + target->getNickname() + " :" + message);
-    _client->getBuffer().erase(0, _client->getBuffer().size());
+    _client->eraseBuf();
 }
 
 void Server::join() {
@@ -95,7 +97,7 @@ void Server::join() {
     Channel& chan = result.first->second;
     if (!chan.isMember(_client)) {
         chan.join(_client);
-        std::string joinMsg = ":" + _client->getPrefix() + " JOIN :" + _client->getArg() + "\r\n";
+        std::string joinMsg = ":" + _client->getPrefix() + " JOIN :" + _client->getArg();
         const std::set<Client*>& members = chan.getMembers();
         for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
             sendToClient((*it)->getFd(), joinMsg);
@@ -124,7 +126,7 @@ void Server::part() {
         sendToClient(_clientFd, "ERROR :You're not in that channel");
         return;
     }
-    std::string partMsg = ":" + _client->getPrefix() + " PART " + _client->getArg() + "\r\n";
+    std::string partMsg = ":" + _client->getPrefix() + " PART " + _client->getArg();
     // Notifier tous les membres AVANT de retirer le client
     const std::set<Client*>& members = chan.getMembers();
     for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {

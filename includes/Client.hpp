@@ -52,6 +52,8 @@ public:
 	void markNick();
 	void markUser();
 	void setBuf(const std::string& buf);
+	void eraseBuf();
+	void setArg(const std::string& arg);
 	void setClientType(bool type);
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
 

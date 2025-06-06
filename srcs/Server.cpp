@@ -87,8 +87,8 @@ void Server::handleNewConnection() {
         if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) // add the new client fd to epoll with EPOLLIN and EPOLLET
             throw std::runtime_error("epoll_ctl() failed on new client");
         std::string ip = inet_ntoa(clientAddr.sin_addr); // convert the client IP address from binary to string format
-		Client* newClient = new Client(clientFd, ip);
-		_clients.insert(std::make_pair(clientFd, newClient));
+        Client* newClient = new Client(clientFd, ip);
+        _clients.insert(std::make_pair(clientFd, newClient));
 
         // std::cout << "New client connected: " << ip << " [fd: " << clientFd << "]" << std::endl;
         std::cout << GREEN << "ENTER of client : " << RESET;
@@ -112,10 +112,13 @@ void Server::run() {
             _client = _clients[fd];
             while (true) {
                 ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
-                
-                if (bytesRead <= 0) {
+                if (bytesRead < 0) {
                     if (errno == EAGAIN || errno == EWOULDBLOCK) break; // nothing to read & still non-blockant mode
                     if (errno == EINTR) continue; // signal => retry
+                    closeAndRemoveClient(fd);
+                    break;
+                }
+                else if (bytesRead == 0) {
                     closeAndRemoveClient(fd);
                     break;
                 }
@@ -149,7 +152,7 @@ void Server::closeAndRemoveClient(int fd)
 }
 
 void Server::handleCommand(int clientFd) {
-	// std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
+    // std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
     _clientFd = clientFd;
     while (_client->getBuffer()[0] != '\n' && ! _client->getBuffer().empty()) {
         _client->parseLine();
@@ -157,39 +160,37 @@ void Server::handleCommand(int clientFd) {
         // std::cout << "Command executed: " << _client->getCmd() << " " << _arg << std::endl;
     }
     if (! _client->getBuffer().empty()) {
-         _client->getBuffer().erase(0,  _client->getBuffer().size());
+        _client->eraseBuf();
     }
 }
 
 void Server::execCommand()
 {
-	std::string type[16] = {"CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT", "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG"};
-    void (Server::*function[16])() = {&Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg, &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic, &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong};
-	if (_client->getCmd().empty()) {
-		sendToClient(_clientFd, "421 * :Empty command\r\n");
-		return;
-	}
-	static const std::string allowedArray[4] = { "CAP", "PASS", "NICK", "USER" };
-	static const std::set<std::string> allowedBeforeRegister(allowedArray, allowedArray + 4);
-	if (!_client->isRegistered() && allowedBeforeRegister.find(_client->getCmd()) == allowedBeforeRegister.end()) {
-		sendToClient(_clientFd, "451 :You have not registered\r\n");
-		return;
-	}
-	for (int i(0); i < 16; i++)
-	{
-		if (_client->getCmd() == type[i]) {
-			(this->*function[i])();
+    if (_client->getCmd().empty()) {
+        sendToClient(_clientFd, "421 * :Empty command");
+        return;
+    }
+    static const std::string allowedArray[4] = { "CAP", "PASS", "NICK", "USER" };
+    static const std::set<std::string> allowedBeforeRegister(allowedArray, allowedArray + 4);
+    if (!_client->isRegistered() && allowedBeforeRegister.find(_client->getCmd()) == allowedBeforeRegister.end()) {
+        sendToClient(_clientFd, "451 :You have not registered");
+        return;
+    }
+    for (int i(0); i < 16; i++)
+    {
+        if (_client->getCmd() == _type[i]) {
+            (this->*_function[i])();
             if (_client->hasPassword() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
-				_client->registerUser(
-					_client->getNickname(),
-					_client->getUsername(),
-					_client->getRealname()
-				);
-                sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!\n");
+                _client->registerUser(
+                    _client->getNickname(),
+                    _client->getUsername(),
+                    _client->getRealname()
+                );
+                sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!");
             }
             return ;
-		}
-	}
-	sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command\n");
-	_client->getBuffer().erase(0, _client->getBuffer().size());
+        }
+    }
+    sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command");
+    _client->eraseBuf();
 }
