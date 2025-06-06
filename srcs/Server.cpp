@@ -1,6 +1,7 @@
 #include "Server.hpp"
 
-Server::Server(int port, const std::string& password): _port(port), _password(password), _serverSocket(-1), _epollFd(-1), _command("")
+Server::Server(int port, const std::string& password):
+_port(port), _password(password), _serverSocket(-1), _epollFd(-1), _clientFd(-1)
 {
     std::cout << "Serveur IRC créé sur le port " << _port
               << " avec mot de passe : " << _password << std::endl << std::endl;
@@ -123,21 +124,12 @@ void Server::run() {
                     continue;
                 }
                 buffer[bytesRead] = '\0';
-                _commandLine = buffer;
-                _client->setBuf(_commandLine, bytesRead);
+                _client = _clients[fd];
+                _client->setBuf(std::string(buffer, bytesRead));
                 handleCommand(fd);
             }
         }
     }
-}
-
-void Server::sendToClient(int fd, const std::string& msg) {
-    std::string formattedMsg = msg;
-    if (_client->getClientType() == false)
-        formattedMsg += "\r\n";
-    else
-        formattedMsg += "\n";
-    send(fd, formattedMsg.c_str(), formattedMsg.length(), 0);
 }
 
 Client* Server::getClientByNick(const std::string& nickname) {
@@ -151,14 +143,13 @@ Client* Server::getClientByNick(const std::string& nickname) {
 void Server::handleCommand(int clientFd) {
 
 	// std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
-    _client = _clients[clientFd];
     _clientFd = clientFd;
-    while (_commandLine[0] != '\n' && !_commandLine.empty()) {
-        parseLine();
+    while ( _client->getBuffer()[0] != '\n' && ! _client->getBuffer().empty()) {
+        _client->parseLine();
         execCommand();
         // std::cout << "Command executed: " << _command << " " << _arg << std::endl;
     }
-    if (!_commandLine.empty()) {
-        _commandLine.erase(0, _commandLine.size());
+    if (! _client->getBuffer().empty()) {
+         _client->getBuffer().erase(0,  _client->getBuffer().size());
     }
 }

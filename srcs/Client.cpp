@@ -1,6 +1,10 @@
 #include "Client.hpp"
 
-Client::Client(int fd, const std::string& ip) : _fd(fd), _ip(ip), _authenticated(false) {}
+Client::Client(int fd, const std::string& ip):
+_fd(fd), _ip(ip), _authenticated(false), _username(""), _hasUser(false), _nickname(""),
+_hasNick(false), _realName(""), _password(""), _hasPassword(false), _readBuf(""),
+_command(""), _arg(""), _clientType(false), _space(0)
+{}
 
 Client::~Client() {}
 
@@ -15,6 +19,8 @@ bool Client::hasNick() const { return _hasNick; }
 bool Client::hasUser() const { return _hasUser; }
 std::string Client::getPrefix() const { return _nickname + "!" + _username + "@localhost"; }
 std::string Client::getBuffer() const { return _readBuf; }
+std::string Client::getCmd() const { return _command; }
+std::string Client::getArg() const { return _arg; }
 bool Client::getClientType() const { return _clientType; }
 
 bool Client::setNickname(const std::string& nick){
@@ -31,9 +37,9 @@ void Client::setPassword(const std::string& passW) { _password = passW;}
 void Client::markPassword() { _hasPassword = true; }
 void Client::markNick() { _hasNick = true; }
 void Client::markUser() { _hasUser = true; }
-void Client::setBuf(const std::string& buf, ssize_t bytesRead)
+void Client::setBuf(const std::string& buf)
 {
-	_readBuf.append(buf, bytesRead);
+	_readBuf.append(buf);
 }
 void Client::setClientType(bool type) { _clientType = type; }
 
@@ -51,4 +57,30 @@ void Client::registerUser(const std::string& nick, const std::string& user, cons
 	setUsername(user);
 	setRealname(real);
 	_authenticated = true;
+}
+
+void Client::parseLine() {
+    std::istringstream iss(_readBuf);
+    if (_readBuf.find("\r\n", _readBuf.size() - 3) != std::string::npos) {
+        _readBuf.erase(_readBuf.find("\r\n", _readBuf.size() - 3), 2);
+		_clientType = false;
+    }
+    else if (_readBuf.find("\n", _readBuf.size() - 2) != std::string::npos) {
+        _readBuf.erase(_readBuf.find("\n", _readBuf.size() - 2), 1);
+		_clientType = true;
+    }
+    iss >> _command >> _arg;
+    _readBuf.erase(0, _command.size());
+    if (_readBuf[0] == ' ') {
+        _readBuf.erase(0, 1);
+    }
+    if (!_arg.empty()) {
+        if (_arg[_arg.size() - 1] != ' ' || _arg[_arg.size() - 1] != ':')
+            _space = 1;
+        _readBuf.erase(0, _arg.size());
+        if (_readBuf[0] == ' ')
+            _readBuf.erase(0, 1);
+        if (_readBuf.empty())
+            _space = 0;
+    }
 }
