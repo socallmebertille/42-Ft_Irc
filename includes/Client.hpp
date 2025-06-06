@@ -2,6 +2,8 @@
 # define CLIENT_HPP
 
 # include <iostream>
+# include <unistd.h>
+# include <sstream>
 
 class Client
 {
@@ -16,6 +18,9 @@ private:
 	std::string _realName;
 	std::string _password; //pr rej un channel protege
 	bool _hasPassword;
+	std::string _readBuf, _command, _arg;   // tampons entrants et CMD + ARG
+    bool _clientType; // true if netcat (msg without \r)
+	int _space;
 
 public:
 	Client(int fd, const std::string& ip);
@@ -33,6 +38,10 @@ public:
 	bool hasNick() const;
 	bool hasUser() const;
 	std::string getPrefix() const; // format "nickname!username@localhost"
+	std::string getBuffer() const;
+	std::string getCmd() const;
+	std::string getArg() const;
+	bool getClientType() const;
 
 	void setUsername(const std::string& user);
 	bool setNickname(const std::string& nick);
@@ -41,7 +50,11 @@ public:
 	void markPassword();
 	void markNick();
 	void markUser();
+	void setBuf(const std::string& buf);
+	void setClientType(bool type);
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
+
+	void parseLine();
 };
 
 #endif

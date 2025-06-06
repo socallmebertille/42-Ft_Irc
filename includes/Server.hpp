@@ -13,7 +13,6 @@
 # include <sys/epoll.h>
 # include <arpa/inet.h>
 # include <algorithm>
-# include <unistd.h>
 # include <cerrno>
 # include "Client.hpp"
 # include "Channel.hpp"
@@ -34,7 +33,6 @@ private:
     int _serverSocket;
     int _epollFd;
 
-    std::string _commandLine, _command, _arg;
     std::map<std::string, Channel> _channels;
     std::map<int, Client*> _clients;
     int _space, _clientFd;
@@ -50,7 +48,6 @@ private:
 
 	void sendReply(int code, Client* client, const std::string& arg1 = "", const std::string& arg2 = "", const std::string& trailing = "");
 
-    void parseLine();
     void execCommand();
     void cap();
     void pass();
