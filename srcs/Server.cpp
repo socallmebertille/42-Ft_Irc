@@ -26,80 +26,73 @@ Server::~Server()
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
         close(it->first);
-        delete it->second; // Free the Client object
+        delete it->second;
     }
 }
 
 void Server::setNonBlocking(int fd) {
-    // non-blocking mode = allow multiple connections without blocking
-    // modif_opt_socket (socker_id, modif_flag, active_non-blockant_mode)
     if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
         throw std::runtime_error("Erreur fcntl() pour mettre en non-bloquant");
     }
 }
 
 void Server::initServerSocket() {
-    _serverSocket = socket(AF_INET, SOCK_STREAM, 0); // socket_init (IPv4, TCP, default protocol)
+    _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverSocket < 0)
         throw std::runtime_error("socket() failed");
     setNonBlocking(_serverSocket);
-    // SO_REUSEADDR = reuse address/port even after shutdown
     int yes = 1;
     if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
         throw std::runtime_error("setsockopt() failed");
     }
-    sockaddr_in addr; // adress struct for IPv4
-    addr.sin_family = AF_INET; // address family (IPv4)
-    addr.sin_addr.s_addr = INADDR_ANY; // bind to any address (for listenning ALL clients)
-    addr.sin_port = htons(_port); // set port to sever & convert to network format (= big-endian)
-    if (bind(_serverSocket, (sockaddr*)&addr, sizeof(addr)) < 0) // bind the socket to the address
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(_port);
+    if (bind(_serverSocket, (sockaddr*)&addr, sizeof(addr)) < 0)
         throw std::runtime_error("bind() failed");
-    if (listen(_serverSocket, SOMAXCONN) < 0) // put the socket in listening mode & SOMAXCONN = max number of pending connections
+    if (listen(_serverSocket, SOMAXCONN) < 0)
         throw std::runtime_error("listen() failed");
-    _epollFd = epoll_create1(0); // create the epoll file descriptor
+    _epollFd = epoll_create1(0);
     if (_epollFd < 0)
         throw std::runtime_error("epoll_create1() failed");
-    struct epoll_event ev; // struct to monitor events on fd
-    ev.events = EPOLLIN | EPOLLET; // EPOLLIN (on server socket) = notif when new client, EPOLLET = edge-triggered mode
+    struct epoll_event ev;
+    ev.events = EPOLLIN | EPOLLET;
     ev.data.fd = _serverSocket;
-    if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, _serverSocket, &ev) < 0) // add the server socket to epoll with EPOLLIN and EPOLLET
+    if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, _serverSocket, &ev) < 0)
         throw std::runtime_error("epoll_ctl() failed");
-
-    std::cout << "Server listening on port " << _port << std::endl;
 }
 
 void Server::handleNewConnection() {
-    // EDGE-TRIGGERED MODE: loop until accept() returns EAGAIN or EWOULDBLOCK
     while (true) {
-        sockaddr_in clientAddr; // adress struct to get ip & port of the client
+        sockaddr_in clientAddr;
         socklen_t len = sizeof(clientAddr);
-        int clientFd = accept(_serverSocket, (sockaddr*)&clientAddr, &len); // get new client connection in a fd
+        int clientFd = accept(_serverSocket, (sockaddr*)&clientAddr, &len);
         if (clientFd < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) // no more clients to accept
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
                 break;
             else
                 throw std::runtime_error("accept() failed");
         }
         setNonBlocking(clientFd);
-        struct epoll_event ev; // struct to monitor events on the new client fd
+        struct epoll_event ev;
         ev.events = EPOLLIN | EPOLLET;
         ev.data.fd = clientFd;
-        if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) // add the new client fd to epoll with EPOLLIN and EPOLLET
+        if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0)
             throw std::runtime_error("epoll_ctl() failed on new client");
-        std::string ip = inet_ntoa(clientAddr.sin_addr); // convert the client IP address from binary to string format
+
+        std::string ip = inet_ntoa(clientAddr.sin_addr);
         Client* newClient = new Client(clientFd, ip);
         _clients.insert(std::make_pair(clientFd, newClient));
 
-        // std::cout << "New client connected: " << ip << " [fd: " << clientFd << "]" << std::endl;
         std::cout << GREEN << "ENTER of client : " << RESET;
-        std::cout << "fd[" << clientFd << "], nickname[" << newClient->getNickname() << "]" << std::endl;
+        std::cout << "fd[" << clientFd << "], ip[" << ip << "]" << std::endl;
     }
 }
 
 void Server::run() {
     struct epoll_event events[MAX_EVENTS];
     while (true) {
-        // nb_events = wait_for_events (fd_to_monitor, events, max_events, infinite timeout)
         int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
         if (nfds < 0) throw std::runtime_error("epoll_wait() failed");
         for (int i = 0; i < nfds; ++i) {
@@ -113,8 +106,8 @@ void Server::run() {
             while (true) {
                 ssize_t bytesRead = recv(fd, buffer, sizeof(buffer) - 1, 0);
                 if (bytesRead < 0) {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK) break; // nothing to read & still non-blockant mode
-                    if (errno == EINTR) continue; // signal => retry
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+                    if (errno == EINTR) continue;
                     closeAndRemoveClient(fd);
                     break;
                 }
@@ -152,70 +145,62 @@ void Server::closeAndRemoveClient(int fd)
 }
 
 void Server::handleCommand(int clientFd) {
-    // std::cout << "Commande brute reçue de fd " << clientFd << " : [" << line << "]" << std::endl;
     _clientFd = clientFd;
-    while (! _client->getBuffer().empty() && _client->getBuffer()[0] != '\n') {
+    while (!_client->getBuffer().empty()) {
         _client->parseLine();
+        if (_client->getCmd().empty()) {
+            break;
+        }
         execCommand();
-        // std::cout << "Command executed: " << _client->getCmd() << " " << _arg << std::endl;
-    }
-    if (!_client->getBuffer().empty()) {
-        _client->eraseBuf();
     }
 }
 
+void Server::parseAndExecuteCommand(const std::string& line) {
+    if (line.empty()) {
+        return;
+    }
+
+    // La commande a déjà été parsée dans Client::parseLine(), donc on peut juste exécuter
+    execCommand();
+}
+
 void Server::execCommand() {
-	if (_client->getCmd().empty()) {
-		sendToClient(_clientFd, "421 * :Empty command\r\n");
-		return;
-	}
+    if (_client->getCmd().empty()) {
+        sendToClient(_clientFd, "421 * :Empty command\r\n");
+        return;
+    }
 
-	// cmd autorisées avant validation du PASS
-	const std::string allowedBeforePass[] = { "CAP", "PASS", "NICK", "USER", "PING" };
-	bool isAllowedBeforePass = false;
-	for (int i = 0; i < 5; ++i) {
-		if (_client->getCmd() == allowedBeforePass[i]) {
-			isAllowedBeforePass = true;
-			break;
-		}
-	}
-	if (!_client->isPasswordOk() && (_client->getCmd() == "CAP" || _client->getCmd() == "PING")) {
-		return;
-	}
-	if (!_client->isPasswordOk() && !isAllowedBeforePass) {
-		if (!_client->hasSentPassError()) {
-			sendToClient(_clientFd, "464 * :Password required\r\n");
-			_client->setPassErrorSent(true);
-		}
-		return;
-	}
-	const std::string allowedBeforeRegister[] = { "CAP", "PASS", "NICK", "USER", "PING" };
-	bool isAllowedPreReg = false;
-	for (int i = 0; i < 5; ++i) {
-		if (_client->getCmd() == allowedBeforeRegister[i]) {
-			isAllowedPreReg = true;
-			break;
-		}
-	}
-	if (!_client->isRegistered() && !isAllowedPreReg) {
-		sendToClient(_clientFd, "451 * :You have not registered\r\n");
-		return;
-	}
-	for (int i = 0; i < 16; i++) {
-		if (_client->getCmd() == _type[i]) {
-			(this->*_function[i])();
+    std::string const& cmd = _client->getCmd();
 
-			if (_client->isPasswordOk() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
-				_client->registerUser(
-					_client->getNickname(),
-					_client->getUsername(),
-					_client->getRealname()
-				);
-				sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!\r\n");
-			}
-			return;
-		}
-	}
-	sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command\r\n");
+    // Toujours autoriser CAP
+    if (cmd == "CAP") {
+        cap();
+        return;
+    }
+
+    // Vérifier le mot de passe pour toutes les autres commandes
+    if (!_client->isPasswordOk() && cmd != "PASS") {
+        sendToClient(_clientFd, "464 * :Password required\r\n");
+        return;
+    }
+
+    // Exécuter la commande si elle existe
+    for (int i = 0; i < 16; i++) {
+        if (cmd == _type[i]) {
+            (this->*_function[i])();
+
+            // Vérifier si on peut enregistrer l'utilisateur
+            if (_client->isPasswordOk() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
+                _client->registerUser(
+                    _client->getNickname(),
+                    _client->getUsername(),
+                    _client->getRealname()
+                );
+                sendToClient(_clientFd, "001 " + _client->getNickname() + " :Welcome to the IRC server!\r\n");
+            }
+            return;
+        }
+    }
+    sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command\r\n");
 }
 

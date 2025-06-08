@@ -3,70 +3,150 @@
 
 
 void Server::cap() {
-	// std::string arg = _client->getArg();
+    std::string arg = _client->getArg();
+    if (arg.empty()) {
+        return;
+    }
 
-	// if (arg == "LS") {
-	// 	sendToClient(_clientFd, "CAP * LS :\r\n");
-	// } else if (arg == "REQ") {
-	// 	sendToClient(_clientFd, "CAP * NAK :" + _client->getBuffer() + "\r\n");
-	// } else if (arg == "END") {
-	// 	// Fin de négociation, rien à envoyer mais très important pour que Irssi avance
-	// 	std::cout << "[DEBUG] Fin de CAP négociation (END reçu)" << std::endl;
-	// } else {
-	// 	sendToClient(_clientFd, "CAP * UNKNOWN :" + arg + "\r\n");
-	// }
+    if (arg == "LS") {
+        sendToClient(_clientFd, "CAP * LS :\r\n");
+        sendToClient(_clientFd, "CAP * END\r\n");
+    }
+    else if (arg == "REQ") {
+        sendToClient(_clientFd, "CAP * NAK :\r\n");
+        sendToClient(_clientFd, "CAP * END\r\n");
+    }
+    else if (arg == "LIST") {
+        sendToClient(_clientFd, "CAP * LIST :\r\n");
+        sendToClient(_clientFd, "CAP * END\r\n");
+    }
+    else if (arg == "END") {
+        sendToClient(_clientFd, "CAP * END\r\n");
+    }
 }
 
+void Server::ping() {
+    if (_client->getArg().empty()) {
+        sendToClient(_clientFd, "409 :No origin specified\r\n");
+        return;
+    }
+    std::string response = "PONG :" + _client->getArg() + "\r\n";
+    sendToClient(_clientFd, response);
+}
 
+void Server::pong() {
+    // No need to handle PONG responses from client
+    return;
+}
 
 void Server::pass() {
-	if (_client->isRegistered()) {
-		sendToClient(_clientFd, "462 :You may not reregister\r\n");
-		return;
-	}
-	if (_client->getArg().empty()) {
-		sendToClient(_clientFd, "461 PASS :Not enough parameters\r\n");
-		return;
-	}
+    if (_client->isRegistered()) {
+        sendToClient(_clientFd, "462 :You may not reregister\r\n");
+        return;
+    }
+    if (_client->getArg().empty()) {
+        sendToClient(_clientFd, "461 PASS :Not enough parameters\r\n");
+        return;
+    }
 
-	std::string inputPass = _client->getArg();
-	inputPass.erase(inputPass.find_last_not_of(" \r\n") + 1);
+    std::string inputPass = _client->getArg();
+    inputPass.erase(inputPass.find_last_not_of(" \r\n") + 1);
 
-	if (inputPass == _password) {
-		std::cout << "[DEBUG] mot de passe correct, on setPasswordOk(true)\n";
-		_client->setPasswordOk(true);
-		_client->setPassErrorSent(false);
-	} else {
-		std::cout << "[DEBUG] mot de passe incorrect\n";
-		sendToClient(_clientFd, "464 :Password incorrect\r\n");
-	}
+    if (inputPass == _password) {
+        _client->setPasswordOk(true);
+        _client->setPassErrorSent(false);
+    } else {
+        std::cout << "[DEBUG] mot de passe incorrect : [" << inputPass << "] vs [" << _password << "]\n";
+        sendToClient(_clientFd, "464 :Password incorrect\r\n");
+        _client->setPasswordOk(false);
+    }
 }
 
 
 void Server::nick() {
     if (_client->getArg().empty()) {
-        sendToClient(_clientFd, "431 :No nickname given");
+        sendToClient(_clientFd, "431 " + _client->getNickname() + " :No nickname given\r\n");
         return;
     }
+
+    // Nettoyer le nouveau nickname
+    std::string newNick = _client->getArg();
+    size_t firstSpace = newNick.find_first_of(" \t\r\n");
+    if (firstSpace != std::string::npos) {
+        newNick = newNick.substr(0, firstSpace);
+    }
+
+    // Vérifier si le nickname est déjà utilisé
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-        if (it->second->getNickname() == _client->getArg() && it->first != _clientFd) {
-            sendToClient(_clientFd, "433 * " + _client->getArg() + " :Nickname is already in use");
+        if (it->second->getNickname() == newNick && it->first != _clientFd) {
+            sendToClient(_clientFd, "433 * " + newNick + " :Nickname is already in use\r\n");
             return;
         }
     }
-    _client->setNickname(_client->getArg());
-    _client->markNick();
-	std::cout << "[DEBUG] Nickname set to " << _client->getArg() << std::endl;
 
+    std::string oldNick = _client->getNickname();
+    if (!_client->setNickname(newNick)) {
+        sendToClient(_clientFd, "432 * " + newNick + " :Erroneous nickname\r\n");
+        return;
+    }
+    _client->markNick();
+
+    // Envoyer le message de confirmation du changement de pseudo
+    std::string prefix = oldNick.empty() ? "*" : oldNick;
+    std::string nickMsg = ":" + prefix + "!" + (_client->getUsername().empty() ? "*" : _client->getUsername()) + "@localhost NICK :" + newNick + "\r\n";
+    sendToClient(_clientFd, nickMsg);
+
+    // Si l'utilisateur a déjà fourni son nom d'utilisateur et le mot de passe est OK, on peut le marquer comme enregistré
+    if (_client->hasUser() && _client->isPasswordOk() && !_client->isRegistered()) {
+        _client->registerUser(newNick, _client->getUsername(), _client->getRealname());
+        sendReply(RPL_WELCOME, _client, "", "", "Welcome to the Internet Relay Network " + _client->getPrefix());
+    }
 }
 
 void Server::user() {
-    if (_client->getArg().empty()) {
+    if (_client->isRegistered()) {
+        sendToClient(_clientFd, "462 :You may not reregister");
+        return;
+    }
+
+    std::string args = _client->getArg();
+    std::string& buffer = _client->getBuffer();
+
+    // Trouver la position du realname (commence par :)
+    size_t realNamePos = args.find(" :");
+    if (realNamePos == std::string::npos) {
+        realNamePos = buffer.find(":");
+        if (realNamePos != std::string::npos) {
+            args += buffer.substr(realNamePos);
+        }
+    }
+
+    std::istringstream iss(args);
+    std::string username, hostname, servername, realname;
+
+    // Extraire username, hostname, servername
+    if (!(iss >> username >> hostname >> servername)) {
         sendToClient(_clientFd, "461 USER :Not enough parameters");
         return;
     }
-    _client->setUsername(_client->getArg());
+
+    // Extraire realname (peut contenir des espaces)
+    if (realNamePos != std::string::npos) {
+        realname = args.substr(realNamePos + 2); // +2 pour sauter " :"
+    } else {
+        sendToClient(_clientFd, "461 USER :Not enough parameters");
+        return;
+    }
+
+    _client->setUsername(username);
+    _client->setRealname(realname);
     _client->markUser();
+
+    // Si le client a déjà un nickname et le mot de passe est OK, on peut le marquer comme enregistré
+    if (_client->hasNick() && _client->isPasswordOk()) {
+        _client->registerUser(_client->getNickname(), username, realname);
+        sendReply(RPL_WELCOME, _client, "", "", "Welcome to the Internet Relay Network " + _client->getPrefix());
+    }
 }
 
 void Server::privmsg() {
@@ -79,7 +159,8 @@ void Server::privmsg() {
     size_t pos = _client->getArg().find(":");
     if (pos != std::string::npos) {
         std::string argCpy(_client->getArg());
-        std::string part1(argCpy.substr(pos + 1)), part2(_client->getBuffer());
+        std::string& buffer = _client->getBuffer();
+        std::string part1(argCpy.substr(pos + 1)), part2(buffer);
         if (_client->getSpace() == 1)
             part1 += " ";
         message = part1 + part2;
@@ -199,14 +280,4 @@ void Server::kick() {
 void Server::notice() {
     std::cout << "Executing NOTICE command." << std::endl;
     // Implementation for NOTICE command
-}
-
-void Server::ping() {
-    std::cout << "Executing PING command." << std::endl;
-    // Implementation for PING command
-}
-
-void Server::pong() {
-    std::cout << "Executing PONG command." << std::endl;
-    // Implementation for PONG command
 }

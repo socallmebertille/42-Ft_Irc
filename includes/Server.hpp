@@ -69,6 +69,7 @@ private:
     void notice();
     void ping();
     void pong();
+    void parseAndExecuteCommand(const std::string& line);
 };
 
 #endif

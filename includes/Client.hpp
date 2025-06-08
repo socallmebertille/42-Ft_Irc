@@ -4,6 +4,7 @@
 # include <iostream>
 # include <unistd.h>
 # include <sstream>
+# include <algorithm>  // Pour std::transform
 
 class Client
 {
@@ -40,7 +41,7 @@ public:
 	bool hasNick() const;
 	bool hasUser() const;
 	std::string getPrefix() const; // format "nickname!username@localhost"
-	std::string getBuffer() const;
+	std::string& getBuffer();
 	std::string getCmd() const;
 	std::string getArg() const;
 	bool getClientType() const;
@@ -60,12 +61,13 @@ public:
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
 
 	void parseLine();
-	
+
 	void setPasswordOk(bool ok);
+	void setCommand(const std::string& cmd);
 
 	bool hasSentPassError() const { return _passErrorSent; }
 	void setPassErrorSent(bool v) { _passErrorSent = v; }
-	
+
 };
 
 #endif
