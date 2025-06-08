@@ -1,34 +1,53 @@
 #include "Server.hpp"
 #include "Replies.hpp"
 
+
 void Server::cap() {
-    std::cout << "Executing CAP command." << std::endl;
-    // Implementation for CAP command
+	// std::string arg = _client->getArg();
+
+	// if (arg == "LS") {
+	// 	sendToClient(_clientFd, "CAP * LS :\r\n");
+	// } else if (arg == "REQ") {
+	// 	sendToClient(_clientFd, "CAP * NAK :" + _client->getBuffer() + "\r\n");
+	// } else if (arg == "END") {
+	// 	// Fin de négociation, rien à envoyer mais très important pour que Irssi avance
+	// 	std::cout << "[DEBUG] Fin de CAP négociation (END reçu)" << std::endl;
+	// } else {
+	// 	sendToClient(_clientFd, "CAP * UNKNOWN :" + arg + "\r\n");
+	// }
 }
 
+
+
 void Server::pass() {
-	if (_client->getArg().empty()) {
-		sendToClient(_clientFd, "461 PASS :Not enough parameters\r\n");
-		return;
-	}
 	if (_client->isRegistered()) {
 		sendToClient(_clientFd, "462 :You may not reregister\r\n");
 		return;
 	}
-	if (_client->getArg() == _password) {
+	if (_client->getArg().empty()) {
+		sendToClient(_clientFd, "461 PASS :Not enough parameters\r\n");
+		return;
+	}
+
+	std::string inputPass = _client->getArg();
+	inputPass.erase(inputPass.find_last_not_of(" \r\n") + 1);
+
+	if (inputPass == _password) {
 		std::cout << "[DEBUG] mot de passe correct, on setPasswordOk(true)\n";
 		_client->setPasswordOk(true);
+		_client->setPassErrorSent(false);
 	} else {
-		sendToClient(_clientFd, "464 :Password incorrect");
+		std::cout << "[DEBUG] mot de passe incorrect\n";
+		sendToClient(_clientFd, "464 :Password incorrect\r\n");
 	}
 }
+
 
 void Server::nick() {
     if (_client->getArg().empty()) {
         sendToClient(_clientFd, "431 :No nickname given");
         return;
     }
-    // Check nickname uniqueness
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->second->getNickname() == _client->getArg() && it->first != _clientFd) {
             sendToClient(_clientFd, "433 * " + _client->getArg() + " :Nickname is already in use");
@@ -37,9 +56,8 @@ void Server::nick() {
     }
     _client->setNickname(_client->getArg());
     _client->markNick();
-    std::string message;
-    message = MAGENTA "NOTICE * :Nickname " + _client->getArg() + " save" RESET;
-    sendToClient(_clientFd, message);
+	std::cout << "[DEBUG] Nickname set to " << _client->getArg() << std::endl;
+
 }
 
 void Server::user() {
@@ -49,9 +67,6 @@ void Server::user() {
     }
     _client->setUsername(_client->getArg());
     _client->markUser();
-    std::string message;
-    message = MAGENTA "NOTICE * :User " + _client->getArg() + " save" RESET;
-    sendToClient(_clientFd, message);
 }
 
 void Server::privmsg() {
@@ -115,7 +130,7 @@ void Server::join() {
         }
         sendReply(353, _client, "=", _client->getArg(), nickList);
         sendReply(366, _client, _client->getArg(), "", "End of /NAMES list.");
-    }	//Ces codes ne sont pas des erreurs, mais des codes de réponse standards IRC.
+    }
 }
 
 void Server::part() {
@@ -152,9 +167,14 @@ void Server::quit() {
 }
 
 void Server::mode() {
-    std::cout << "Executing MODE command." << std::endl;
-    // Implementation for MODE command
+	if (_client->getArg().empty()) {
+		sendToClient(_clientFd, "461 MODE :Not enough parameters\r\n");
+		return;
+	}
+	// Pour l'instant on ignore les modes, mais on évite l'erreur
+	sendToClient(_clientFd, "324 " + _client->getNickname() + " +\r\n");
 }
+
 
 void Server::topic() {
     std::cout << "Executing TOPIC command." << std::endl;

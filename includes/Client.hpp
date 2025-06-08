@@ -22,6 +22,7 @@ private:
     bool _clientType; // true if netcat (msg without \r)
 	int _space;
 	bool _passOk;
+	bool _passErrorSent;
 
 public:
 	Client(int fd, const std::string& ip);
@@ -35,7 +36,7 @@ public:
 	const std::string& getNickname() const;
 	const std::string& getRealname() const;
 	const std::string& getPassword() const;
-	bool hasPassword() const;
+	bool isPasswordOk() const;
 	bool hasNick() const;
 	bool hasUser() const;
 	std::string getPrefix() const; // format "nickname!username@localhost"
@@ -61,6 +62,10 @@ public:
 	void parseLine();
 	
 	void setPasswordOk(bool ok);
+
+	bool hasSentPassError() const { return _passErrorSent; }
+	void setPassErrorSent(bool v) { _passErrorSent = v; }
+	
 };
 
 #endif

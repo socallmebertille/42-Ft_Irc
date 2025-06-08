@@ -12,7 +12,7 @@ Server::CommandFunc Server::_function[16] = {
 };
 
 Server::Server(int port, const std::string& password):
-_port(port), _password(password), _serverSocket(-1), _epollFd(-1), _clientFd(-1)
+_port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password)
 {
     std::cout << "Serveur IRC créé sur le port " << _port
               << " avec mot de passe : " << _password << std::endl << std::endl;
@@ -164,41 +164,48 @@ void Server::handleCommand(int clientFd) {
     }
 }
 
-void Server::execCommand()
-{
+void Server::execCommand() {
 	if (_client->getCmd().empty()) {
 		sendToClient(_clientFd, "421 * :Empty command\r\n");
 		return;
 	}
-	// Commandes autorisées sans être identifié (auth)
-	static const std::string allowedPrePass[] = { "CAP", "PASS" };
-	bool isAllowedPrePass = false;
-	for (int i = 0; i < 2; ++i) {
-		if (_client->getCmd() == allowedPrePass[i]) {
-			isAllowedPrePass = true;
+
+	// cmd autorisées avant validation du PASS
+	const std::string allowedBeforePass[] = { "CAP", "PASS", "NICK", "USER", "PING" };
+	bool isAllowedBeforePass = false;
+	for (int i = 0; i < 5; ++i) {
+		if (_client->getCmd() == allowedBeforePass[i]) {
+			isAllowedBeforePass = true;
 			break;
 		}
 	}
-	if (!_client->hasPassword() && !isAllowedPrePass) {
-		sendToClient(_clientFd, "464 :Password incorrect\r\n");
+	if (!_client->isPasswordOk() && (_client->getCmd() == "CAP" || _client->getCmd() == "PING")) {
 		return;
 	}
-	static const std::string allowedPreRegister[] = { "CAP", "PASS", "NICK", "USER" };
+	if (!_client->isPasswordOk() && !isAllowedBeforePass) {
+		if (!_client->hasSentPassError()) {
+			sendToClient(_clientFd, "464 * :Password required\r\n");
+			_client->setPassErrorSent(true);
+		}
+		return;
+	}
+	const std::string allowedBeforeRegister[] = { "CAP", "PASS", "NICK", "USER", "PING" };
 	bool isAllowedPreReg = false;
-	for (int i = 0; i < 4; ++i) {
-		if (_client->getCmd() == allowedPreRegister[i]) {
+	for (int i = 0; i < 5; ++i) {
+		if (_client->getCmd() == allowedBeforeRegister[i]) {
 			isAllowedPreReg = true;
 			break;
 		}
 	}
 	if (!_client->isRegistered() && !isAllowedPreReg) {
-		sendToClient(_clientFd, "451 :You have not registered\r\n");
+		sendToClient(_clientFd, "451 * :You have not registered\r\n");
 		return;
 	}
 	for (int i = 0; i < 16; i++) {
 		if (_client->getCmd() == _type[i]) {
 			(this->*_function[i])();
-			if (_client->hasPassword() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
+
+			if (_client->isPasswordOk() && _client->hasNick() && _client->hasUser() && !_client->isRegistered()) {
 				_client->registerUser(
 					_client->getNickname(),
 					_client->getUsername(),
@@ -210,5 +217,5 @@ void Server::execCommand()
 		}
 	}
 	sendToClient(_clientFd, "421 " + _client->getCmd() + " :Unknown command\r\n");
-	_client->eraseBuf();
 }
+
