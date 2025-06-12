@@ -121,6 +121,11 @@ void Server::privmsg() {
 		return;
 	}
 	std::string message;
+	if (_client->getArg().find(":") == std::string::npos) {
+		sendToClient(_clientFd, "412 :No text to send\r\n");
+		_client->eraseBuf();
+		return;
+	}
 	size_t pos = _client->getArg().find(":");
 	if (pos != std::string::npos) {
 		std::string argCpy(_client->getArg());
@@ -158,6 +163,11 @@ void Server::join() {
 	}
 	std::pair<std::map<std::string, Channel>::iterator, bool> result = _channels.insert(std::make_pair(_client->getArg(), Channel(_client->getArg())));
 	Channel& chan = result.first->second;
+	if (result.second) {
+		chan.addOperator(_client);
+		std::string modeMsg = ":" + _client->getPrefix() + " MODE " + _client->getArg() + " +o " + _client->getNickname() + "\r\n";
+		sendToClient(_clientFd, modeMsg);
+	}
 	if (!chan.isMember(_client)) {
 		chan.join(_client);
 		std::string joinMsg = ":" + _client->getPrefix() + " JOIN :" + _client->getArg() + "\r\n";
@@ -198,8 +208,26 @@ void Server::part() {
 }
 
 void Server::quit() {
+	// std::string quitMessage = _client->getArg().empty() ? "Client Quit" : _client->getArg();
+	// std::string quitMsg = ":" + _client->getPrefix() + " QUIT :" + quitMessage + "\r\n";
+
+	// for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+	// 	Channel& chan = it->second;
+	// 	if (chan.isMember(_client)) {
+	// 		const std::set<Client*>& members = chan.getMembers();
+	// 		for (std::set<Client*>::const_iterator mit = members.begin(); mit != members.end(); ++mit) {
+	// 			if (*mit != _client)
+	// 				sendToClient((*mit)->getFd(), quitMsg);
+	// 		}
+	// 		chan.part(_client);
+	// 	}
+	// }
+
+	// // Fermer la connexion et supprimer le client
+	// disconnectClient(_clientFd);
 	return;
 }
+
 
 void Server::mode() {
 	if (_client->getArg().empty()) {
@@ -218,12 +246,107 @@ void Server::list() {
 }
 
 void Server::invite() {
-	return;
+	std::vector<std::string> args = ft_split(_client->getArg(), ' ');
+	if (args.size() < 2) {
+		sendToClient(_clientFd, "ERROR :Not enough parameters for INVITE\r\n");
+		return;
+	}
+	std::string targetNick = args[0];
+	std::string channelName = args[1];
+
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it == _channels.end()) {
+		sendToClient(_clientFd, "ERROR :No such channel\r\n");
+		return;
+	}
+	Channel& chan = it->second;
+	if (!chan.isOperator(_client)) {
+		sendToClient(_clientFd, "ERROR :You're not channel operator\r\n");
+		return;
+	}
+	Client* target = getClientByNick(targetNick);
+	if (!target) {
+		sendToClient(_clientFd, "ERROR :No such user\r\n");
+		return;
+	}
+	if (chan.isMember(target)) {
+		sendToClient(_clientFd, "ERROR :User is already in the channel\r\n");
+		return;
+	}
+	chan.invite(target);
+	std::string inviteMsg = ":" + _client->getPrefix() + " INVITE " + targetNick + " :" + channelName + "\r\n";
+	sendToClient(target->getFd(), inviteMsg);
+	sendToClient(_clientFd, "INVITE sent\r\n");
+	if (!chan.isOperator(_client)) {
+		std::string errMsg = std::string(":") + SERVER_NAME + " 482 " + _client->getNickname()
+			+ " " + channelName + " :You're not channel operator\r\n";
+		sendToClient(_clientFd, errMsg);
+		return;
+	}
+
+
+	// if (chan.isInviteOnly() && !chan.isInvited(_client)) {
+	// 	sendToClient(_clientFd, "ERROR :Channel is invite-only\r\n");
+	// 	return;
+	// }
+
 }
 
-void Server::kick() {
-	return;
+
+
+void Server::kick() //expulse un utilisateur d’un channel
+{
+	if (!_client->isRegistered()) {
+		sendToClient(_clientFd, "451 " + _client->getNickname() + " :You have not registered\r\n");
+		return;
+	}
+
+	std::vector<std::string> args = ft_split(_client->getArg(), ' ');
+	if (args.size() < 2) {
+		sendToClient(_clientFd, "461 " + _client->getNickname() + " KICK :Not enough parameters\r\n");
+		return;
+	}
+
+	std::string channelName = args[0];
+	std::string targetNick = args[1];
+
+	std::string comment = "Kicked";
+	size_t colon = _client->getArg().find(':');
+	if (colon != std::string::npos)
+		comment = _client->getArg().substr(colon + 1);
+
+	// Channel existe ?
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it == _channels.end()) {
+		sendToClient(_clientFd, "403 " + channelName + " :No such channel\r\n");
+		return;
+	}
+
+	Channel& channel = it->second;
+
+	// Client est-il opérateur ?
+	if (!channel.isOperator(_client)) {
+		sendToClient(_clientFd, "482 " + _client->getNickname() + " " + channelName + " :You're not channel operator\r\n");
+		return;
+	}
+
+	// Trouver le client cible
+	Client* target = getClientByNick(targetNick);
+	if (!target || !channel.isMember(target)) {
+		sendToClient(_clientFd, "441 " + _client->getNickname() + " " + targetNick + " " + channelName + " :They aren't on that channel\r\n");
+		return;
+	}
+
+	// Message de kick
+	std::string kickMsg = ":" + _client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment + "\r\n";
+
+	// Notifier tout le monde
+	channel.sendToAll(kickMsg);
+
+	// Retirer la cible du channel
+	channel.part(target);
 }
+
 
 void Server::notice() {
 	return;

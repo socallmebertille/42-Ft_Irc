@@ -10,6 +10,8 @@
 class Client;
 class Server;
 
+#define SERVER_NAME "irc.ft_irc"
+
 // === Numeric Replies ===
 #define RPL_WELCOME        001
 #define ERR_NOSUCHNICK     401
@@ -18,6 +20,7 @@ class Server;
 #define ERR_NEEDMOREPARAMS 461
 #define RPL_NAMREPLY       353
 #define RPL_ENDOFNAMES     366
+
 
 
 

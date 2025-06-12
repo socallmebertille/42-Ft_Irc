@@ -40,3 +40,17 @@ size_t Channel::getMemberCount() const {
 const std::set<Client*>& Channel::getMembers() const {
 	return _members;
 }
+
+void Channel::addOperator(Client* client) {
+	_operators.insert(client);
+}
+
+bool Channel::isOperator(Client* client) const {
+	return _operators.find(client) != _operators.end();
+}
+
+void Channel::sendToAll(const std::string& msg) const {
+    for (std::set<Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it) {
+        send((*it)->getFd(), msg.c_str(), msg.length(), 0);
+    }
+}

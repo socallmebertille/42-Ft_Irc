@@ -14,6 +14,8 @@
 # include <arpa/inet.h>
 # include <algorithm>
 # include <cerrno>
+# include <vector>
+#include "Utils.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "colors.hpp"
@@ -28,6 +30,8 @@ public:
 	void checkRegistration();
     void run();
     typedef void (Server::*CommandFunc)();
+
+	void disconnectClient(int fd);
 
 private:
     int _port;

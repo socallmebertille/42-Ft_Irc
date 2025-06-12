@@ -158,9 +158,14 @@ void Server::closeAndRemoveClient(int fd)
 void Server::handleCommand(int clientFd) {
 	_clientFd = clientFd;
 	_client = _clients[clientFd];
+	if (!_client)
+		return;
 
 	while (true) {
 		std::string& buf = _client->getBuffer();
+		if (buf.empty())
+			break;
+
 		size_t pos = buf.find("\r\n");
 		if (pos == std::string::npos)
 			break;
@@ -172,10 +177,10 @@ void Server::handleCommand(int clientFd) {
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
 			continue;
-
 		execCommand();
 	}
 }
+
 
 
 
@@ -215,7 +220,11 @@ void Server::execCommand() {
 	}
     for (int i = 0; i < 16; i++) {
         if (cmd == _type[i]) {
-            (this->*_function[i])();
+            try {
+				(this->*_function[i])();
+			} catch (const std::exception& e) {
+				std::cerr << "[CRASH] Exception during command " << cmd << ": " << e.what() << std::endl;
+			}
             checkRegistration();
             return;
         }
@@ -238,3 +247,37 @@ void Server::checkRegistration() {
         std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
     }
 }
+
+void Server::disconnectClient(int fd) {
+	std::map<int, Client*>::iterator it = _clients.find(fd);
+	if (it != _clients.end()) {
+		Client* client = it->second;
+
+		// On parcourt tous les channels pour retirer le client
+		std::map<std::string, Channel>::iterator chanIt = _channels.begin();
+		while (chanIt != _channels.end()) {
+			Channel& chan = chanIt->second;
+
+			if (chan.isMember(client)) {
+				chan.part(client); // retire le client du channel
+
+				// Si le channel est vide, on le supprime
+				if (chan.getMemberCount() == 0) {
+					std::map<std::string, Channel>::iterator toErase = chanIt;
+					++chanIt;
+					_channels.erase(toErase);
+					continue;
+				}
+			}
+			++chanIt;
+		}
+
+		_clients.erase(it);   // On retire le client de la map
+		close(fd);            // On ferme le socket
+		delete client;        // On libère la mémoire
+
+		std::cout << "Client fd[" << fd << "] déconnecté proprement" << std::endl;
+	}
+}
+
+

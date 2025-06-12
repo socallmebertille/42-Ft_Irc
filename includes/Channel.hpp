@@ -3,6 +3,7 @@
 
 # include <string>
 # include <set>
+# include <sys/socket.h>
 
 class Client;
 
@@ -35,6 +36,19 @@ public:
 	bool isMember(Client* client) const;
 
 	size_t getMemberCount() const;
+	void sendToAll(const std::string& msg) const;
+
+	void addOperator(Client* client);
+	bool isOperator(Client* client) const;
+
+	void invite(Client* client) {
+		_invited.insert(client);
+	}
+
+	bool isInvited(Client* client) const {
+		return _invited.find(client) != _invited.end();
+	}
 };
 
 #endif
+
