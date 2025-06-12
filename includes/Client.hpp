@@ -59,7 +59,7 @@ public:
 	void setPasswordOk(bool ok);
 	void setCommand(const std::string& cmd);
 	void setArg(const std::string& arg);
-	void setBuf(const std::string& buf);
+	// void setBuf(const std::string& buf);
 	void eraseBuf();
 	void setClientType(bool type);
 	void setPassErrorSent(bool v);

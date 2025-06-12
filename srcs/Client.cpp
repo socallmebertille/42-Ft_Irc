@@ -46,7 +46,7 @@ void Client::setRealname(const std::string& real) { _realName = real; }
 void Client::setPasswordOk(bool ok) { _passOk = ok; }
 void Client::setCommand(const std::string& cmd) { _command = cmd; }
 void Client::setArg(const std::string& arg) { _arg = arg; }
-void Client::setBuf(const std::string& buf) { _readBuf.append(buf); }
+// void Client::setBuf(const std::string& buf) { _readBuf.append(buf); }
 void Client::eraseBuf() { _readBuf.clear(); }
 void Client::setClientType(bool type) { _clientType = type; }
 void Client::setPassErrorSent(bool v) { _passErrorSent = v; }

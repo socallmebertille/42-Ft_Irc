@@ -7,7 +7,15 @@ void Server::sendToClient(int fd, const std::string& msg) {
         formattedMsg += "\r\n";
     else
         formattedMsg += "\n";
-    send(fd, formattedMsg.c_str(), formattedMsg.length(), 0);
+    ssize_t bytesSent = send(fd, formattedMsg.c_str(), formattedMsg.length(), MSG_NOSIGNAL);
+	if (bytesSent < 0) {
+        if (errno == EPIPE || errno == ECONNRESET) {
+            std::cout << "[ERROR] Client " << fd << " disconnected during send" << std::endl;
+            closeAndRemoveClient(fd);
+        } else {
+            std::cerr << "[ERROR] send() failed: " << strerror(errno) << std::endl;
+        }
+    }
 }
 
 void Server::sendReply(int code, Client* client, const std::string& arg1, const std::string& arg2, const std::string& trailing) {
