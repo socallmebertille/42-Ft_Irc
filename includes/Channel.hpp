@@ -1,44 +1,40 @@
 #ifndef CHANNEL_HPP
 # define CHANNEL_HPP
 
-#include <string>
-#include <map>
-#include <set> // stock sans doublons, et classe les elmts en ordre croissant
+# include <string>
+# include <set>
 
 class Client;
-class Channel
-{
-private:
-	std::map<std::string, Channel>	_channels;
 
+class Channel {
+private:
 	std::string _name;
-	std::string _topic;//cmd topic
-	std::string _password; //	+k
-	int _userLimit;//	+l
+	std::string _topic;
+	std::string _password;
+	int _userLimit;
 
 	std::set<Client*> _members;
-	std::set<Client*> _operators;//+o
-	std::set<Client*> _invited; // +i
+	std::set<Client*> _operators;
+	std::set<Client*> _invited;
 
-	bool _inviteOnly; // +i
-	bool _topicRestricted; // +t
-	bool _passwordProtected; // +k
-	bool _limitUsers; // +l
+	bool _inviteOnly;
+	bool _topicRestricted;
+	bool _passwordProtected;
+	bool _limitUsers;
 
 public:
-	Channel(const std::string name);
+	Channel(const std::string& name);
 	~Channel();
 
 	const std::string& getName() const;
-	void addMember(Client* client);
-	bool isMember(Client* client) const;
-	void join(Client* client);
-	void part(Client* client);
-	size_t getMemberCount() const;
-	
 	const std::set<Client*>& getMembers() const;
 
+	void addMember(Client* client);
+	void join(Client* client);
+	void part(Client* client);
+	bool isMember(Client* client) const;
 
+	size_t getMemberCount() const;
 };
 
 #endif

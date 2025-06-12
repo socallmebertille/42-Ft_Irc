@@ -4,69 +4,73 @@
 # include <iostream>
 # include <unistd.h>
 # include <sstream>
-# include <algorithm>  // Pour std::transform
 
 class Client
 {
 private:
-	int _fd;//pr savoir quand et ou le client a besoin de communiquer(util pour poll)
-	std::string _ip; // IP address of the client
+	int _fd;                     // File descriptor du client
+	std::string _ip;             // Adresse IP du client
+
+	// État d'enregistrement
 	bool _isRegistered;
-	std::string _username;
-	bool _hasUser;
-	std::string _nickname;
-	bool _hasNick;
-	std::string _realName;
-	std::string _password; //pr rej un channel protege
-	bool _hasPassword;
-	std::string _readBuf, _command, _arg;   // tampons entrants et CMD + ARG
-    bool _clientType; // true if netcat (msg without \r)
-	int _space;
 	bool _passOk;
+	bool _hasUser;
+	bool _hasNick;
 	bool _passErrorSent;
+
+	// Infos utilisateur
+	std::string _username;
+	std::string _nickname;
+	std::string _realName;
+
+	// Buffer de lecture et parsing
+	std::string _readBuf;
+	std::string _command;
+	std::string _arg;
+
+	// Client spécial ? (e.g. netcat sans \r)
+	bool _clientType;
 
 public:
 	Client(int fd, const std::string& ip);
 	~Client();
 
+	// Getters
 	int getFd() const;
 	std::string getIp() const;
 	bool isRegistered() const;
+	bool isPasswordOk() const;
+	bool hasNick() const;
+	bool hasUser() const;
+	std::string getPrefix() const; // nickname!username@localhost
 
 	const std::string& getUsername() const;
 	const std::string& getNickname() const;
 	const std::string& getRealname() const;
-	const std::string& getPassword() const;
-	bool isPasswordOk() const;
-	bool hasNick() const;
-	bool hasUser() const;
-	std::string getPrefix() const; // format "nickname!username@localhost"
-	std::string& getBuffer();
 	std::string getCmd() const;
 	std::string getArg() const;
+	std::string& getBuffer();
 	bool getClientType() const;
-	int getSpace() const;
 
+	// Setters
 	void setUsername(const std::string& user);
-	bool setNickname(const std::string& nick);
+	void setNickname(const std::string& nick);
 	void setRealname(const std::string& real);
-	void setPassword(const std::string& passW);
-	void markPassword();
-	void markNick();
-	void markUser();
-	void setBuf(const std::string& buf);
-	void eraseBuf();
-	void setArg(const std::string& arg);
-	void setClientType(bool type);
-	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
-
-	void parseLine();
-
 	void setPasswordOk(bool ok);
 	void setCommand(const std::string& cmd);
+	void setArg(const std::string& arg);
+	void setBuf(const std::string& buf);
+	void eraseBuf();
+	void setClientType(bool type);
+	void setPassErrorSent(bool v);
+	bool hasSentPassError() const;
 
-	bool hasSentPassError() const { return _passErrorSent; }
-	void setPassErrorSent(bool v) { _passErrorSent = v; }
+	// Enregistrement
+	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
+	// void parseLine();
+	void parseLine(const std::string& line);
+
+	void appendToBuffer(const std::string& data);
 
 };
 

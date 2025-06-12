@@ -25,6 +25,7 @@ public:
     Server(int port, const std::string& password);
     ~Server();
 
+	void checkRegistration();
     void run();
     typedef void (Server::*CommandFunc)();
 
