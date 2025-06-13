@@ -19,6 +19,7 @@
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "colors.hpp"
+# include "Replies.hpp"
 
 # define MAX_EVENTS 64
 
@@ -43,6 +44,7 @@ private:
     std::map<std::string, Channel> _channels;
     std::map<int, Client*> _clients;
     Client* _client;
+	std::vector<int> _clientsToRemove;
     static const std::string _type[16];
     static CommandFunc _function[16];
 
@@ -56,6 +58,8 @@ private:
 
     void sendToClient(int fd, const std::string& msg);
 	void sendReply(int code, Client* client, const std::string& arg1 = "", const std::string& arg2 = "", const std::string& trailing = "");
+
+	void cleanupClients();
 
     void execCommand();
     void cap();

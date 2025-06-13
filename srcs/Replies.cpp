@@ -1,6 +1,24 @@
 #include"Replies.hpp"
 //Centraliser tous les codes de réponse IRC (001, 433, 461, etc.)
 
+//modification sendToclient pour eviter doublons de fonctions
+// void Server::sendToClient(int fd, const std::string& msg) {
+//     std::string formattedMsg = msg;
+//     if (_client->getClientType() == false)
+//         formattedMsg += "\r\n";
+//     else
+//         formattedMsg += "\n";
+//     ssize_t bytesSent = send(fd, formattedMsg.c_str(), formattedMsg.length(), MSG_NOSIGNAL);
+// 	if (bytesSent < 0) {
+//         if (errno == EPIPE || errno == ECONNRESET) {
+//             std::cout << "[ERROR] Client " << fd << " disconnected during send" << std::endl;
+//             closeAndRemoveClient(fd);
+//         } else {
+//             std::cerr << "[ERROR] send() failed: " << strerror(errno) << std::endl;
+//         }
+//     }
+// }
+
 void Server::sendToClient(int fd, const std::string& msg) {
     std::string formattedMsg = msg;
     if (_client->getClientType() == false)
@@ -8,15 +26,17 @@ void Server::sendToClient(int fd, const std::string& msg) {
     else
         formattedMsg += "\n";
     ssize_t bytesSent = send(fd, formattedMsg.c_str(), formattedMsg.length(), MSG_NOSIGNAL);
-	if (bytesSent < 0) {
+    if (bytesSent < 0) {
         if (errno == EPIPE || errno == ECONNRESET) {
             std::cout << "[ERROR] Client " << fd << " disconnected during send" << std::endl;
-            closeAndRemoveClient(fd);
+            if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), fd) == _clientsToRemove.end())
+                _clientsToRemove.push_back(fd);
         } else {
             std::cerr << "[ERROR] send() failed: " << strerror(errno) << std::endl;
         }
     }
 }
+
 
 void Server::sendReply(int code, Client* client, const std::string& arg1, const std::string& arg2, const std::string& trailing) {
 	std::ostringstream oss;
