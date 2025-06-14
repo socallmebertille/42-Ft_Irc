@@ -179,6 +179,7 @@ void Server::handleCommand(int clientFd) {
         std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
 
         _client->parseLine(fullLine);
+        std::cout << "[DEBUG] Commande parsée : " << _client->getCmd() << " >> " << _client->getArg() << std::endl;
         if (_client->getCmd().empty())
             continue;
 

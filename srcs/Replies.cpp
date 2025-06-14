@@ -3,6 +3,7 @@
 
 void Server::sendToClient(int fd, const std::string& msg) {
     std::string formattedMsg = msg;
+    std::cout << "[SEND TO CLIENT " << fd << "] " << formattedMsg << std::endl;
     if (_client->getClientType() == false)
         formattedMsg += "\r\n";
     else
