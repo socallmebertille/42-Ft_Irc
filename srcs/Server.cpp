@@ -240,7 +240,8 @@ void Server::checkRegistration() {
         && _client->hasNick()
         && !_client->getNickname().empty()
         && _client->hasUser()
-        && !_client->getUsername().empty()) {
+        && !_client->getUsername().empty()
+        && !_client->isCapNegotiationDone()) {
 
         std::cout << "[DEBUG] → registerUser called" << std::endl;
         _client->registerUser(_client->getNickname(), _client->getUsername(), _client->getRealname());

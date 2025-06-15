@@ -3,9 +3,10 @@
 #include "colors.hpp"
 
 Channel::Channel(const std::string& name)
-	: _name(name), _topic(""), _password(""), _userLimit(0),
-	  _inviteOnly(false), _topicRestricted(false),
-	  _passwordProtected(false), _limitUsers(false) {}
+	: _name(name), _topic(""), _password("")//, _userLimit(0),
+	//   _inviteOnly(false), _topicRestricted(false),
+	//   _passwordProtected(false), _limitUsers(false)
+{}
 
 Channel::~Channel() {}
 

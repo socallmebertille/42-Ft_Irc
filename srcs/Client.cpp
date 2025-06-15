@@ -5,7 +5,7 @@ Client::Client(int fd, const std::string& ip)
 	_hasUser(false), _hasNick(false), _passErrorSent(false),
 	_username(""), _nickname(""), _realName(""),
 	_readBuf(""), _command(""), _arg(""),
-	_clientType(false) {}
+	_clientType(false), _capNegotiationDone(false) {}
 
 Client::~Client() {}
 
@@ -17,6 +17,7 @@ bool Client::hasNick() const { return _hasNick; }
 bool Client::hasUser() const { return _hasUser; }
 bool Client::getClientType() const { return _clientType; }
 bool Client::hasSentPassError() const { return _passErrorSent; }
+bool Client::isCapNegotiationDone() const { return _capNegotiationDone; }
 
 const std::string& Client::getUsername() const { return _username; }
 const std::string& Client::getNickname() const { return _nickname; }
@@ -46,7 +47,6 @@ void Client::setRealname(const std::string& real) { _realName = real; }
 void Client::setPasswordOk(bool ok) { _passOk = ok; }
 void Client::setCommand(const std::string& cmd) { _command = cmd; }
 void Client::setArg(const std::string& arg) { _arg = arg; }
-// void Client::setBuf(const std::string& buf) { _readBuf.append(buf); }
 void Client::eraseBuf() { _readBuf.clear(); }
 void Client::setClientType(bool type) { _clientType = type; }
 void Client::setPassErrorSent(bool v) { _passErrorSent = v; }
@@ -91,8 +91,6 @@ void Client::parseLine(const std::string& line) {
 		_arg.erase(0, 1);
 }
 
+void Client::appendToBuffer(const std::string& data) { _readBuf += data; }
 
-void Client::appendToBuffer(const std::string& data) {
-	_readBuf += data;
-}
-
+void Client::setCapNegotiationDone(bool done) { _capNegotiationDone = done; }

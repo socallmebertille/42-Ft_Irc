@@ -11,16 +11,16 @@ private:
 	std::string _name;
 	std::string _topic;
 	std::string _password;
-	int _userLimit;
+	// int _userLimit;
 
 	std::set<Client*> _members;
 	std::set<Client*> _operators;
 	std::set<Client*> _invited;
 
-	bool _inviteOnly;
-	bool _topicRestricted;
-	bool _passwordProtected;
-	bool _limitUsers;
+	// bool _inviteOnly;
+	// bool _topicRestricted;
+	// bool _passwordProtected;
+	// bool _limitUsers;
 
 public:
 	Channel(const std::string& name);
