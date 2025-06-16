@@ -38,12 +38,30 @@ void Server::sendToClient(int fd, const std::string& msg) {
 }
 
 
+// void Server::sendReply(int code, Client* client, const std::string& arg1, const std::string& arg2, const std::string& trailing) {
+// 	std::ostringstream oss;
+// 	std::string nickname = client->getNickname();
+// 	std::string serverName = "ircserv";
+
+// 	oss << ":" << serverName << " " << code << " " << nickname;
+
+// 	if (!arg1.empty())
+// 		oss << " " << arg1;
+// 	if (!arg2.empty())
+// 		oss << " " << arg2;
+// 	if (!trailing.empty())
+// 		oss << " :" << trailing;
+// 	sendToClient(client->getFd(), oss.str());
+// }
 void Server::sendReply(int code, Client* client, const std::string& arg1, const std::string& arg2, const std::string& trailing) {
 	std::ostringstream oss;
 	std::string nickname = client->getNickname();
-	std::string serverName = "ircserv";
+	std::ostringstream codeStr;
+	codeStr.width(3);
+	codeStr.fill('0');
+	codeStr << code;
 
-	oss << ":" << serverName << " " << code << " " << nickname;
+	oss << ":" << SERVER_NAME << " " << codeStr.str() << " " << nickname;
 
 	if (!arg1.empty())
 		oss << " " << arg1;
@@ -51,6 +69,14 @@ void Server::sendReply(int code, Client* client, const std::string& arg1, const 
 		oss << " " << arg2;
 	if (!trailing.empty())
 		oss << " :" << trailing;
-	sendToClient(client->getFd(), oss.str());
+
+	// S'assurer que ça termine bien par \r\n
+	std::string msg = oss.str();
+	if (_client->getClientType() == false)
+		msg += "\r\n";
+	else
+		msg += "\n";
+
+	sendToClient(client->getFd(), msg);
 }
 

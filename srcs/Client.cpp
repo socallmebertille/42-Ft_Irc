@@ -51,13 +51,17 @@ void Client::eraseBuf() { _readBuf.clear(); }
 void Client::setClientType(bool type) { _clientType = type; }
 void Client::setPassErrorSent(bool v) { _passErrorSent = v; }
 
+
+
 void Client::registerUser(const std::string& nick, const std::string& user, const std::string& real) {
 	std::cout << "[DEBUG] → registerUser called" << std::endl;
+
 	setNickname(nick);
 	setUsername(user);
 	setRealname(real);
 	_isRegistered = true;
 }
+
 
 // void Client::parseLine() {
 // 	std::string line = _readBuf;

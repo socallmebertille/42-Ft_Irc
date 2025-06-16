@@ -4,6 +4,8 @@
 # include <iostream>
 # include <unistd.h>
 # include <sstream>
+# include "Replies.hpp"
+# include "Server.hpp"
 
 class Client
 {
@@ -11,24 +13,20 @@ private:
 	int _fd;                     // File descriptor du client
 	std::string _ip;             // Adresse IP du client
 
-	// État d'enregistrement
 	bool _isRegistered;
 	bool _passOk;
 	bool _hasUser;
 	bool _hasNick;
 	bool _passErrorSent;
 
-	// Infos utilisateur
 	std::string _username;
 	std::string _nickname;
 	std::string _realName;
 
-	// Buffer de lecture et parsing
 	std::string _readBuf;
 	std::string _command;
 	std::string _arg;
 
-	// Client spécial ? (e.g. netcat sans \r)
 	bool _clientType;
 
 public:

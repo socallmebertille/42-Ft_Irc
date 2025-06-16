@@ -54,8 +54,6 @@ class Server;
 
 #define ERR_CHANOPRIVSNEEDED  482
 
-
-
 // === Message Macros ===
 #define MSG_WELCOME(nick)              (RPL_WELCOME + std::string(" ") + (nick) + " :Welcome to the IRC server!")
 #define MSG_ERR_NICKNAMEINUSE(nick)    (ERR_NICKNAMEINUSE + std::string(" ") + (nick) + " :Nickname is already in use")
