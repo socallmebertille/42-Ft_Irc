@@ -1,15 +1,14 @@
 #include "Server.hpp"
 #include "Replies.hpp"
+#include <sstream>  // Pour ostringstream
 
 void Server::cap() {
     std::string arg = _client->getArg();
     if (arg.empty())
         return;
-
     std::istringstream iss(arg);
     std::string subcmd;
     iss >> subcmd;
-
     if (subcmd == "LS") {
         sendToClient(_clientFd, ":localhost CAP * LS :");
         sendToClient(_clientFd, ":localhost CAP * END");
@@ -43,7 +42,7 @@ void Server::pong() {
 
 void Server::pass() {
 	if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end()) {
-		std::cout << "[DEBUG] Commande ignorée (client marqué pour suppression): " << _clientFd << std::endl;
+		// std::cout << "[DEBUG] Commande ignorée (client marqué pour suppression): " << _clientFd << std::endl;
 		return;
 	}
 	if (_client->isRegistered()) {
@@ -59,7 +58,7 @@ void Server::pass() {
 	if (inputPass == _password) {
 		_client->setPasswordOk(true);
 		_client->setPassErrorSent(false);
-		std::cout << "[DEBUG] setPasswordOk(true) → " << _client->isPasswordOk() << std::endl;
+		// std::cout << "[DEBUG] setPasswordOk(true) → " << _client->isPasswordOk() << std::endl;
 	} else {
 		sendReply(ERR_PASSWDMISMATCH, _client, "", "", "Password incorrect");
 		_client->setPasswordOk(false);
@@ -69,97 +68,69 @@ void Server::pass() {
 void Server::nick() {
 	if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
 		return;
-
 	if (_client->getArg().empty()) {
 		sendReply(ERR_NONICKNAMEGIVEN, _client, "*", "", "No nickname given");
 		return;
 	}
-
 	std::string newNick = _client->getArg();
 	size_t firstSpace = newNick.find_first_of(" \t\r\n");
 	if (firstSpace != std::string::npos)
 		newNick = newNick.substr(0, firstSpace);
-
-	// Vérifie si le nickname est déjà utilisé
 	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
 		if (it->second->getNickname() == newNick && it->first != _clientFd) {
 			sendReply(ERR_NICKNAMEINUSE, _client, "*", newNick, "Nickname is already in use");
 			return;
 		}
 	}
-
 	std::string oldNick = _client->getNickname();
 	_client->setNickname(newNick);
-
-	std::cout << "[DEBUG] setNickname(" << newNick << ") → " << _client->getNickname() << std::endl;
-
+	// std::cout << "[DEBUG] setNickname(" << newNick << ") → " << _client->getNickname() << std::endl;
 	std::string prefix;
 	if (oldNick.empty())
 		prefix = "*";
 	else
 		prefix = oldNick;
-
 	std::string username = _client->getUsername();
 	if (username.empty())
 		username = "*";
-
 	std::string nickMsg = ":" + prefix + "!" + username + "@localhost NICK :" + newNick;
 	sendToClient(_clientFd, nickMsg);
-
-	// Si l'utilisateur a aussi complété USER et PASS, on enregistre
-	if (_client->isPasswordOk() && !_client->getUsername().empty() && !_client->isRegistered()) {
-		_client->registerUser(newNick, username, _client->getRealname());
-		sendReply(RPL_WELCOME, _client, newNick, "", "Welcome to the IRC server!");
-	}
+	checkRegistration();
 }
 
 
 void Server::user() {
-	if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
-		return;
-	if (_client->isRegistered()) {
-		sendReply(462, _client, "", "", "You may not reregister");
-		return;
-	}
-	std::string args = _client->getArg();
-	std::string& buffer = _client->getBuffer();
-
-	size_t realNamePos = args.find(" :");
-	if (realNamePos == std::string::npos) {
-		realNamePos = buffer.find(":");
-		if (realNamePos != std::string::npos)
-			args += buffer.substr(realNamePos);
-	}
-	std::istringstream iss(args);
-	std::string username, hostname, servername, realname;
-	if (!(iss >> username >> hostname >> servername)) {
-		sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "Not enough parameters");
-		return;
-	}
-	if (realNamePos != std::string::npos)
-		realname = args.substr(realNamePos + 2);
-	else {
-		sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "Not enough parameters");
-		return;
-	}
-	_client->setUsername(username);
-	_client->setRealname(realname);
-
-	// Vérifie que tout est prêt pour l'enregistrement
-	if (_client->isPasswordOk() && _client->hasNick()) {
-		_client->registerUser(_client->getNickname(), username, realname);
-
-		// Réponses de bienvenue (RFC)
-		sendReply(RPL_WELCOME, _client, _client->getNickname(), "", "Welcome to the IRC server!");
-		sendReply(RPL_YOURHOST, _client, _client->getNickname(), "", "Your host is irc.ft_irc, running version 1.0");
-		sendReply(RPL_CREATED, _client, _client->getNickname(), "", "This server was created in June 2025");
-		sendReply(RPL_MYINFO, _client, _client->getNickname(), "", "irc.ft_irc 1.0 o o");
-
-		std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
-	}
-
-	std::cout << "[DEBUG] setUsername(" << username << ") → " << _client->getUsername() << std::endl;
-	std::cout << "[DEBUG] setRealname(" << realname << ") → " << _client->getRealname() << std::endl;
+    if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+        return;
+    if (_client->isRegistered()) {
+        sendReply(462, _client, "", "", "You may not reregister");
+        return;
+    }
+    std::string args = _client->getArg();
+    std::string& buffer = _client->getBuffer();
+    size_t realNamePos = args.find(" :");
+    if (realNamePos == std::string::npos) {
+        realNamePos = buffer.find(":");
+        if (realNamePos != std::string::npos)
+            args += buffer.substr(realNamePos);
+    }
+    std::istringstream iss(args);
+    std::string username, hostname, servername, realname;
+    if (!(iss >> username >> hostname >> servername)) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "Not enough parameters");
+        return;
+    }
+    if (realNamePos != std::string::npos)
+        realname = args.substr(realNamePos + 2);
+    else {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "Not enough parameters");
+        return;
+    }
+    _client->setUsername(username);
+    _client->setRealname(realname);
+    checkRegistration();
+    // std::cout << "[DEBUG] setUsername(" << username << ") → " << _client->getUsername() << std::endl;
+    // std::cout << "[DEBUG] setRealname(" << realname << ") → " << _client->getRealname() << std::endl;
 }
 
 std::string trim(const std::string& str) {
@@ -170,89 +141,87 @@ std::string trim(const std::string& str) {
 	return str.substr(first, last - first + 1);
 }
 
-
 void Server::privmsg() {
-	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
-		return;
+    if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+        return;
+    if (!_client->isRegistered()) {
+        sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+        return;
+    }
+    std::string args = _client->getArg();
+    if (args.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "Not enough parameters");
+        return;
+    }
+    std::string target, message;
+    size_t colonPos = args.find(" :");
+    if (colonPos != std::string::npos) {
+        target = args.substr(0, colonPos);
+        message = args.substr(colonPos + 2); // +2 pour passer " :"
+    } else {
+        // Cas où il n'y a pas de ":" - erreur
+        std::istringstream iss(args);
+        if (!(iss >> target)) {
+            sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "Not enough parameters");
+            return;
+        }
+        sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "No text to send");
+        return;
+    }
+    target = trim(target);
+    if (target.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "Not enough parameters");
+        return;
+    }
+    if (message.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "No text to send");
+        return;
+    }
+    // std::cout << "[DEBUG] PRIVMSG - Target: '" << target << "', Message: '" << message << "'" << std::endl;
+    if (target[0] == '#') {
+        handleChannelMessage(target, message);
+    } else {
+        handlePrivateMessage(target, message);
+    }
+}
 
-	const std::string& rawArg = _client->getArg();
-	if (rawArg.empty()) {
-		sendReply(411, _client, "", "", "No recipient given (PRIVMSG)");
-		_client->eraseBuf();
-		return;
-	}
+void Server::handleChannelMessage(const std::string& channelName, const std::string& message) {
+    std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+    if (it == _channels.end()) {
+        sendReply(ERR_NOSUCHCHANNEL, _client, channelName, "", "No such channel");
+        return;
+    }
+    Channel& channel = it->second;
+    if (!channel.isMember(_client)) {
+        sendReply(ERR_CANNOTSENDTOCHAN, _client, channelName, "", "Cannot send to channel");
+        return;
+    }
+    std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + channelName + " :" + message;
+    const std::set<Client*>& members = channel.getMembers();
+    int sentCount = 0;
+    for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+        if (*it != _client) {
+            sendToClient((*it)->getFd(), fullMsg);
+            sentCount++;
+        }
+    }
+    // std::cout << "[DEBUG] PRIVMSG canal '" << channelName << "' envoyé à " << sentCount << " membres" << std::endl;
+}
 
-	std::string targetNick, message;
-	size_t colonPos = rawArg.find(':');
+void Server::handlePrivateMessage(const std::string& targetNick, const std::string& message) {
+    Client* target = getClientByNick(targetNick);
+    if (!target) {
+        sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick/channel");
+        return;
+    }
+    if (!target->isRegistered()) {
+        // std::cout << "[DEBUG] Target client not registered, skipping message" << std::endl;
+        return;
+    }
+    std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + targetNick + " :" + message;
+    sendToClient(target->getFd(), fullMsg);
 
-	if (colonPos != std::string::npos) {
-		targetNick = trim(rawArg.substr(0, colonPos));
-		message = rawArg.substr(colonPos + 1) + _client->getBuffer();
-	} else {
-		targetNick = trim(rawArg);
-		message = _client->getBuffer();
-		if (message.empty() || message[0] != ':') {
-			sendReply(412, _client, "", "", "No text to send");
-			_client->eraseBuf();
-			return;
-		}
-		message.erase(0, 1);
-	}
-
-	if (message.empty()) {
-		sendReply(412, _client, "", "", "No text to send");
-		_client->eraseBuf();
-		return;
-	}
-	if (message[0] == ' ')
-		message.erase(0, 1);
-
-	std::cout << "[DEBUG] Recherche du destinataire : '" << targetNick << "'\n";
-
-	Client* target = getClientByNick(targetNick);
-
-	if (!target) {
-		// 🔁 Cas channel
-		if (targetNick[0] == '#') {
-			std::map<std::string, Channel>::iterator it = _channels.find(targetNick);
-			if (it == _channels.end()) {
-				sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick/channel");
-				_client->eraseBuf();
-				return;
-			}
-			Channel& chan = it->second;
-
-			// Vérifie que l'utilisateur est bien dans le channel
-			if (!chan.isMember(_client)) {
-				sendReply(ERR_CANNOTSENDTOCHAN, _client, targetNick, "", "Cannot send to channel");
-				_client->eraseBuf();
-				return;
-			}
-
-			// Envoie à tous les membres sauf l'émetteur
-			std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + targetNick + " :" + message + "\r\n";
-			const std::set<Client*>& members = chan.getMembers();
-			for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-				if (*it != _client)
-					send((*it)->getFd(), fullMsg.c_str(), fullMsg.length(), 0);
-			}
-			std::cout << "[DEBUG] PRIVMSG envoyé à tous les membres de " << targetNick << " : " << fullMsg;
-			_client->eraseBuf();
-			return;
-		} else {
-			sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick/channel");
-			_client->eraseBuf();
-			return;
-		}
-	}
-
-	// 🔁 Cas message privé entre deux nicks
-	std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + target->getNickname() + " :" + message + "\r\n";
-	if (send(target->getFd(), fullMsg.c_str(), fullMsg.length(), 0) < 0)
-		std::cerr << "Erreur d'envoi à " << target->getFd() << std::endl;
-
-	std::cout << "[DEBUG] PRIVMSG envoyé à " << target->getNickname() << " (fd=" << target->getFd() << ") : " << fullMsg;
-	_client->eraseBuf();
+    // std::cout << "[DEBUG] PRIVMSG privé envoyé à '" << targetNick << "' (fd=" << target->getFd() << "): " << fullMsg << std::endl;
 }
 
 
@@ -278,6 +247,21 @@ void Server::join() {
 		const std::set<Client*>& members = chan.getMembers();
 		for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
 			sendToClient((*it)->getFd(), joinMsg);
+
+		// Envoyer le topic du canal au nouveau membre (si un topic existe)
+		if (!chan.getTopic().empty()) {
+			// RPL_TOPIC (332) : Le topic lui-même
+			sendReply(RPL_TOPIC, _client, channelName, "", chan.getTopic());
+
+			// RPL_TOPICWHOTIME (333) : Qui a défini le topic et quand
+			std::ostringstream timeStr;
+			timeStr << chan.getTopicSetTime();
+			sendReply(RPL_TOPICWHOTIME, _client, channelName, chan.getTopicSetBy(), timeStr.str());
+
+			// std::cout << "[DEBUG] Topic + métadonnées envoyés à " << _client->getNickname() << " lors du JOIN" << std::endl;
+		} else {
+			// std::cout << "[DEBUG] Aucun topic à envoyer pour " << channelName << std::endl;
+		}
 
 		std::string nickList;
 		for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
@@ -331,20 +315,18 @@ void Server::quit() {
 		}
 		chan.part(_client);
 	}
-	std::cout << "[DEBUG] QUIT reçu → ajout à _clientsToRemove: fd[" << _clientFd << "]" << std::endl;
+	// std::cout << "[DEBUG] QUIT reçu → ajout à _clientsToRemove: fd[" << _clientFd << "]" << std::endl;
 	_clientsToRemove.push_back(_clientFd);
 }
 
 void Server::mode() {
 	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
 		return;
-
 	const std::string& args = _client->getArg();
 	if (args.empty()) {
 		sendReply(ERR_NEEDMOREPARAMS, _client, "MODE", "", "Not enough parameters");
 		return;
 	}
-
 	std::istringstream iss(args);
 	std::string channelName, modeStr, param;
 	iss >> channelName >> modeStr;
@@ -355,8 +337,6 @@ void Server::mode() {
 	}
 
 	Channel& chan = it->second;
-
-	// Si aucun mode à appliquer → envoyer les modes actuels
 	if (modeStr.empty()) {
 		std::string currentModes = "+";
 		if (chan.isInviteOnly()) currentModes += "i";
@@ -420,10 +400,72 @@ void Server::mode() {
 	sendToClient(_clientFd, ":" + _client->getPrefix() + " MODE " + channelName + " " + args);
 }
 
-
 void Server::topic() {
-	return;
+
+	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+		return;
+
+	if (!_client->isRegistered()) {
+		sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+		return;
+	}
+
+	std::string args = _client->getArg();
+	if (args.empty()) {
+		sendReply(ERR_NEEDMOREPARAMS, _client, "TOPIC", "", "Not enough parameters");
+		return;
+	}
+	std::istringstream iss(args);
+	std::string channelName;
+	iss >> channelName;
+
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it == _channels.end()) {
+		sendReply(ERR_NOSUCHCHANNEL, _client, channelName, "", "No such channel");
+		return;
+	}
+
+	Channel& chan = it->second;
+	if (!chan.isMember(_client)) {
+		sendReply(ERR_NOTONCHANNEL, _client, channelName, "", "You're not on that channel");
+		return;
+	}
+
+	size_t colonPos = args.find(" :");
+
+	if (colonPos != std::string::npos) {
+		std::string newTopic = args.substr(colonPos + 2); // +2 pour passer " :"
+
+		if (!chan.isOperator(_client)) {
+			sendReply(ERR_CHANOPRIVSNEEDED, _client, channelName, "", "You're not channel operator");
+			return;
+		}
+
+		chan.setTopic(newTopic, _client->getNickname());  // Utiliser la nouvelle version avec métadonnées
+
+		std::string topicMsg = ":" + _client->getPrefix() + " TOPIC " + channelName + " :" + newTopic;
+		const std::set<Client*>& members = chan.getMembers();
+		for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+			sendToClient((*it)->getFd(), topicMsg);
+		}
+		sendReply(RPL_TOPIC, _client, channelName, "", chan.getTopic());
+
+		std::ostringstream timeStr;
+		timeStr << chan.getTopicSetTime();
+		sendReply(RPL_TOPICWHOTIME, _client, channelName, chan.getTopicSetBy(), timeStr.str());
+
+		// std::cout << "[DEBUG] TOPIC modifié pour " << channelName << " par " << _client->getNickname() << " : " << newTopic << std::endl;
+	} else {
+		if (chan.getTopic().empty()) {
+			sendReply(331, _client, channelName, "", "No topic is set");
+		} else {
+			sendReply(332, _client, channelName, "", chan.getTopic());
+		}
+
+		// std::cout << "[DEBUG] TOPIC consulté pour " << channelName << " par " << _client->getNickname() << std::endl;
+	}
 }
+
 
 void Server::list() {
 	return;
@@ -505,4 +547,88 @@ void Server::kick() {
 
 void Server::notice() {
 	return;
+}
+
+void Server::userhost() {
+	// La commande USERHOST retourne des informations sur un ou plusieurs utilisateurs
+	// Format: USERHOST nick1 [nick2 ...]
+
+	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+		return;
+
+	if (!_client->isRegistered()) {
+		sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+		return;
+	}
+
+	std::string args = _client->getArg();
+	if (args.empty()) {
+		sendReply(ERR_NEEDMOREPARAMS, _client, "USERHOST", "", "Not enough parameters");
+		return;
+	}
+
+	// Parser les nicknames demandés
+	std::istringstream iss(args);
+	std::string nickname;
+	std::string response;
+
+	while (iss >> nickname) {
+		Client* target = getClientByNick(nickname);
+		if (target && target->isRegistered()) {
+			if (!response.empty())
+				response += " ";
+			// Format: nick=+user@host (+ indique que l'utilisateur est disponible)
+			response += target->getNickname() + "=+" + target->getUsername() + "@localhost";
+		}
+	}
+
+	// Réponse USERHOST (code 302)
+	sendReply(302, _client, "", "", response);
+}
+
+void Server::whois() {
+	// La commande WHOIS retourne des informations détaillées sur un utilisateur
+	// Format: WHOIS nick
+
+	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+		return;
+
+	if (!_client->isRegistered()) {
+		sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+		return;
+	}
+
+	std::string args = _client->getArg();
+	if (args.empty()) {
+		sendReply(ERR_NEEDMOREPARAMS, _client, "WHOIS", "", "Not enough parameters");
+		return;
+	}
+
+	// Prendre le premier nickname
+	std::istringstream iss(args);
+	std::string nickname;
+	iss >> nickname;
+
+	Client* target = getClientByNick(nickname);
+	if (!target) {
+		sendReply(ERR_NOSUCHNICK, _client, nickname, "", "No such nick/channel");
+		return;
+	}
+
+	if (!target->isRegistered()) {
+		sendReply(ERR_NOSUCHNICK, _client, nickname, "", "No such nick/channel");
+		return;
+	}
+
+	// Envoyer les informations WHOIS
+	// RPL_WHOISUSER (311): nick user host * :realname
+	sendReply(311, _client, nickname, target->getUsername() + " localhost *", target->getRealname());
+
+	// RPL_WHOISSERVER (312): nick server :server info
+	sendReply(312, _client, nickname, SERVER_NAME, "IRC Server");
+
+	// RPL_ENDOFWHOIS (318): nick :End of /WHOIS list
+	sendReply(318, _client, nickname, "", "End of /WHOIS list");
+
+	// std::cout << "[DEBUG] WHOIS for " << nickname << " completed" << std::endl;
 }

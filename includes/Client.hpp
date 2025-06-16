@@ -63,7 +63,6 @@ public:
 	void setPassErrorSent(bool v);
 	bool hasSentPassError() const;
 
-	// Enregistrement
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
 	// void parseLine();
 	void parseLine(const std::string& line);

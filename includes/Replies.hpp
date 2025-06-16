@@ -1,35 +1,30 @@
 #ifndef REPLIES_HPP
 #define REPLIES_HPP
 
-#include "Replies.hpp"
-#include "Client.hpp"
-#include "Server.hpp"
-#include <sstream>
 #include <string>
 
-class Client;
-class Server;
-
-# define SERVER_NAME "irc.ft_irc"
+#define SERVER_NAME "irc.ft_irc"
 
 // === Numeric Replies ===
 
-// 001–004 : Réponses de bienvenue
 #define RPL_WELCOME           001
 #define RPL_YOURHOST          002
 #define RPL_CREATED           003
 #define RPL_MYINFO            004
 
-// 3xx : Réponses positives diverses
+#define RPL_TOPIC             332
+#define RPL_TOPICWHOTIME      333
+
 #define RPL_INVITING          341
 #define RPL_NAMREPLY          353
 #define RPL_ENDOFNAMES        366
 
-// 4xx : Réponses d'erreurs client/serveur
 #define ERR_NOSUCHNICK        401
 #define ERR_NOSUCHCHANNEL     403
 #define ERR_CANNOTSENDTOCHAN  404
 
+#define ERR_NORECIPIENT       411
+#define ERR_NOTEXTTOSEND      412
 #define ERR_UNKNOWNCOMMAND    421
 
 #define ERR_NONICKNAMEGIVEN   431
@@ -41,7 +36,6 @@ class Server;
 #define ERR_USERONCHANNEL     443
 
 #define ERR_NOTREGISTERED     451
-
 #define ERR_NEEDMOREPARAMS    461
 #define ERR_ALREADYREGISTRED  462
 #define ERR_PASSWDMISMATCH    464
@@ -54,13 +48,43 @@ class Server;
 
 #define ERR_CHANOPRIVSNEEDED  482
 
-// === Message Macros ===
-#define MSG_WELCOME(nick)              (RPL_WELCOME + std::string(" ") + (nick) + " :Welcome to the IRC server!")
-#define MSG_ERR_NICKNAMEINUSE(nick)    (ERR_NICKNAMEINUSE + std::string(" ") + (nick) + " :Nickname is already in use")
-#define MSG_ERR_NONICKNAMEGIVEN        (ERR_NONICKNAMEGIVEN + std::string(" * :No nickname given"))
-#define MSG_ERR_NEEDMOREPARAMS(cmd)    (ERR_NEEDMOREPARAMS + std::string(" ") + (cmd) + " :Not enough parameters")
-#define MSG_ERR_UNKNOWNCOMMAND(cmd)    (ERR_UNKNOWNCOMMAND + std::string(" ") + (cmd) + " :Unknown command")
-#define MSG_ERR_PASSWDMISMATCH         (ERR_PASSWDMISMATCH + std::string(" :Password required"))
+// === Macros simples (pas de std::string) ===
 
+#define MSG_ERR_NONICKNAMEGIVEN         "431 * :No nickname given"
+#define MSG_ERR_PASSWDMISMATCH          "464 :Password required"
+
+// === Fonctions inline ===
+
+inline std::string msgWelcome(const std::string& nick) {
+	return ":irc.ft_irc 001 " + nick + " :Welcome to the IRC server!\r\n";
+}
+
+inline std::string errNickInUse(const std::string& nick) {
+	return ":irc.ft_irc 433 " + nick + " :Nickname is already in use\r\n";
+}
+
+inline std::string errNeedMoreParams(const std::string& cmd) {
+	return ":irc.ft_irc 461 " + cmd + " :Not enough parameters\r\n";
+}
+
+inline std::string errUnknownCommand(const std::string& cmd) {
+	return ":irc.ft_irc 421 " + cmd + " :Unknown command\r\n";
+}
+
+inline std::string replyTopic(const std::string& source, const std::string& channel, const std::string& topic) {
+	return ":" + source + " 332 " + channel + " :" + topic + "\r\n";
+}
+
+inline std::string replyNoTopic(const std::string& source, const std::string& channel) {
+	return ":" + source + " 331 " + channel + " :No topic is set\r\n";
+}
+
+inline std::string errNotOnChannel(const std::string& source, const std::string& channel) {
+	return ":" + source + " 442 " + channel + " :You're not on that channel\r\n";
+}
+
+inline std::string errChanOpNeeded(const std::string& source, const std::string& channel) {
+	return ":" + source + " 482 " + channel + " :You're not channel operator\r\n";
+}
 
 #endif

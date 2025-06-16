@@ -1,14 +1,16 @@
 #include "Server.hpp"
 
-const std::string Server::_type[16] = {
+const std::string Server::_type[18] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
-    "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG"
+    "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG",
+    "USERHOST", "WHOIS"
 };
 
-Server::CommandFunc Server::_function[16] = {
+Server::CommandFunc Server::_function[18] = {
     &Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg,
     &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic,
-    &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong
+    &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong,
+    &Server::userhost, &Server::whois
 };
 
 Server::Server(int port, const std::string& password):
@@ -131,6 +133,7 @@ void Server::handleNewConnection() {
 // 		cleanupClients();
 //     }
 // }
+
 void Server::run() {
     struct epoll_event events[MAX_EVENTS];
     while (true) {
@@ -151,12 +154,12 @@ void Server::run() {
 
                 if (bytesRead > 0) {
                     buffer[bytesRead] = '\0';
-                    std::cout << "[RECV FD " << fd << "] >>> [" << buffer << "]" << std::endl;
+                    // std::cout << "[RECV FD " << fd << "] >>> [" << buffer << "]" << std::endl;
                     _clients[fd]->appendToBuffer(buffer);
                     handleCommand(fd);
                 }
                 else if (bytesRead == 0 || (bytesRead < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
-                    std::cout << "[DEBUG] Client fd[" << fd << "] marked for removal (recv error or disconnect)" << std::endl;
+                    // std::cout << "[DEBUG] Client fd[" << fd << "] marked for removal (recv error or disconnect)" << std::endl;
                     if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), fd) == _clientsToRemove.end())
                         _clientsToRemove.push_back(fd);
                     break; // évite de continuer avec ce fd
@@ -251,9 +254,7 @@ void Server::handleCommand(int clientFd) {
 		}
 		else
 			break;
-
-		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
-
+		// std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
 			continue;
@@ -309,24 +310,19 @@ void Server::handleCommand(int clientFd) {
 // }
 
 void Server::execCommand() {
-    // protection contre les clients marqués pour suppression:
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
-
     // DEBUG:
-    std::cout << "[DEBUG] Commande reçue : " << _client->getCmd()
-              << " | passOk=" << _client->isPasswordOk()
-              << ", nick=" << _client->getNickname()
-              << ", user=" << _client->getUsername()
-              << ", isReg=" << _client->isRegistered() << std::endl;
-
+    // std::cout << "[DEBUG] Commande reçue : " << _client->getCmd()
+    //           << " | passOk=" << _client->isPasswordOk()
+    //           << ", nick=" << _client->getNickname()
+    //           << ", user=" << _client->getUsername()
+    //           << ", isReg=" << _client->isRegistered() << std::endl;
     const std::string& cmd = _client->getCmd();
-
     if (cmd.empty()) {
         sendReply(ERR_UNKNOWNCOMMAND, _client, "*", "", "Empty command");
         return;
     }
-
     if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP") {
         if (!_client->hasSentPassError()) {
             sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
@@ -334,13 +330,11 @@ void Server::execCommand() {
         }
         return;
     }
-
     if (cmd == "CAP") {
         cap();
         return;
     }
-
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 18; i++) {
         if (cmd == _type[i]) {
             try {
                 (this->*_function[i])();
@@ -351,8 +345,6 @@ void Server::execCommand() {
             return;
         }
     }
-
-    // Réponse pour commande inconnue
     sendReply(ERR_UNKNOWNCOMMAND, _client, cmd, "", "Unknown command");
 }
 
@@ -363,12 +355,10 @@ void Server::checkRegistration() {
         && !_client->getNickname().empty()
         && _client->hasUser()
         && !_client->getUsername().empty()) {
-
-        std::cout << "[DEBUG] → registerUser called" << std::endl;
+        // std::cout << "[DEBUG] → registerUser called" << std::endl;
         _client->registerUser(_client->getNickname(), _client->getUsername(), _client->getRealname());
-
         sendReply(RPL_WELCOME, _client, "", "", "Welcome to the IRC server!");
-        std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
+        // std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
     }
 }
 
@@ -378,11 +368,9 @@ void Server::disconnectClient(int fd) {
 }
 
 void Server::cleanupClients() {
-
 	for (size_t i = 0; i < _clientsToRemove.size(); ++i) {
 		int fd = _clientsToRemove[i];
-		std::cout << "[DEBUG] CLEANUP client fd[" << fd << "]" << std::endl;
-
+		// std::cout << "[DEBUG] CLEANUP client fd[" << fd << "]" << std::endl;
 		std::map<int, Client*>::iterator it = _clients.find(fd);
 		if (it != _clients.end()) {
 			std::cout << RED << "CLEANUP client fd[" << fd << "] nickname[" << it->second->getNickname() << "]" << RESET << std::endl;

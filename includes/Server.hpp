@@ -45,8 +45,8 @@ private:
     std::map<int, Client*> _clients;
     Client* _client;
 	std::vector<int> _clientsToRemove;
-    static const std::string _type[16];
-    static CommandFunc _function[16];
+    static const std::string _type[18];
+    static CommandFunc _function[18];
 
     void initServerSocket();
     void handleNewConnection();
@@ -78,7 +78,12 @@ private:
     void notice();
     void ping();
     void pong();
-    void parseAndExecuteCommand(const std::string& line);
+    void userhost();
+    void whois();
+    // void parseAndExecuteCommand(const std::string& line);
+
+    void handleChannelMessage(const std::string& channelName, const std::string& message);
+    void handlePrivateMessage(const std::string& targetNick, const std::string& message);
 };
 
 #endif
