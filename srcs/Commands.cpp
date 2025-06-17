@@ -336,6 +336,11 @@ void Server::part() {
     const std::set<Client*>& members = chan.getMembers();
     for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
         sendToClient((*it)->getFd(), partMsg);
+    if (chan.isOperator(_client)) {
+        // If the client was an operator, remove them from the operators list
+        std::cout << RED << "[DEBUG PART] Client " << _client->getNickname() << " was an operator in channel " << channelName << RESET << std::endl;
+        chan.removeOperator(_client); // Remove client from operators if they were one
+    }
     // Remove client from channel
     chan.part(_client);
     // Remove empty channel
@@ -481,6 +486,10 @@ void Server::kick() {
     }
     std::string channelName = args[0];
     std::string targetNick = args[1];
+    if (channelName.empty() || channelName[0] != '#') {
+        sendReply(ERR_NOSUCHCHANNEL, _client, channelName, "", "No such channel");
+        return;
+    }
     std::string comment = "Kicked";
     size_t colon = _client->getArg().find(':');
     if (colon != std::string::npos)
@@ -500,7 +509,7 @@ void Server::kick() {
         sendReply(ERR_USERNOTINCHANNEL, _client, targetNick, channelName, "They aren't on that channel");
         return;
     }
-    std::string kickMsg = ":" + _client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
+    std::string kickMsg = ":" + _client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment + "\r\n";
     channel.sendToAll(kickMsg);
     channel.part(target);
 }
