@@ -1,5 +1,259 @@
 [32mENTER of client : [0mfd[5], ip[127.0.0.1]
 [PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK SpecialChar]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #special]
+[0;31m[DEBUG] JOIN reçu avec argument : [#special][0m
+[32mSpecialChar joined the channel #special[0m
+There are currently 1 members in the channel : #special.
+[0;31m[DEBUG JOIN] Canal: #special[0m
+[0;31m[DEBUG JOIN] Nouveau membre: SpecialChar[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: SpecialChar [0m
+[PARSE FD 5] >>> [TOPIC #special :Topic avec emoticones et chars speciaux: []{}!@#$%^&*()]
+[0;31m[DEBUG TOPIC] Client: SpecialChar[0m
+[0;31m[DEBUG TOPIC] Canal: #special[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #special]
+[PARSE FD 5] >>> [QUIT]
+[0;31mSpecialChar left the channel #special[0m
+There are currently 0 members in the channel : #special.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[SpecialChar][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK LongTopic]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #longtopic]
+[0;31m[DEBUG] JOIN reçu avec argument : [#longtopic][0m
+[32mLongTopic joined the channel #longtopic[0m
+There are currently 1 members in the channel : #longtopic.
+[0;31m[DEBUG JOIN] Canal: #longtopic[0m
+[0;31m[DEBUG JOIN] Nouveau membre: LongTopic[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: LongTopic [0m
+[PARSE FD 5] >>> [TOPIC #longtopic :Topic très long pour tester les limites du serveur IRC: partie1 partie2 partie3 partie4 partie5 partie6 partie7 partie8 partie9 partie10 partie11 partie12 partie13 partie14 partie15 partie16 partie17 partie18 partie19 partie20 ]
+[0;31m[DEBUG TOPIC] Client: LongTopic[0m
+[0;31m[DEBUG TOPIC] Canal: #longtopic[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #longtopic]
+[PARSE FD 5] >>> [QUIT]
+[0;31mLongTopic left the channel #longtopic[0m
+There are currently 0 members in the channel : #longtopic.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[LongTopic][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK RapidUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #rapid]
+[0;31m[DEBUG] JOIN reçu avec argument : [#rapid][0m
+[32mRapidUser joined the channel #rapid[0m
+There are currently 1 members in the channel : #rapid.
+[0;31m[DEBUG JOIN] Canal: #rapid[0m
+[0;31m[DEBUG JOIN] Nouveau membre: RapidUser[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: RapidUser [0m
+[PARSE FD 5] >>> [TOPIC #rapid :Topic1]
+[0;31m[DEBUG TOPIC] Client: RapidUser[0m
+[0;31m[DEBUG TOPIC] Canal: #rapid[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #rapid :Topic2]
+[0;31m[DEBUG TOPIC] Client: RapidUser[0m
+[0;31m[DEBUG TOPIC] Canal: #rapid[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #rapid :Topic3]
+[0;31m[DEBUG TOPIC] Client: RapidUser[0m
+[0;31m[DEBUG TOPIC] Canal: #rapid[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #rapid]
+[PARSE FD 5] >>> [QUIT]
+[0;31mRapidUser left the channel #rapid[0m
+There are currently 0 members in the channel : #rapid.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[RapidUser][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ChannelLimit]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #canal-test_123]
+[0;31m[DEBUG] JOIN reçu avec argument : [#canal-test_123][0m
+[32mChannelLimit joined the channel #canal-test_123[0m
+There are currently 1 members in the channel : #canal-test_123.
+[0;31m[DEBUG JOIN] Canal: #canal-test_123[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ChannelLimit[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ChannelLimit [0m
+[PARSE FD 5] >>> [TOPIC #canal-test_123 :Topic canal avec tirets et underscores]
+[0;31m[DEBUG TOPIC] Client: ChannelLimit[0m
+[0;31m[DEBUG TOPIC] Canal: #canal-test_123[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mChannelLimit left the channel #canal-test_123[0m
+There are currently 0 members in the channel : #canal-test_123.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[ChannelLimit][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TestUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[TestUser][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TestUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[TestUser][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS wrongpass]
+[PARSE FD 5] >>> [NICK TestUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TestUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [NICK NewNick]
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[NewNick][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TestUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #test]
+[0;31m[DEBUG] JOIN reçu avec argument : [#test][0m
+[32mTestUser joined the channel #test[0m
+There are currently 1 members in the channel : #test.
+[0;31m[DEBUG JOIN] Canal: #test[0m
+[0;31m[DEBUG JOIN] Nouveau membre: TestUser[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: TestUser [0m
+[PARSE FD 5] >>> [PART #test]
+[0;31mTestUser left the channel #test[0m
+There are currently 0 members in the channel : #test.
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[TestUser][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TestUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #topictest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#topictest][0m
+[32mTestUser joined the channel #topictest[0m
+There are currently 1 members in the channel : #topictest.
+[0;31m[DEBUG JOIN] Canal: #topictest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: TestUser[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: TestUser [0m
+[PARSE FD 5] >>> [TOPIC #topictest]
+[PARSE FD 5] >>> [QUIT]
+[0;31mTestUser left the channel #topictest[0m
+There are currently 0 members in the channel : #topictest.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[TestUser][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TopicSetter]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #topictest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#topictest][0m
+[32mTopicSetter joined the channel #topictest[0m
+There are currently 1 members in the channel : #topictest.
+[0;31m[DEBUG JOIN] Canal: #topictest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: TopicSetter[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: TopicSetter [0m
+[PARSE FD 5] >>> [TOPIC #topictest :Nouveau topic de test]
+[0;31m[DEBUG TOPIC] Client: TopicSetter[0m
+[0;31m[DEBUG TOPIC] Canal: #topictest[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mTopicSetter left the channel #topictest[0m
+There are currently 0 members in the channel : #topictest.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[TopicSetter][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TopicGetter]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #topictest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#topictest][0m
+[32mTopicGetter joined the channel #topictest[0m
+There are currently 1 members in the channel : #topictest.
+[0;31m[DEBUG JOIN] Canal: #topictest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: TopicGetter[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: TopicGetter [0m
+[PARSE FD 5] >>> [TOPIC #topictest :Test topic]
+[0;31m[DEBUG TOPIC] Client: TopicGetter[0m
+[0;31m[DEBUG TOPIC] Canal: #topictest[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #topictest]
+[PARSE FD 5] >>> [QUIT]
+[0;31mTopicGetter left the channel #topictest[0m
+There are currently 0 members in the channel : #topictest.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[TopicGetter][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
 [PARSE FD 5] >>> [NICK TestOperator]
 [PARSE FD 5] >>> [USER op op localhost :Test Operator]
 [DEBUG] → registerUser called
@@ -92,3 +346,806 @@ There are currently 1 members in the channel : #realtest.
 [0;31mCLEANUP client fd[5] nickname[ChannelOwner][0m
 [0;31mChannelOwner left the channel #realtest[0m
 There are currently 0 members in the channel : #realtest.
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ModeTest]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #modetest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#modetest][0m
+[32mModeTest joined the channel #modetest[0m
+There are currently 1 members in the channel : #modetest.
+[0;31m[DEBUG JOIN] Canal: #modetest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ModeTest[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ModeTest [0m
+[PARSE FD 5] >>> [MODE #modetest +i]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mModeTest left the channel #modetest[0m
+There are currently 0 members in the channel : #modetest.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[ModeTest][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK TopicMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #topicmode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#topicmode][0m
+[32mTopicMode joined the channel #topicmode[0m
+There are currently 1 members in the channel : #topicmode.
+[0;31m[DEBUG JOIN] Canal: #topicmode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: TopicMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: TopicMode [0m
+[PARSE FD 5] >>> [MODE #topicmode +t]
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mTopicMode left the channel #topicmode[0m
+There are currently 0 members in the channel : #topicmode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[TopicMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK KeyMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #keymode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#keymode][0m
+[32mKeyMode joined the channel #keymode[0m
+There are currently 1 members in the channel : #keymode.
+[0;31m[DEBUG JOIN] Canal: #keymode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: KeyMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: KeyMode [0m
+[PARSE FD 5] >>> [MODE #keymode +k secret123]
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mKeyMode left the channel #keymode[0m
+There are currently 0 members in the channel : #keymode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[KeyMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK LimitMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #limitmode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#limitmode][0m
+[32mLimitMode joined the channel #limitmode[0m
+There are currently 1 members in the channel : #limitmode.
+[0;31m[DEBUG JOIN] Canal: #limitmode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: LimitMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: LimitMode [0m
+[PARSE FD 5] >>> [MODE #limitmode +l 5]
+[0;31m[DEBUG MODE] Processing flag: l adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mLimitMode left the channel #limitmode[0m
+There are currently 0 members in the channel : #limitmode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[LimitMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK MultiMode1]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #multimode1]
+[0;31m[DEBUG] JOIN reçu avec argument : [#multimode1][0m
+[32mMultiMode1 joined the channel #multimode1[0m
+There are currently 1 members in the channel : #multimode1.
+[0;31m[DEBUG JOIN] Canal: #multimode1[0m
+[0;31m[DEBUG JOIN] Nouveau membre: MultiMode1[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: MultiMode1 [0m
+[PARSE FD 5] >>> [MODE #multimode1 +it]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [MODE #multimode1]
+[PARSE FD 5] >>> [QUIT]
+[0;31mMultiMode1 left the channel #multimode1[0m
+There are currently 0 members in the channel : #multimode1.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[MultiMode1][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK MultiMode2]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #multimode2]
+[0;31m[DEBUG] JOIN reçu avec argument : [#multimode2][0m
+[32mMultiMode2 joined the channel #multimode2[0m
+There are currently 1 members in the channel : #multimode2.
+[0;31m[DEBUG JOIN] Canal: #multimode2[0m
+[0;31m[DEBUG JOIN] Nouveau membre: MultiMode2[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: MultiMode2 [0m
+[PARSE FD 5] >>> [MODE #multimode2 +ikt secret123]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mMultiMode2 left the channel #multimode2[0m
+There are currently 0 members in the channel : #multimode2.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[MultiMode2][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK MultiMode3]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #multimode3]
+[0;31m[DEBUG] JOIN reçu avec argument : [#multimode3][0m
+[32mMultiMode3 joined the channel #multimode3[0m
+There are currently 1 members in the channel : #multimode3.
+[0;31m[DEBUG JOIN] Canal: #multimode3[0m
+[0;31m[DEBUG JOIN] Nouveau membre: MultiMode3[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: MultiMode3 [0m
+[PARSE FD 5] >>> [MODE #multimode3 +iktl secret123 10]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[0;31m[DEBUG MODE] Processing flag: l adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mMultiMode3 left the channel #multimode3[0m
+There are currently 0 members in the channel : #multimode3.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[MultiMode3][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK MixedMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #mixedmode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#mixedmode][0m
+[32mMixedMode joined the channel #mixedmode[0m
+There are currently 1 members in the channel : #mixedmode.
+[0;31m[DEBUG JOIN] Canal: #mixedmode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: MixedMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: MixedMode [0m
+[PARSE FD 5] >>> [MODE #mixedmode +it]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [MODE #mixedmode +i-t+k newpass]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: NO[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = NON[0m
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mMixedMode left the channel #mixedmode[0m
+There are currently 0 members in the channel : #mixedmode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[MixedMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK RemoveMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #removemode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#removemode][0m
+[32mRemoveMode joined the channel #removemode[0m
+There are currently 1 members in the channel : #removemode.
+[0;31m[DEBUG JOIN] Canal: #removemode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: RemoveMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: RemoveMode [0m
+[PARSE FD 5] >>> [MODE #removemode +ikt secret123]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [MODE #removemode -itk]
+[0;31m[DEBUG MODE] Processing flag: i adding: NO[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: NO[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = NON[0m
+[0;31m[DEBUG MODE] Processing flag: k adding: NO[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mRemoveMode left the channel #removemode[0m
+There are currently 0 members in the channel : #removemode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[RemoveMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK QueryMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #querymode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#querymode][0m
+[32mQueryMode joined the channel #querymode[0m
+There are currently 1 members in the channel : #querymode.
+[0;31m[DEBUG JOIN] Canal: #querymode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: QueryMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: QueryMode [0m
+[PARSE FD 5] >>> [MODE #querymode +it]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [MODE #querymode]
+[PARSE FD 5] >>> [QUIT]
+[0;31mQueryMode left the channel #querymode[0m
+There are currently 0 members in the channel : #querymode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[QueryMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ErrorMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #errormode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#errormode][0m
+[32mErrorMode joined the channel #errormode[0m
+There are currently 1 members in the channel : #errormode.
+[0;31m[DEBUG JOIN] Canal: #errormode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ErrorMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ErrorMode [0m
+[PARSE FD 5] >>> [MODE #errormode +k]
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mErrorMode left the channel #errormode[0m
+There are currently 0 members in the channel : #errormode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[ErrorMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ContinueMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #continuemode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#continuemode][0m
+[32mContinueMode joined the channel #continuemode[0m
+There are currently 1 members in the channel : #continuemode.
+[0;31m[DEBUG JOIN] Canal: #continuemode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ContinueMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ContinueMode [0m
+[PARSE FD 5] >>> [MODE #continuemode +ik]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mContinueMode left the channel #continuemode[0m
+There are currently 0 members in the channel : #continuemode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[ContinueMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK OpMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #opmode]
+[0;31m[DEBUG] JOIN reçu avec argument : [#opmode][0m
+[32mOpMode joined the channel #opmode[0m
+There are currently 1 members in the channel : #opmode.
+[0;31m[DEBUG JOIN] Canal: #opmode[0m
+[0;31m[DEBUG JOIN] Nouveau membre: OpMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: OpMode [0m
+[PARSE FD 5] >>> [MODE #opmode +o OpMode]
+[0;31m[DEBUG MODE] Processing flag: o adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mOpMode left the channel #opmode[0m
+There are currently 0 members in the channel : #opmode.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[OpMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK InvalidLimit]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #invalidlimit]
+[0;31m[DEBUG] JOIN reçu avec argument : [#invalidlimit][0m
+[32mInvalidLimit joined the channel #invalidlimit[0m
+There are currently 1 members in the channel : #invalidlimit.
+[0;31m[DEBUG JOIN] Canal: #invalidlimit[0m
+[0;31m[DEBUG JOIN] Nouveau membre: InvalidLimit[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: InvalidLimit [0m
+[PARSE FD 5] >>> [MODE #invalidlimit +l -5]
+[0;31m[DEBUG MODE] Processing flag: l adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mInvalidLimit left the channel #invalidlimit[0m
+There are currently 0 members in the channel : #invalidlimit.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[InvalidLimit][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ParamOrder]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #paramorder]
+[0;31m[DEBUG] JOIN reçu avec argument : [#paramorder][0m
+[32mParamOrder joined the channel #paramorder[0m
+There are currently 1 members in the channel : #paramorder.
+[0;31m[DEBUG JOIN] Canal: #paramorder[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ParamOrder[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ParamOrder [0m
+[PARSE FD 5] >>> [MODE #paramorder +kl mypass 15]
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: l adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mParamOrder left the channel #paramorder[0m
+There are currently 0 members in the channel : #paramorder.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[ParamOrder][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK PartMsg]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #parttest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#parttest][0m
+[32mPartMsg joined the channel #parttest[0m
+There are currently 1 members in the channel : #parttest.
+[0;31m[DEBUG JOIN] Canal: #parttest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: PartMsg[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: PartMsg [0m
+[PARSE FD 5] >>> [PART #parttest :Au revoir tout le monde!]
+[0;31mPartMsg left the channel #parttest[0m
+There are currently 0 members in the channel : #parttest.
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[PartMsg][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK PartNoMsg]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #partnotest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#partnotest][0m
+[32mPartNoMsg joined the channel #partnotest[0m
+There are currently 1 members in the channel : #partnotest.
+[0;31m[DEBUG JOIN] Canal: #partnotest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: PartNoMsg[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: PartNoMsg [0m
+[PARSE FD 5] >>> [PART #partnotest]
+[0;31mPartNoMsg left the channel #partnotest[0m
+There are currently 0 members in the channel : #partnotest.
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[PartNoMsg][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK PartEmpty]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #partempty]
+[0;31m[DEBUG] JOIN reçu avec argument : [#partempty][0m
+[32mPartEmpty joined the channel #partempty[0m
+There are currently 1 members in the channel : #partempty.
+[0;31m[DEBUG JOIN] Canal: #partempty[0m
+[0;31m[DEBUG JOIN] Nouveau membre: PartEmpty[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: PartEmpty [0m
+[PARSE FD 5] >>> [PART]
+[PARSE FD 5] >>> [QUIT]
+[0;31mPartEmpty left the channel #partempty[0m
+There are currently 0 members in the channel : #partempty.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[PartEmpty][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK PartNone]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [PART #inexistant]
+[PARSE FD 5] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[PartNone][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK MsgSender]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #msgtest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#msgtest][0m
+[32mMsgSender joined the channel #msgtest[0m
+There are currently 1 members in the channel : #msgtest.
+[0;31m[DEBUG JOIN] Canal: #msgtest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: MsgSender[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: MsgSender [0m
+[PARSE FD 5] >>> [PRIVMSG #msgtest :Hello world]
+[PARSE FD 5] >>> [QUIT]
+[0;31mMsgSender left the channel #msgtest[0m
+There are currently 0 members in the channel : #msgtest.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[MsgSender][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK Creator]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #scenario]
+[0;31m[DEBUG] JOIN reçu avec argument : [#scenario][0m
+[32mCreator joined the channel #scenario[0m
+There are currently 1 members in the channel : #scenario.
+[0;31m[DEBUG JOIN] Canal: #scenario[0m
+[0;31m[DEBUG JOIN] Nouveau membre: Creator[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: Creator [0m
+[PARSE FD 5] >>> [TOPIC #scenario :Topic du scénario]
+[0;31m[DEBUG TOPIC] Client: Creator[0m
+[0;31m[DEBUG TOPIC] Canal: #scenario[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mCreator left the channel #scenario[0m
+There are currently 0 members in the channel : #scenario.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[Creator][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK Joiner]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #scenario]
+[0;31m[DEBUG] JOIN reçu avec argument : [#scenario][0m
+[32mJoiner joined the channel #scenario[0m
+There are currently 1 members in the channel : #scenario.
+[0;31m[DEBUG JOIN] Canal: #scenario[0m
+[0;31m[DEBUG JOIN] Nouveau membre: Joiner[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: Joiner [0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mJoiner left the channel #scenario[0m
+There are currently 0 members in the channel : #scenario.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[Joiner][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK MultiUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #chan1]
+[0;31m[DEBUG] JOIN reçu avec argument : [#chan1][0m
+[32mMultiUser joined the channel #chan1[0m
+There are currently 1 members in the channel : #chan1.
+[0;31m[DEBUG JOIN] Canal: #chan1[0m
+[0;31m[DEBUG JOIN] Nouveau membre: MultiUser[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: MultiUser [0m
+[PARSE FD 5] >>> [TOPIC #chan1 :Topic du canal 1]
+[0;31m[DEBUG TOPIC] Client: MultiUser[0m
+[0;31m[DEBUG TOPIC] Canal: #chan1[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [JOIN #chan2]
+[0;31m[DEBUG] JOIN reçu avec argument : [#chan2][0m
+[32mMultiUser joined the channel #chan2[0m
+There are currently 1 members in the channel : #chan2.
+[0;31m[DEBUG JOIN] Canal: #chan2[0m
+[0;31m[DEBUG JOIN] Nouveau membre: MultiUser[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: MultiUser [0m
+[PARSE FD 5] >>> [TOPIC #chan2 :Topic du canal 2]
+[0;31m[DEBUG TOPIC] Client: MultiUser[0m
+[0;31m[DEBUG TOPIC] Canal: #chan2[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #chan1]
+[PARSE FD 5] >>> [TOPIC #chan2]
+[PARSE FD 5] >>> [QUIT]
+[0;31mMultiUser left the channel #chan1[0m
+There are currently 0 members in the channel : #chan1.
+[0;31mMultiUser left the channel #chan2[0m
+There are currently 0 members in the channel : #chan2.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[MultiUser][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK OpTransfer]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #optransfer]
+[0;31m[DEBUG] JOIN reçu avec argument : [#optransfer][0m
+[32mOpTransfer joined the channel #optransfer[0m
+There are currently 1 members in the channel : #optransfer.
+[0;31m[DEBUG JOIN] Canal: #optransfer[0m
+[0;31m[DEBUG JOIN] Nouveau membre: OpTransfer[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: OpTransfer [0m
+[PARSE FD 5] >>> [TOPIC #optransfer :Topic initial]
+[0;31m[DEBUG TOPIC] Client: OpTransfer[0m
+[0;31m[DEBUG TOPIC] Canal: #optransfer[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [MODE #optransfer +o OpTransfer]
+[0;31m[DEBUG MODE] Processing flag: o adding: YES[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mOpTransfer left the channel #optransfer[0m
+There are currently 0 members in the channel : #optransfer.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[OpTransfer][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ComplexMode]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #complex]
+[0;31m[DEBUG] JOIN reçu avec argument : [#complex][0m
+[32mComplexMode joined the channel #complex[0m
+There are currently 1 members in the channel : #complex.
+[0;31m[DEBUG JOIN] Canal: #complex[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ComplexMode[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ComplexMode [0m
+[PARSE FD 5] >>> [MODE #complex +iktl secret123 10]
+[0;31m[DEBUG MODE] Processing flag: i adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[0;31m[DEBUG MODE] Processing flag: l adding: YES[0m
+[PARSE FD 5] >>> [MODE #complex]
+[PARSE FD 5] >>> [QUIT]
+[0;31mComplexMode left the channel #complex[0m
+There are currently 0 members in the channel : #complex.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[ComplexMode][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ProtectedCreator]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #protected]
+[0;31m[DEBUG] JOIN reçu avec argument : [#protected][0m
+[32mProtectedCreator joined the channel #protected[0m
+There are currently 1 members in the channel : #protected.
+[0;31m[DEBUG JOIN] Canal: #protected[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ProtectedCreator[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ProtectedCreator [0m
+[PARSE FD 5] >>> [MODE #protected +k secret123]
+[0;31m[DEBUG MODE] Processing flag: k adding: YES[0m
+[DEBUG] Ligne vide ignorée pour fd 5
+[32mENTER of client : [0mfd[6], ip[127.0.0.1]
+[PARSE FD 6] >>> [PASS test]
+[PARSE FD 6] >>> [NICK TryJoin1]
+[PARSE FD 6] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 6] >>> [JOIN #protected]
+[0;31m[DEBUG] JOIN reçu avec argument : [#protected][0m
+[PARSE FD 6] >>> [QUIT]
+[DEBUG] Ligne vide ignorée pour fd 6
+[0;31mCLEANUP client fd[6] nickname[TryJoin1][0m
+[32mENTER of client : [0mfd[6], ip[127.0.0.1]
+[PARSE FD 6] >>> [PASS test]
+[PARSE FD 6] >>> [NICK TryJoin2]
+[PARSE FD 6] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 6] >>> [JOIN #protected secret123]
+[0;31m[DEBUG] JOIN reçu avec argument : [#protected secret123][0m
+[32mTryJoin2 joined the channel #protected[0m
+There are currently 2 members in the channel : #protected.
+[0;31m[DEBUG JOIN] Canal: #protected[0m
+[0;31m[DEBUG JOIN] Nouveau membre: TryJoin2[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 2[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? NON[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ProtectedCreator [0m
+[PARSE FD 6] >>> [QUIT]
+[0;31mTryJoin2 left the channel #protected[0m
+There are currently 1 members in the channel : #protected.
+[DEBUG] Ligne vide ignorée pour fd 6
+[0;31mCLEANUP client fd[6] nickname[TryJoin2][0m
+[0;31mCLEANUP client fd[5] nickname[ProtectedCreator][0m
+[0;31mProtectedCreator left the channel #protected[0m
+There are currently 0 members in the channel : #protected.
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK SpecialChar]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #special]
+[0;31m[DEBUG] JOIN reçu avec argument : [#special][0m
+[32mSpecialChar joined the channel #special[0m
+There are currently 1 members in the channel : #special.
+[0;31m[DEBUG JOIN] Canal: #special[0m
+[0;31m[DEBUG JOIN] Nouveau membre: SpecialChar[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: SpecialChar [0m
+[PARSE FD 5] >>> [TOPIC #special :Topic avec emoticones et chars speciaux: []{}!@#$%^&*()]
+[0;31m[DEBUG TOPIC] Client: SpecialChar[0m
+[0;31m[DEBUG TOPIC] Canal: #special[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #special]
+[PARSE FD 5] >>> [QUIT]
+[0;31mSpecialChar left the channel #special[0m
+There are currently 0 members in the channel : #special.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[SpecialChar][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK LongTopic]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #longtopic]
+[0;31m[DEBUG] JOIN reçu avec argument : [#longtopic][0m
+[32mLongTopic joined the channel #longtopic[0m
+There are currently 1 members in the channel : #longtopic.
+[0;31m[DEBUG JOIN] Canal: #longtopic[0m
+[0;31m[DEBUG JOIN] Nouveau membre: LongTopic[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: LongTopic [0m
+[PARSE FD 5] >>> [TOPIC #longtopic :Topic très long pour tester les limites du serveur IRC: partie1 partie2 partie3 partie4 partie5 partie6 partie7 partie8 partie9 partie10 partie11 partie12 partie13 partie14 partie15 partie16 partie17 partie18 partie19 partie20 ]
+[0;31m[DEBUG TOPIC] Client: LongTopic[0m
+[0;31m[DEBUG TOPIC] Canal: #longtopic[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #longtopic]
+[PARSE FD 5] >>> [QUIT]
+[0;31mLongTopic left the channel #longtopic[0m
+There are currently 0 members in the channel : #longtopic.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[LongTopic][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK RapidUser]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #rapid]
+[0;31m[DEBUG] JOIN reçu avec argument : [#rapid][0m
+[32mRapidUser joined the channel #rapid[0m
+There are currently 1 members in the channel : #rapid.
+[0;31m[DEBUG JOIN] Canal: #rapid[0m
+[0;31m[DEBUG JOIN] Nouveau membre: RapidUser[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: RapidUser [0m
+[PARSE FD 5] >>> [TOPIC #rapid :Topic1]
+[0;31m[DEBUG TOPIC] Client: RapidUser[0m
+[0;31m[DEBUG TOPIC] Canal: #rapid[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #rapid :Topic2]
+[0;31m[DEBUG TOPIC] Client: RapidUser[0m
+[0;31m[DEBUG TOPIC] Canal: #rapid[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #rapid :Topic3]
+[0;31m[DEBUG TOPIC] Client: RapidUser[0m
+[0;31m[DEBUG TOPIC] Canal: #rapid[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [TOPIC #rapid]
+[PARSE FD 5] >>> [QUIT]
+[0;31mRapidUser left the channel #rapid[0m
+There are currently 0 members in the channel : #rapid.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[RapidUser][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ChannelLimit]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #canal-test_123]
+[0;31m[DEBUG] JOIN reçu avec argument : [#canal-test_123][0m
+[32mChannelLimit joined the channel #canal-test_123[0m
+There are currently 1 members in the channel : #canal-test_123.
+[0;31m[DEBUG JOIN] Canal: #canal-test_123[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ChannelLimit[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ChannelLimit [0m
+[PARSE FD 5] >>> [TOPIC #canal-test_123 :Topic canal avec tirets et underscores]
+[0;31m[DEBUG TOPIC] Client: ChannelLimit[0m
+[0;31m[DEBUG TOPIC] Canal: #canal-test_123[0m
+[0;31m[DEBUG TOPIC] Topic protégé: NON[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [QUIT]
+[0;31mChannelLimit left the channel #canal-test_123[0m
+There are currently 0 members in the channel : #canal-test_123.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[ChannelLimit][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK CleanExit]
+[PARSE FD 5] >>> [USER test test localhost :Test User]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #cleanup]
+[0;31m[DEBUG] JOIN reçu avec argument : [#cleanup][0m
+[32mCleanExit joined the channel #cleanup[0m
+There are currently 1 members in the channel : #cleanup.
+[0;31m[DEBUG JOIN] Canal: #cleanup[0m
+[0;31m[DEBUG JOIN] Nouveau membre: CleanExit[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: CleanExit [0m
+[PARSE FD 5] >>> [QUIT :Au revoir!]
+[0;31mCleanExit left the channel #cleanup[0m
+There are currently 0 members in the channel : #cleanup.
+[DEBUG] Ligne vide ignorée pour fd 5
+[0;31mCLEANUP client fd[5] nickname[CleanExit][0m
+
+Signal 2 received. Cleaning up...
