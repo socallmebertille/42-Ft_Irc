@@ -8,6 +8,7 @@ Client::Client(int fd, const std::string& ip)
 	_username(""), _nickname(""), _realName(""),
 	_readBuf(""), _command(""), _arg(""),
 	_clientType(false), _capNegotiationDone(false) {}
+	_clientType(false), _capNegotiationDone(false) {}
 
 Client::~Client() {}
 
@@ -27,6 +28,7 @@ bool Client::hasUser() const { return _hasUser; }
 bool Client::getClientType() const { return _clientType; }
 
 bool Client::hasSentPassError() const { return _passErrorSent; }
+// bool Client::isCapNegotiationDone() const { return _capNegotiationDone; }
 
 const std::string& Client::getUsername() const { return _username; }
 

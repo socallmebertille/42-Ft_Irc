@@ -28,27 +28,31 @@
 ### Step 1
 
 📌 Résumé des commandes utiles
-| Commande         | Description             |
-| ---------------- | ----------------------- |
-| `/server`        | Se connecter au serveur |
-| `/nick`          | Changer de pseudo       |
-| `/user`          | S’enregistrer           |
-| `/join #channel` | Rejoindre un channel    |
-| `/part #channel` | Quitter un channel      |
-| `/quit`          | Quitter irssi           |
+| Commande                                              | Description             |
+| ----------------------------------------------------- | ----------------------- |
+| `/server`                                             | Se connecter au serveur |
+| `/nick <nick>`                                        | Changer de pseudo       |
+| `/user <username> <hostname> <servename> :<realname>` | S’enregistrer           |
+| `/join #channel`                                      | Rejoindre un channel    |
+| `/part #channel`                                      | Quitter un channel      |
+| `/quit`                                               | Quitter irssi           |
 
 
-| Action dans irssi         | Commande envoyée au serveur |
-| ------------------------- | --------------------------- |
-| `/connect 127.0.0.1 6667` | (ouverture de socket TCP)   |
-| `/nick mel`               | `NICK mel\r\n`              |
-| `/user mel 0 * :Mel`      | `USER mel 0 * :Mel\r\n`     |
-| `/join #42`               | `JOIN #42\r\n`              |
-| `/part #42`               | `PART #42\r\n`              |
-| `/msg #42 hello`          | `PRIVMSG #42 :hello\r\n`    |
-| `/quit`                   | `QUIT :Client exited\r\n`   |
-| `/whois mel`              | `WHOIS mel\r\n`             |
-| etc.                      |                             |
+| Action dans irssi                     | Commande envoyée au serveur |
+| ------------------------------------- | --------------------------- |
+| `/connect 127.0.0.1 6667 password`    | (ouverture de socket TCP)   |
+| `/connect <ip> <port> <OPT:password>` | `CAP LS` & `PASS <password>` & `NICK <...>` & `USER <...>` & `CAP END` & `MODE <username> +i` & `PING <ip>` |
+| `/nick mel`                           | `NICK mel\r\n`              |
+| `/user mel 0 * :Mel`                  | `USER mel 0 * :Mel\r\n`     |
+| `/join #42`                           | `JOIN #42\r\n`              |
+| `/part #42`                           | `PART #42\r\n`              |
+| `/msg #42 hello`                      | `PRIVMSG #42 :hello\r\n`    |
+| 1) `/query <username_of_someone>`     | to see the private message of someone   |
+| 2) `hello`                            | send hello to someone in the priv chat without the command    |
+| 3) `/wc`                              | return to the previous window of irssi    |
+| `/quit`                               | `QUIT :Client exited\r\n`   |
+| `/whois mel`                          | `WHOIS mel\r\n`             |
+| etc.                                  |                             |
 
 
 # ✅ Tests fonctionnels du serveur IRC avec Irssi

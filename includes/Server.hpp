@@ -5,6 +5,7 @@
 # include <sstream>
 # include <unistd.h>
 # include <map>
+# include <vector>
 # include <string>
 # include <fcntl.h>
 # include <cstring>

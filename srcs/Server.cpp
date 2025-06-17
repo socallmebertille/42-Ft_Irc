@@ -205,8 +205,16 @@ void Server::handleCommand(int clientFd) {
 			buf.erase(0, posNc + 1);
 			_client->setClientType(true); // Client spécial (e.g. netcat sans \r)
 		}
-		else
-			break;
+		else {
+            if (!buf.empty()) { //if CTRL+D was pressed, buf might still contain data
+                std::cout << "[DEBUG] Partial command in buffer due to disconnection: [" << buf << "]" << std::endl;
+            }
+            break;
+        }
+        if (fullLine.empty() || fullLine == "\r") {
+            std::cerr << "[DEBUG] Ligne vide ignorée pour fd " << clientFd << std::endl;
+            return;
+        }
 		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
