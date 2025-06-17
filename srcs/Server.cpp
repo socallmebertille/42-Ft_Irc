@@ -207,12 +207,12 @@ void Server::handleCommand(int clientFd) {
 		}
 		else {
             if (!buf.empty()) { //if CTRL+D was pressed, buf might still contain data
-                std::cout << "[DEBUG] Partial command in buffer due to disconnection: [" << buf << "]" << std::endl;
+                // std::cout << "[DEBUG] Partial command in buffer due to disconnection: [" << buf << "]" << std::endl;
             }
             break;
         }
         if (fullLine.empty() || fullLine == "\r") {
-            std::cerr << "[DEBUG] Ligne vide ignorée pour fd " << clientFd << std::endl;
+            // std::cerr << "[DEBUG] Ligne vide ignorée pour fd " << clientFd << std::endl;
             return;
         }
 		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;

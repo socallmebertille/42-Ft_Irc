@@ -76,7 +76,7 @@ void Client::eraseBuf() { _readBuf.clear(); }
 
 // ========== OTHER ==========
 void Client::registerUser(const std::string& nick, const std::string& user, const std::string& real) {
-	std::cout << "[DEBUG] → registerUser called" << std::endl;
+	// std::cout << "[DEBUG] → registerUser called" << std::endl;
 
 	setNickname(nick);
 	setUsername(user);
