@@ -19,7 +19,7 @@ bool Client::hasNick() const { return _hasNick; }
 bool Client::hasUser() const { return _hasUser; }
 bool Client::getClientType() const { return _clientType; }
 bool Client::hasSentPassError() const { return _passErrorSent; }
-bool Client::isCapNegotiationDone() const { return _capNegotiationDone; }
+// bool Client::isCapNegotiationDone() const { return _capNegotiationDone; }
 
 const std::string& Client::getUsername() const { return _username; }
 const std::string& Client::getNickname() const { return _nickname; }

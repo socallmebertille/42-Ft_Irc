@@ -95,45 +95,6 @@ void Server::handleNewConnection() {
     }
 }
 
-//modification run pour eviter doublons de fonctions
-// void Server::run() {
-//     struct epoll_event events[MAX_EVENTS];
-//     while (true) {
-//         // nb_events = wait_for_events (fd_to_monitor, events, max_events, infinite timeout)
-//         int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
-//         if (nfds < 0) throw std::runtime_error("epoll_wait() failed");
-//         for (int i = 0; i < nfds; ++i) {
-//             int fd = events[i].data.fd;
-//             if (fd == _serverSocket) {
-//                 handleNewConnection();
-//                 continue;
-//             }
-//             if (events[i].events & EPOLLIN) {
-//                 char buffer[1024];
-//                 _client = _clients[fd];
-//                 int bytesRead = recv(fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
-//                 if (bytesRead > 0) {
-//                     buffer[bytesRead] = '\0';
-//                     std::cout << "[RECV FD " << fd << "] >>> [" << buffer << "]" << std::endl;
-//                     _clients[fd]->appendToBuffer(buffer);
-//                     handleCommand(fd);
-//                 }
-//                 else if (bytesRead == 0) {
-//                     closeAndRemoveClient(fd);
-//                     break;
-//                 }
-//                 else if (bytesRead < 0) {
-//                     if (errno == EAGAIN || errno == EWOULDBLOCK) break;// nothing to read & still non-blockant mode
-//                     if (errno == EINTR) continue;// signal => retry
-//                     closeAndRemoveClient(fd);
-//                     break;
-//                 }
-//             }
-//         }
-// 		cleanupClients();
-//     }
-// }
-
 void Server::run() {
     struct epoll_event events[MAX_EVENTS];
     while (true) {
@@ -178,57 +139,6 @@ Client* Server::getClientByNick(const std::string& nickname) {
     return NULL;
 }
 
-//Old version handleCommand modifie pour adapter a quit
-// void Server::handleCommand(int clientFd) {
-// 	_clientFd = clientFd;
-// 	_client = _clients[clientFd];
-// 	if (!_client)
-// 		return;
-//     _clientFd = clientFd;
-//     _client = _clients[clientFd];
-// 	while (true) {
-// 		std::string& buf = _client->getBuffer();
-// 		if (buf.empty())
-// 			break;
-// 		size_t pos = buf.find("\r\n");
-// 		if (pos == std::string::npos)
-// 			break;
-// 		std::string fullLine = buf.substr(0, pos);
-// 		buf.erase(0, pos + 2);
-// 		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
-//     while (true) {
-//         std::string& buf = _client->getBuffer();
-//         size_t pos = buf.find("\r\n");
-//         size_t posNc = buf.find("\n");
-//         std::string fullLine;
-//         if (pos != std::string::npos)
-//         {
-//             fullLine = buf.substr(0, pos);
-//             buf.erase(0, pos + 2);
-//             _client->setClientType(false); // Client normal (avec \r\n)
-//         }
-//         else if (posNc != std::string::npos)
-//         {
-//             fullLine = buf.substr(0, posNc);
-//             buf.erase(0, posNc + 1);
-//             _client->setClientType(true); // Client spécial (e.g. netcat sans \r)
-//         }
-//         else
-//             break;
-//         std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
-// 		_client->parseLine(fullLine);
-// 		if (_client->getCmd().empty())
-// 			continue;
-// 		execCommand();
-// 		checkRegistration();
-// 	}
-//         _client->parseLine(fullLine);
-//         if (_client->getCmd().empty())
-//             continue;
-//         execCommand();
-//     }
-// }
-
 void Server::handleCommand(int clientFd) {
 	_clientFd = clientFd;
 	_client = _clients[clientFd];
@@ -252,8 +162,16 @@ void Server::handleCommand(int clientFd) {
 			buf.erase(0, posNc + 1);
 			_client->setClientType(true); // Client spécial (e.g. netcat sans \r)
 		}
-		else
-			break;
+		else {
+            if (!buf.empty()) { //if CTRL+D was pressed, buf might still contain data
+                std::cout << "[DEBUG] Partial command in buffer due to disconnection: [" << buf << "]" << std::endl;
+            }
+            break;
+        }
+        if (fullLine.empty() || fullLine == "\r") {
+            std::cerr << "[DEBUG] Ligne vide ignorée pour fd " << clientFd << std::endl;
+            return;
+        }
 		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
@@ -262,52 +180,6 @@ void Server::handleCommand(int clientFd) {
 		checkRegistration();
 	}
 }
-
-//Old version exec cmd modifie pour adapter a quit
-// void Server::execCommand() {
-// 	 // DEBUG:
-//     std::cout << "[DEBUG] Commande reçue : " << _client->getCmd()
-//               << " | passOk=" << _client->isPasswordOk()
-//               << ", nick=" << _client->getNickname()
-//               << ", user=" << _client->getUsername()
-//               << ", isReg=" << _client->isRegistered() << std::endl;
-//     // Empêche toute commande (sauf PASS et CAP) tant que le mot de passe n’est pas validé
-//     if (!_client->isPasswordOk() && _client->getCmd() != "PASS" && _client->getCmd() != "CAP") {
-//         if (!_client->hasSentPassError()) {
-//             sendToClient(_clientFd, "464 :Password required");
-//             _client->setPassErrorSent(true);
-//         }
-//         return;
-//     }
-//     if (_client->getCmd().empty()) {
-//         sendToClient(_clientFd, "421 * :Empty command");
-//         return;
-//     }
-//     const std::string& cmd = _client->getCmd();
-//     if (cmd == "CAP") {
-//         cap();
-//         return;
-//     }
-//     if (!_client->isPasswordOk() && _client->getCmd() != "PASS" && _client->getCmd() != "CAP") {
-//         if (!_client->hasSentPassError()) {
-//             sendToClient(_clientFd, "464 :Password required");
-//             _client->setPassErrorSent(true);  // pour éviter les spams
-//         }
-//         return;
-//     }
-//     for (int i = 0; i < 16; i++) {
-//         if (cmd == _type[i]) {
-//             try {
-// 				(this->*_function[i])();
-// 			} catch (const std::exception& e) {
-// 				std::cerr << "[CRASH] Exception during command " << cmd << ": " << e.what() << std::endl;
-// 			}
-//             checkRegistration();
-//             return;
-//         }
-//     }
-//     // sendToClient(_clientFd, "421 " + cmd + " :Unknown command");
-// }
 
 void Server::execCommand() {
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())

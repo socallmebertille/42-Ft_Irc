@@ -72,7 +72,6 @@ public:
 	void parseLine(const std::string& line);
 	
 	void appendToBuffer(const std::string& data);
-    void setCapNegotiationDone(bool done);
 
 };
 
