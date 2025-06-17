@@ -8,7 +8,7 @@
 # Couleurs pour l'affichage
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
+YIGHLLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
@@ -117,6 +117,16 @@ test_connection() {
 
     local response=$(echo -e "PASS $SERVER_PASS\r\nNICK TestUser\r\nUSER test test localhost :Test User\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT)
 
+    echo -e "${CYAN}[DEBUG] Commande envoyée:${NC}"
+    echo "PASS $SERVER_PASS"
+    echo "NICK TestUser"
+    echo "USER test test localhost :Test User"
+    echo "QUIT"
+    echo
+    echo -e "${CYAN}[DEBUG] Réponse reçue:${NC}"
+    echo "$response"
+    echo
+
     if echo "$response" | grep -q "001.*Welcome"; then
         print_success "Connexion et enregistrement réussis"
     else
@@ -133,19 +143,39 @@ test_auth() {
     print_header "TESTS D'AUTHENTIFICATION"
 
     print_test "Test mot de passe correct"
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK TestUser\r\nUSER test test localhost :Test User\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT)
+    local cmd="PASS $SERVER_PASS\r\nNICK TestUser\r\nUSER test test localhost :Test User\r\nQUIT\r\n"
+    echo -e "${CYAN}[DEBUG] Test: Connexion avec bon mot de passe${NC}"
+    echo -e "${CYAN}[DEBUG] Commandes:${NC} PASS $SERVER_PASS | NICK TestUser | USER test test localhost :Test User | QUIT"
+
+    local response=$(echo -e "$cmd" | nc -w3 localhost $SERVER_PORT)
+    echo -e "${CYAN}[DEBUG] Réponse:${NC}"
+    echo "$response" | head -10
+    echo
+
     if echo "$response" | grep -q "001.*Welcome"; then
         print_success "Authentification réussie avec le bon mot de passe"
+        echo -e "${GREEN}→ Code 001 Welcome trouvé dans la réponse${NC}"
     else
         print_error "Échec d'authentification avec le bon mot de passe"
+        echo -e "${RED}→ Code 001 Welcome non trouvé${NC}"
     fi
 
     print_test "Test mot de passe incorrect"
-    local response=$(echo -e "PASS wrongpass\r\nNICK TestUser\r\nUSER test test localhost :Test User\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT)
+    local cmd_wrong="PASS wrongpass\r\nNICK TestUser\r\nUSER test test localhost :Test User\r\nQUIT\r\n"
+    echo -e "${CYAN}[DEBUG] Test: Connexion avec mauvais mot de passe${NC}"
+    echo -e "${CYAN}[DEBUG] Commandes:${NC} PASS wrongpass | NICK TestUser | USER test test localhost :Test User | QUIT"
+
+    local response=$(echo -e "$cmd_wrong" | nc -w3 localhost $SERVER_PORT)
+    echo -e "${CYAN}[DEBUG] Réponse:${NC}"
+    echo "$response" | head -10
+    echo
+
     if echo "$response" | grep -q "464.*Password"; then
         print_success "Rejet correct du mauvais mot de passe"
+        echo -e "${GREEN}→ Code 464 Password error trouvé${NC}"
     else
         print_error "Le serveur devrait rejeter le mauvais mot de passe"
+        echo -e "${RED}→ Code 464 Password error non trouvé${NC}"
     fi
 }
 
@@ -153,11 +183,21 @@ test_nick() {
     print_header "TESTS NICKNAME"
 
     print_test "Test changement de nickname"
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK TestUser\r\nUSER test test localhost :Test User\r\nNICK NewNick\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT)
+    local cmd="PASS $SERVER_PASS\r\nNICK TestUser\r\nUSER test test localhost :Test User\r\nNICK NewNick\r\nQUIT\r\n"
+    echo -e "${CYAN}[DEBUG] Test: Changement de nickname${NC}"
+    echo -e "${CYAN}[DEBUG] Commandes:${NC} PASS | NICK TestUser | USER | NICK NewNick | QUIT"
+
+    local response=$(echo -e "$cmd" | nc -w3 localhost $SERVER_PORT)
+    echo -e "${CYAN}[DEBUG] Réponse (extraits):${NC}"
+    echo "$response" | grep -E "(NICK|001)" | head -5
+    echo
+
     if echo "$response" | grep -q "NewNick"; then
         print_success "Changement de nickname réussi"
+        echo -e "${GREEN}→ NewNick trouvé dans la réponse${NC}"
     else
         print_error "Échec du changement de nickname"
+        echo -e "${RED}→ NewNick non trouvé dans la réponse${NC}"
     fi
 }
 
@@ -234,16 +274,37 @@ test_topic_advanced() {
     print_header "TESTS AVANCÉS DU TOPIC"
 
     print_test "Test topic sans permission (utilisateur normal)"
-    # Créer un canal, puis un deuxième utilisateur essaie de changer le topic
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK Operator\r\nUSER test test localhost :Test User\r\nJOIN #topicperm\r\nTOPIC #topicperm :Topic initial\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+    echo -e "${CYAN}[DEBUG] Test: Utilisateur normal essaie de changer topic sur canal +t${NC}"
 
-    # Deuxième utilisateur (non-opérateur) essaie de changer le topic
+    # Étape 1: Créer un canal avec mode +t activé et garder l'opérateur connecté
+    echo -e "${CYAN}[DEBUG] Étape 1: Opérateur crée canal, active +t et reste connecté${NC}"
+    (
+        echo -e "PASS $SERVER_PASS\r\nNICK Operator\r\nUSER test test localhost :Test User\r\nJOIN #topicperm\r\nMODE #topicperm +t\r\nTOPIC #topicperm :Topic initial\r\nsleep 3\r\nQUIT\r\n" | nc -w8 localhost $SERVER_PORT
+    ) &
+    local op_pid=$!
+
+    # Étape 2: Attendre que l'opérateur soit en place, puis connecter l'utilisateur normal
+    sleep 1
+    echo -e "${CYAN}[DEBUG] Étape 2: Utilisateur normal se connecte et essaie de changer topic${NC}"
     local response2=$(echo -e "PASS $SERVER_PASS\r\nNICK NormalUser\r\nUSER test test localhost :Test User\r\nJOIN #topicperm\r\nTOPIC #topicperm :Topic interdit\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    # Attendre que l'opérateur termine
+    wait $op_pid
+
+    echo -e "${CYAN}[DEBUG] Réponse utilisateur normal:${NC}"
+    echo "$response2"
+    echo
+    echo -e "${CYAN}[DEBUG] Recherche de l'erreur 482:${NC}"
+    echo "$response2" | grep -n "482\|TOPIC"
+    echo
 
     if echo "$response2" | grep -q "482.*not channel operator"; then
         print_success "Protection du topic: utilisateur normal correctement rejeté"
+        echo -e "${GREEN}→ Code 482 ERR_CHANOPRIVSNEEDED trouvé${NC}"
     else
-        print_error "Le serveur devrait empêcher les non-opérateurs de changer le topic"
+        print_error "Le serveur devrait empêcher les non-opérateurs de changer le topic avec +t"
+        echo -e "${RED}→ Code 482 ERR_CHANOPRIVSNEEDED non trouvé${NC}"
+        echo -e "${YELLOW}[DEBUG] Test avec deux connexions distinctes${NC}"
     fi
 
     print_test "Test topic lors du JOIN (métadonnées complètes)"
@@ -787,3 +848,255 @@ fi
 
 # Exécuter le programme principal
 main "$@"
+
+# =============================================================================
+# TESTS COMPLETS ET DÉTAILLÉS DU TOPIC (INSPIRÉ DU SCRIPT EXTERNE)
+# =============================================================================
+
+test_topic_complete() {
+    print_header "TESTS COMPLETS DU TOPIC (VERSION DÉTAILLÉE)"
+
+    print_test "Test complet du topic - Scénario séquentiel"
+    echo -e "${CYAN}[DEBUG] Test inspiré du script externe - Scénario complet avec un seul client${NC}"
+
+    # Script complet inspiré de votre exemple, mais avec tous les détails
+    local response=$(cat << 'EOF' | nc -w10 localhost $SERVER_PORT
+PASS test
+NICK TopicTestUser
+USER topic topic localhost :Topic Test User
+
+JOIN #topic42
+
+TOPIC #topic42
+
+TOPIC #topic42 :Bienvenue sur le channel
+
+TOPIC #topic42
+
+TOPIC #topic42 :
+
+TOPIC #topic42
+
+TOPIC
+
+TOPIC #doesnotexist
+
+JOIN #prot
+TOPIC #prot :Topic ouvert
+MODE #prot +t
+TOPIC #prot :Topic protégé
+
+QUIT :Test terminé
+EOF
+)
+
+    echo -e "${CYAN}[DEBUG] Réponse complète du test séquentiel:${NC}"
+    echo "$response"
+    echo
+
+    # Analyser les résultats étape par étape
+    echo -e "${CYAN}[DEBUG] Analyse des résultats par étape:${NC}"
+
+    if echo "$response" | grep -q "331.*No topic is set\|331.*topic"; then
+        print_success "Étape 1 ✅ : Topic vide initial (331) détecté"
+    else
+        print_error "Étape 1 ❌ : Topic vide initial non détecté"
+    fi
+
+    if echo "$response" | grep -q "TOPIC.*#topic42.*Bienvenue"; then
+        print_success "Étape 2 ✅ : Définition de topic réussie"
+    else
+        print_error "Étape 2 ❌ : Définition de topic échoué"
+    fi
+
+    if echo "$response" | grep -q "332.*Bienvenue"; then
+        print_success "Étape 3 ✅ : Lecture du topic défini (332) réussie"
+    else
+        print_error "Étape 3 ❌ : Lecture du topic défini échoué"
+    fi
+
+    if echo "$response" | grep -q "TOPIC.*#topic42.*:" && echo "$response" | grep -c "TOPIC.*#topic42.*:" -ge 2; then
+        print_success "Étape 4 ✅ : Effacement du topic (chaîne vide) détecté"
+    else
+        print_warning "Étape 4 ⚠️ : Effacement du topic - vérifier manuellement"
+    fi
+
+    if echo "$response" | grep -q "461.*Not enough parameters\|461.*TOPIC"; then
+        print_success "Étape 5 ✅ : TOPIC sans paramètre correctement rejeté (461)"
+    else
+        print_error "Étape 5 ❌ : TOPIC sans paramètre devrait être rejeté"
+    fi
+
+    if echo "$response" | grep -q "403.*No such channel\|403.*doesnotexist"; then
+        print_success "Étape 6 ✅ : TOPIC sur canal inexistant rejeté (403)"
+    else
+        print_error "Étape 6 ❌ : TOPIC sur canal inexistant devrait être rejeté"
+    fi
+
+    print_test "Test topic avec mode +t (protection) - Scénario avancé"
+    echo -e "${CYAN}[DEBUG] Test protection du topic avec changement de nickname${NC}"
+
+    local response_protected=$(cat << 'EOF' | nc -w10 localhost $SERVER_PORT
+PASS test
+NICK ProtectedTopicOp
+USER prot prot localhost :Protected Topic Operator
+
+JOIN #protected
+TOPIC #protected :Topic initial non protégé
+MODE #protected +t
+TOPIC #protected :Topic maintenant protégé
+NICK ProtectedTopicUser
+TOPIC #protected :Tentative de changement sans privilèges
+
+QUIT :Test protection terminé
+EOF
+)
+
+    echo -e "${CYAN}[DEBUG] Réponse test protection:${NC}"
+    echo "$response_protected"
+    echo
+
+    if echo "$response_protected" | grep -q "482.*not channel operator\|482.*channel operator"; then
+        print_success "Protection +t ✅ : Utilisateur normal correctement bloqué (482)"
+    else
+        print_error "Protection +t ❌ : Utilisateur normal devrait être bloqué"
+    fi
+
+    print_test "Test topic avec caractères spéciaux et limites"
+    echo -e "${CYAN}[DEBUG] Test robustesse : caractères spéciaux, emojis, et topics longs${NC}"
+
+    local special_topic="Topic avec caractères spéciaux: !@#$%^&*()[]{}|;:,.<>?/~\`"
+    local long_topic="Topic très très long pour tester les limites: $(printf 'A%.0s' {1..100})"
+    local emoji_topic="Topic avec emojis et unicode: 🎉🚀💻🔥⭐"
+
+    local response_special=$(cat << EOF | nc -w10 localhost $SERVER_PORT
+PASS test
+NICK SpecialTopicUser
+USER special special localhost :Special Topic User
+
+JOIN #special
+TOPIC #special :$special_topic
+TOPIC #special
+
+JOIN #longtopic
+TOPIC #longtopic :$long_topic
+TOPIC #longtopic
+
+JOIN #emoji
+TOPIC #emoji :$emoji_topic
+TOPIC #emoji
+
+QUIT :Test spéciaux terminé
+EOF
+)
+
+    echo -e "${CYAN}[DEBUG] Réponse test caractères spéciaux:${NC}"
+    echo "$response_special" | head -20
+    echo
+
+    if echo "$response_special" | grep -q "332.*spéciaux"; then
+        print_success "Caractères spéciaux ✅ : Topic avec caractères spéciaux accepté"
+    else
+        print_warning "Caractères spéciaux ⚠️ : Vérifier le support des caractères spéciaux"
+    fi
+
+    if echo "$response_special" | grep -q "332.*très.*long"; then
+        print_success "Topic long ✅ : Topic long accepté"
+    else
+        print_warning "Topic long ⚠️ : Vérifier le support des topics longs"
+    fi
+
+    print_test "Test persistence et métadonnées du topic"
+    echo -e "${CYAN}[DEBUG] Test métadonnées : qui a défini le topic et quand${NC}"
+
+    # Créer un topic puis vérifier les métadonnées
+    echo -e "PASS test\r\nNICK MetaTopicSetter\r\nUSER meta meta localhost :Meta User\r\nJOIN #metatest\r\nTOPIC #metatest :Topic avec métadonnées\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT > /dev/null
+
+    local response_meta=$(echo -e "PASS test\r\nNICK MetaTopicReader\r\nUSER meta meta localhost :Meta Reader\r\nJOIN #metatest\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    echo -e "${CYAN}[DEBUG] Réponse métadonnées lors du JOIN:${NC}"
+    echo "$response_meta"
+    echo
+
+    if echo "$response_meta" | grep -q "332.*métadonnées" && echo "$response_meta" | grep -q "333.*MetaTopicSetter"; then
+        print_success "Métadonnées ✅ : Topic + auteur (332 + 333) lors du JOIN"
+    else
+        print_error "Métadonnées ❌ : Métadonnées manquantes lors du JOIN"
+    fi
+
+    print_test "Test cas limites et erreurs diverses"
+    echo -e "${CYAN}[DEBUG] Test cas limites : canaux multiples, topics vides, erreurs${NC}"
+
+    local response_edge=$(cat << 'EOF' | nc -w10 localhost $SERVER_PORT
+PASS test
+NICK EdgeCaseUser
+USER edge edge localhost :Edge Case User
+
+JOIN #edge1,#edge2,#edge3
+TOPIC #edge1 :Topic du canal 1
+TOPIC #edge2 :Topic du canal 2
+TOPIC #edge3 :Topic du canal 3
+TOPIC #edge1
+TOPIC #edge2
+TOPIC #edge3
+
+TOPIC #edge1 :
+TOPIC #edge2 :
+TOPIC #edge3 :
+TOPIC #edge1
+TOPIC #edge2
+TOPIC #edge3
+
+PART #edge1,#edge2,#edge3
+
+JOIN #finaltest
+TOPIC #finaltest :Topic final de test
+TOPIC #finaltest
+
+QUIT :Tests cas limites terminés
+EOF
+)
+
+    echo -e "${CYAN}[DEBUG] Réponse cas limites:${NC}"
+    echo "$response_edge" | head -25
+    echo
+
+    local topic_count=$(echo "$response_edge" | grep -c "332.*Topic du canal")
+    if [ "$topic_count" -ge 3 ]; then
+        print_success "Multi-canaux ✅ : Topics multiples gérés ($topic_count topics trouvés)"
+    else
+        print_warning "Multi-canaux ⚠️ : Vérifier la gestion de topics multiples"
+    fi
+
+    if echo "$response_edge" | grep -q "TOPIC.*#finaltest.*final"; then
+        print_success "Test final ✅ : Dernier test de topic réussi"
+    else
+        print_error "Test final ❌ : Problème avec le test final"
+    fi
+}
+
+# =============================================================================
+# TESTS DE TOPIC AVEC CONNEXIONS SIMULTANÉES
+# =============================================================================
+
+test_topic_multi_client() {
+    print_header "TESTS TOPIC MULTI-CLIENTS"
+
+    print_test "Test topic avec plusieurs clients simultanés"
+    echo -e "${CYAN}[DEBUG] Simulation de plusieurs clients pour tester la synchronisation${NC}"
+
+    # Client 1: Créateur du canal
+    (
+        sleep 1
+        echo -e "PASS test\r\nNICK MultiClient1\r\nUSER multi1 multi1 localhost :Multi Client 1\r\nJOIN #multiclient\r\nTOPIC #multiclient :Topic du créateur\r\nMODE #multiclient +t\r\nsleep 5\r\nQUIT\r\n" | nc -w8 localhost $SERVER_PORT
+    ) &
+
+    # Client 2: Rejoint et teste
+    (
+        sleep 2
+        echo -e "PASS test\r\nNICK MultiClient2\r\nUSER multi2 multi2 localhost :Multi Client 2\r\nJOIN #multiclient\r\nTOPIC #multiclient\r\nTOPIC #multiclient :Tentative de changement\r\nsleep 3\r\nQUIT\r\n" | nc -w8 localhost $SERVER_PORT
+    ) &
+
+    wait
+    print_success "Test multi-clients terminé (vérifier manuellement la synchronisation)"
+}

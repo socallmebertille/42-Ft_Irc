@@ -1,106 +1,5 @@
 [32mENTER of client : [0mfd[5], ip[127.0.0.1]
 [PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TestUser]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [QUIT]
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[TestUser][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TestUser]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [QUIT]
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[TestUser][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS wrongpass]
-[PARSE FD 5] >>> [NICK TestUser]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[PARSE FD 5] >>> [QUIT]
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TestUser]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [NICK NewNick]
-[PARSE FD 5] >>> [QUIT]
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[NewNick][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TestUser]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [QUIT]
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[TestUser][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TestUser]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [JOIN #test]
-[0;31m[DEBUG] JOIN reçu avec argument : [#test][0m
-[32mTestUser joined the channel #test[0m
-There are currently 1 members in the channel : #test.
-[PARSE FD 5] >>> [PART #test]
-[0;31mTestUser left the channel #test[0m
-There are currently 0 members in the channel : #test.
-[PARSE FD 5] >>> [QUIT]
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[TestUser][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TestUser]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [JOIN #topictest]
-[0;31m[DEBUG] JOIN reçu avec argument : [#topictest][0m
-[32mTestUser joined the channel #topictest[0m
-There are currently 1 members in the channel : #topictest.
-[PARSE FD 5] >>> [TOPIC #topictest]
-[PARSE FD 5] >>> [QUIT]
-[0;31mTestUser left the channel #topictest[0m
-There are currently 0 members in the channel : #topictest.
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[TestUser][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TopicSetter]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [JOIN #topictest]
-[0;31m[DEBUG] JOIN reçu avec argument : [#topictest][0m
-[32mTopicSetter joined the channel #topictest[0m
-There are currently 1 members in the channel : #topictest.
-[PARSE FD 5] >>> [TOPIC #topictest :Nouveau topic de test]
-[PARSE FD 5] >>> [QUIT]
-[0;31mTopicSetter left the channel #topictest[0m
-There are currently 0 members in the channel : #topictest.
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[TopicSetter][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
-[PARSE FD 5] >>> [NICK TopicGetter]
-[PARSE FD 5] >>> [USER test test localhost :Test User]
-[DEBUG] → registerUser called
-[PARSE FD 5] >>> [JOIN #topictest]
-[0;31m[DEBUG] JOIN reçu avec argument : [#topictest][0m
-[32mTopicGetter joined the channel #topictest[0m
-There are currently 1 members in the channel : #topictest.
-[PARSE FD 5] >>> [TOPIC #topictest :Test topic]
-[PARSE FD 5] >>> [TOPIC #topictest]
-[PARSE FD 5] >>> [QUIT]
-[0;31mTopicGetter left the channel #topictest[0m
-There are currently 0 members in the channel : #topictest.
-[PARSE FD 5] >>> []
-[0;31mCLEANUP client fd[5] nickname[TopicGetter][0m
-[32mENTER of client : [0mfd[5], ip[127.0.0.1]
-[PARSE FD 5] >>> [PASS test]
 [PARSE FD 5] >>> [NICK Operator]
 [PARSE FD 5] >>> [USER test test localhost :Test User]
 [DEBUG] → registerUser called
@@ -108,11 +7,13 @@ There are currently 0 members in the channel : #topictest.
 [0;31m[DEBUG] JOIN reçu avec argument : [#topicperm][0m
 [32mOperator joined the channel #topicperm[0m
 There are currently 1 members in the channel : #topicperm.
+[PARSE FD 5] >>> [MODE #topicperm +t]
 [PARSE FD 5] >>> [TOPIC #topicperm :Topic initial]
+[PARSE FD 5] >>> [sleep 3]
 [PARSE FD 5] >>> [QUIT]
 [0;31mOperator left the channel #topicperm[0m
 There are currently 0 members in the channel : #topicperm.
-[PARSE FD 5] >>> []
+[DEBUG] Ligne vide ignorée pour fd 5
 [0;31mCLEANUP client fd[5] nickname[Operator][0m
 [32mENTER of client : [0mfd[5], ip[127.0.0.1]
 [PARSE FD 5] >>> [PASS test]
@@ -127,7 +28,7 @@ There are currently 1 members in the channel : #topicperm.
 [PARSE FD 5] >>> [QUIT]
 [0;31mNormalUser left the channel #topicperm[0m
 There are currently 0 members in the channel : #topicperm.
-[PARSE FD 5] >>> []
+[DEBUG] Ligne vide ignorée pour fd 5
 [0;31mCLEANUP client fd[5] nickname[NormalUser][0m
 [32mENTER of client : [0mfd[5], ip[127.0.0.1]
 [PARSE FD 5] >>> [PASS test]
@@ -142,7 +43,7 @@ There are currently 1 members in the channel : #topicjoin.
 [PARSE FD 5] >>> [QUIT]
 [0;31mTopicSetter left the channel #topicjoin[0m
 There are currently 0 members in the channel : #topicjoin.
-[PARSE FD 5] >>> []
+[DEBUG] Ligne vide ignorée pour fd 5
 [0;31mCLEANUP client fd[5] nickname[TopicSetter][0m
 [32mENTER of client : [0mfd[5], ip[127.0.0.1]
 [PARSE FD 5] >>> [PASS test]
@@ -156,7 +57,7 @@ There are currently 1 members in the channel : #topicjoin.
 [PARSE FD 5] >>> [QUIT]
 [0;31mTopicJoiner left the channel #topicjoin[0m
 There are currently 0 members in the channel : #topicjoin.
-[PARSE FD 5] >>> []
+[DEBUG] Ligne vide ignorée pour fd 5
 [0;31mCLEANUP client fd[5] nickname[TopicJoiner][0m
 [32mENTER of client : [0mfd[5], ip[127.0.0.1]
 [PARSE FD 5] >>> [PASS test]
@@ -173,5 +74,5 @@ There are currently 1 members in the channel : #topicchange.
 [PARSE FD 5] >>> [QUIT]
 [0;31mTopicChanger left the channel #topicchange[0m
 There are currently 0 members in the channel : #topicchange.
-[PARSE FD 5] >>> []
+[DEBUG] Ligne vide ignorée pour fd 5
 [0;31mCLEANUP client fd[5] nickname[TopicChanger][0m

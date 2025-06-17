@@ -69,6 +69,13 @@ void Channel::setTopic(const std::string& topic, const std::string& setBy) {
 	_topicSetTime = time(NULL);
 }
 
+void Channel::clearTopic() {
+	_topic.clear();
+	_topicSetBy.clear();
+	_topicSetTime = 0;
+}
+
+
 // ========== MODE +i (INVITE ONLY) ==========
 void Channel::setInviteOnly(bool value) { _inviteOnly = value;}
 

@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include "Replies.hpp"
-#include <sstream>  // For ostringstream
-#include <cstdlib>  // For atoi (C++98 compatible)
+#include <sstream>
+#include <cstdlib>
 
 void Server::cap() {
     std::string arg = _client->getArg();
@@ -348,7 +348,6 @@ void Server::quit() {
 }
 
 void Server::topic() {
-
 	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
 		return;
 
@@ -356,7 +355,6 @@ void Server::topic() {
 		sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
 		return;
 	}
-
 	std::string args = _client->getArg();
 	if (args.empty()) {
 		sendReply(ERR_NEEDMOREPARAMS, _client, "TOPIC", "", "Not enough parameters");
@@ -365,54 +363,49 @@ void Server::topic() {
 	std::istringstream iss(args);
 	std::string channelName;
 	iss >> channelName;
-
 	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
 	if (it == _channels.end()) {
 		sendReply(ERR_NOSUCHCHANNEL, _client, channelName, "", "No such channel");
 		return;
 	}
-
 	Channel& chan = it->second;
 	if (!chan.isMember(_client)) {
 		sendReply(ERR_NOTONCHANNEL, _client, channelName, "", "You're not on that channel");
 		return;
 	}
-
 	size_t colonPos = args.find(" :");
-
 	if (colonPos != std::string::npos) {
-		std::string newTopic = args.substr(colonPos + 2); // +2 to skip " :"
-
-		// Vérifier les permissions : si +t est activé, seuls les opérateurs peuvent changer le topic
+		std::string newTopic = args.substr(colonPos + 2); // Skip " :"
 		if (chan.isTopicProtected() && !chan.isOperator(_client)) {
 			sendReply(ERR_CHANOPRIVSNEEDED, _client, channelName, "", "You're not channel operator");
 			return;
 		}
-
-		chan.setTopic(newTopic, _client->getNickname());  // Use the new version with metadata
-
+		if (newTopic.empty()) {
+			chan.clearTopic();
+			return;
+		}
+		chan.setTopic(newTopic, _client->getNickname());
 		std::string topicMsg = ":" + _client->getPrefix() + " TOPIC " + channelName + " :" + newTopic;
 		const std::set<Client*>& members = chan.getMembers();
-		for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+		for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
 			sendToClient((*it)->getFd(), topicMsg);
-		}
 		sendReply(RPL_TOPIC, _client, channelName, "", chan.getTopic());
-
 		std::ostringstream timeStr;
 		timeStr << chan.getTopicSetTime();
 		sendReply(RPL_TOPICWHOTIME, _client, channelName, chan.getTopicSetBy(), timeStr.str());
-
-		// std::cout << "[DEBUG] TOPIC modified for " << channelName << " by " << _client->getNickname() << " : " << newTopic << std::endl;
-	} else {
-		if (chan.getTopic().empty()) {
-			sendReply(331, _client, channelName, "", "No topic is set");
-		} else {
-			sendReply(332, _client, channelName, "", chan.getTopic());
+	}
+	else {
+		if (chan.getTopic().empty())
+			sendReply(RPL_NOTOPIC, _client, channelName, "", "No topic is set");
+		else {
+			sendReply(RPL_TOPIC, _client, channelName, "", chan.getTopic());
+			std::ostringstream timeStr;
+			timeStr << chan.getTopicSetTime();
+			sendReply(RPL_TOPICWHOTIME, _client, channelName, chan.getTopicSetBy(), timeStr.str());
 		}
-
-		// std::cout << "[DEBUG] TOPIC queried for " << channelName << " by " << _client->getNickname() << std::endl;
 	}
 }
+
 
 void Server::invite() {
 	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())

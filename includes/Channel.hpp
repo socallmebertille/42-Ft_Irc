@@ -78,6 +78,7 @@ public:
 	void setTopic(const std::string& topic, const std::string& setBy);
 	time_t getTopicSetTime() const { return _topicSetTime; }
 	bool hasTopic() const { return !_topic.empty(); }
+	void clearTopic();
 
 };
 
