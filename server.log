@@ -3,5 +3,92 @@
 [PARSE FD 5] >>> [NICK TestOperator]
 [PARSE FD 5] >>> [USER op op localhost :Test Operator]
 [DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #protection_test]
+[0;31m[DEBUG] JOIN reçu avec argument : [#protection_test][0m
+[32mTestOperator joined the channel #protection_test[0m
+There are currently 1 members in the channel : #protection_test.
+[0;31m[DEBUG JOIN] Canal: #protection_test[0m
+[0;31m[DEBUG JOIN] Nouveau membre: TestOperator[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: TestOperator [0m
+[PARSE FD 5] >>> [MODE #protection_test +t]
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [TOPIC #protection_test :Topic protégé par opérateur]
+[0;31m[DEBUG TOPIC] Client: TestOperator[0m
+[0;31m[DEBUG TOPIC] Canal: #protection_test[0m
+[0;31m[DEBUG TOPIC] Topic protégé: OUI[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [NICK TestOperatorRenamed]
+[PARSE FD 5] >>> [TOPIC #protection_test :Changement par opérateur renommé]
+[0;31m[DEBUG TOPIC] Client: TestOperatorRenamed[0m
+[0;31m[DEBUG TOPIC] Canal: #protection_test[0m
+[0;31m[DEBUG TOPIC] Topic protégé: OUI[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[PARSE FD 5] >>> [QUIT :Test terminé]
+[0;31mTestOperatorRenamed left the channel #protection_test[0m
+There are currently 0 members in the channel : #protection_test.
 [DEBUG] Ligne vide ignorée pour fd 5
-[0;31mCLEANUP client fd[5] nickname[TestOperator][0m
+[0;31mCLEANUP client fd[5] nickname[TestOperatorRenamed][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[PARSE FD 5] >>> [PASS test]
+[PARSE FD 5] >>> [NICK ChannelOwner]
+[PARSE FD 5] >>> [USER owner owner localhost :Channel Owner]
+[DEBUG] → registerUser called
+[PARSE FD 5] >>> [JOIN #realtest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#realtest][0m
+[32mChannelOwner joined the channel #realtest[0m
+There are currently 1 members in the channel : #realtest.
+[0;31m[DEBUG JOIN] Canal: #realtest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: ChannelOwner[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 1[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? OUI[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ChannelOwner [0m
+[PARSE FD 5] >>> [MODE #realtest +t]
+[0;31m[DEBUG MODE] Processing flag: t adding: YES[0m
+[0;31m[DEBUG MODE] After processing +t: isTopicProtected = OUI[0m
+[PARSE FD 5] >>> [TOPIC #realtest :Topic initial protégé]
+[0;31m[DEBUG TOPIC] Client: ChannelOwner[0m
+[0;31m[DEBUG TOPIC] Canal: #realtest[0m
+[0;31m[DEBUG TOPIC] Topic protégé: OUI[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: OUI[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] AUTORISÉ - Changement de topic[0m
+[DEBUG] Ligne vide ignorée pour fd 5
+[32mENTER of client : [0mfd[6], ip[127.0.0.1]
+[PARSE FD 6] >>> [PASS test]
+[PARSE FD 6] >>> [NICK RealNormalUser]
+[PARSE FD 6] >>> [USER normal normal localhost :Normal User]
+[DEBUG] → registerUser called
+[PARSE FD 6] >>> [JOIN #realtest]
+[0;31m[DEBUG] JOIN reçu avec argument : [#realtest][0m
+[32mRealNormalUser joined the channel #realtest[0m
+There are currently 2 members in the channel : #realtest.
+[0;31m[DEBUG JOIN] Canal: #realtest[0m
+[0;31m[DEBUG JOIN] Nouveau membre: RealNormalUser[0m
+[0;31m[DEBUG JOIN] Nombre total de membres: 2[0m
+[0;31m[DEBUG JOIN] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG JOIN] Est-ce que ce client est opérateur? NON[0m
+[0;31m[DEBUG JOIN] Opérateurs actuels: ChannelOwner [0m
+[PARSE FD 6] >>> [TOPIC #realtest :Tentative par vrai non-opérateur]
+[0;31m[DEBUG TOPIC] Client: RealNormalUser[0m
+[0;31m[DEBUG TOPIC] Canal: #realtest[0m
+[0;31m[DEBUG TOPIC] Topic protégé: OUI[0m
+[0;31m[DEBUG TOPIC] Client est opérateur: NON[0m
+[0;31m[DEBUG TOPIC] Nombre d'opérateurs: 1[0m
+[0;31m[DEBUG TOPIC] BLOQUÉ - Envoi erreur 482[0m
+[PARSE FD 6] >>> [QUIT :Test utilisateur normal terminé]
+[0;31mRealNormalUser left the channel #realtest[0m
+There are currently 1 members in the channel : #realtest.
+[DEBUG] Ligne vide ignorée pour fd 6
+[0;31mCLEANUP client fd[6] nickname[RealNormalUser][0m
+[0;31mCLEANUP client fd[5] nickname[ChannelOwner][0m
+[0;31mChannelOwner left the channel #realtest[0m
+There are currently 0 members in the channel : #realtest.
