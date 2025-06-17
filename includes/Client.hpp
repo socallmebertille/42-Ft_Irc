@@ -27,7 +27,9 @@ private:
 	std::string _command;
 	std::string _arg;
 
+	// Client spécial ? (e.g. netcat sans \r)
 	bool _clientType;
+	bool _capNegotiationDone;
 
 public:
 	Client(int fd, const std::string& ip);
@@ -57,6 +59,8 @@ public:
 	void setPasswordOk(bool ok);
 	void setCommand(const std::string& cmd);
 	void setArg(const std::string& arg);
+	void setCapNegotiationDone(bool done);
+
 	// void setBuf(const std::string& buf);
 	void eraseBuf();
 	void setClientType(bool type);

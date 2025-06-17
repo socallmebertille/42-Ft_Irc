@@ -6,7 +6,7 @@
 #include <ctime>
 
 Channel::Channel(const std::string& name)
-	: _name(name), _topic(""), _topicSetBy(""), _topicSetTime(0), _inviteOnly(false), _topicProtected(false),
+	: _name(name), _topic(""), _topicSetBy(""), _topicSetTime(0), _creator(""), _inviteOnly(false), _topicProtected(false),
 	  _key(""), _hasKey(false), _userLimit(0), _limitActive(false) {}
 
 Channel::~Channel() {}
@@ -121,6 +121,16 @@ void Channel::invite(Client* client) {
 
 bool Channel::isInvited(Client* client) const {
 	return _invited.find(client) != _invited.end();
+}
+
+// ========== CREATOR ==========
+
+void Channel::setCreator(const std::string& nickname) {
+	_creator = nickname;
+}
+
+bool Channel::isCreator(Client* client) const {
+	return client && client->getNickname() == _creator;
 }
 
 // ========== TOPIC ==========

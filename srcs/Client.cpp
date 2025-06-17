@@ -83,6 +83,9 @@ void Client::registerUser(const std::string& nick, const std::string& user, cons
 // }
 
 void Client::parseLine(const std::string& line) {
+	_command.clear();
+	_arg.clear();
+
 	std::istringstream iss(line);
 	iss >> _command;
 	std::transform(_command.begin(), _command.end(), _command.begin(), ::toupper);
@@ -94,3 +97,5 @@ void Client::parseLine(const std::string& line) {
 void Client::appendToBuffer(const std::string& data) {
 	_readBuf += data;
 }
+
+void Client::setCapNegotiationDone(bool done) { _capNegotiationDone = done; }

@@ -254,7 +254,7 @@ void Server::handleCommand(int clientFd) {
 		}
 		else
 			break;
-		// std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
+		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
 			continue;
@@ -312,24 +312,30 @@ void Server::handleCommand(int clientFd) {
 void Server::execCommand() {
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
-    // DEBUG:
-    // std::cout << "[DEBUG] Commande reçue : " << _client->getCmd()
-    //           << " | passOk=" << _client->isPasswordOk()
-    //           << ", nick=" << _client->getNickname()
-    //           << ", user=" << _client->getUsername()
-    //           << ", isReg=" << _client->isRegistered() << std::endl;
+
     const std::string& cmd = _client->getCmd();
     if (cmd.empty()) {
         sendReply(ERR_UNKNOWNCOMMAND, _client, "*", "", "Empty command");
         return;
     }
-    if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP") {
+
+    // Ordre strict : PASS → NICK → USER
+    // Seules CAP, PASS et JOIN sont autorisées sans mot de passe validé
+    // (JOIN est autorisé pour gérer "JOIN :" envoyé par certains clients)
+    if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP" && cmd != "JOIN") {
         if (!_client->hasSentPassError()) {
             sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
             _client->setPassErrorSent(true);
         }
         return;
     }
+
+    // Empêcher USER si NICK n'est pas encore défini (ordre strict)
+    if (cmd == "USER" && !_client->hasNick()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "You must set a nickname first");
+        return;
+    }
+
     if (cmd == "CAP") {
         cap();
         return;
@@ -349,8 +355,9 @@ void Server::execCommand() {
 }
 
 void Server::checkRegistration() {
+    // Vérifier que TOUTES les conditions sont remplies pour l'enregistrement
     if (!_client->isRegistered()
-        && _client->isPasswordOk()
+        && _client->isPasswordOk()  // ← Le mot de passe DOIT être validé
         && _client->hasNick()
         && !_client->getNickname().empty()
         && _client->hasUser()
@@ -359,6 +366,13 @@ void Server::checkRegistration() {
         _client->registerUser(_client->getNickname(), _client->getUsername(), _client->getRealname());
         sendReply(RPL_WELCOME, _client, "", "", "Welcome to the IRC server!");
         // std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
+    }
+    // Si le mot de passe n'est pas OK mais que le client essaie d'utiliser d'autres commandes
+    else if (!_client->isPasswordOk() && _client->hasNick() && _client->hasUser()) {
+        if (!_client->hasSentPassError()) {
+            sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
+            _client->setPassErrorSent(true);
+        }
     }
 }
 

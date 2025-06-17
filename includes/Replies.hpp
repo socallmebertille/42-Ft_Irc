@@ -25,6 +25,7 @@
 
 #define ERR_NORECIPIENT       411
 #define ERR_NOTEXTTOSEND      412
+#define ERR_NOORIGIN          409
 #define ERR_UNKNOWNCOMMAND    421
 
 #define ERR_NONICKNAMEGIVEN   431

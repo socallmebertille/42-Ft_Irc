@@ -14,6 +14,7 @@ private:
 	std::string _topic;
 	std::string _topicSetBy;     // Qui a défini le topic
 	time_t _topicSetTime;        // Quand le topic a été défini
+	std::string _creator;        // Créateur du canal
 
 	std::set<Client*> _members;
 	std::set<Client*> _operators;// +o
@@ -47,6 +48,10 @@ public:
 	void invite(Client* client);
 	bool isInvited(Client* client) const;
 
+	// Gestion du créateur
+	void setCreator(const std::string& nickname);
+	bool isCreator(Client* client) const;
+
 	// Modes +i
 	void setInviteOnly(bool value);
 	bool isInviteOnly() const;
@@ -69,7 +74,7 @@ public:
 
 	// Gestion du topic
 	// void setTopic(const std::string& topic) { _topic = topic; }
-	void setTopic(const std::string& topic, const std::string& setBy); 
+	void setTopic(const std::string& topic, const std::string& setBy);
 	const std::string& getTopic() const { return _topic; }
 	const std::string& getTopicSetBy() const { return _topicSetBy; }
 	time_t getTopicSetTime() const { return _topicSetTime; }
