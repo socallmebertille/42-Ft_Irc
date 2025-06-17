@@ -178,12 +178,34 @@ void Server::privmsg() {
         sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "No text to send");
         return;
     }
-    // std::cout << "[DEBUG] PRIVMSG - Target: '" << target << "', Message: '" << message << "'" << std::endl;
-    if (target[0] == '#') {
-        handleChannelMessage(target, message);
-    } else {
-        handlePrivateMessage(target, message);
-    }
+
+	if (_client->getNickname() == "irc_bot")
+		return; // Évite que le bot réagisse à ses propres messages
+	if (message[0] == '!') {
+	std::string botResponse = processIRCBotCommand(message, target);
+	if (!botResponse.empty()) {
+		std::string response = ":irc_bot!bot@localhost PRIVMSG " + target + " :" + botResponse + "\r\n";
+		if (target[0] == '#') {
+			// envoie à tous les membres du channel
+			std::map<std::string, Channel>::iterator it = _channels.find(target);
+			if (it != _channels.end()) {
+				const std::set<Client*>& members = it->second.getMembers();
+				for (std::set<Client*>::const_iterator itC = members.begin(); itC != members.end(); ++itC)
+					sendToClient((*itC)->getFd(), response);
+			}
+		}
+		else {
+			sendToClient(_clientFd, response);
+		}
+	}
+    	// std::cout << "[DEBUG] PRIVMSG - Target: '" << target << "', Message: '" << message << "'" << std::endl;
+    	if (target[0] == '#') {
+        	handleChannelMessage(target, message);
+    	}
+		else {
+        	handlePrivateMessage(target, message);
+    	}
+	}
 }
 
 void Server::join() {

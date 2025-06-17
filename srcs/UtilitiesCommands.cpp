@@ -2,6 +2,7 @@
 #include "Replies.hpp"
 #include <sstream>
 #include <cstdlib>
+#include <ctime>
 
 void Server::handleChannelMessage(const std::string& channelName, const std::string& message) {
     std::map<std::string, Channel>::iterator it = _channels.find(channelName);
@@ -14,6 +15,19 @@ void Server::handleChannelMessage(const std::string& channelName, const std::str
         sendReply(ERR_CANNOTSENDTOCHAN, _client, channelName, "", "Cannot send to channel");
         return;
     }
+    if (message.find("!") == 0) {
+        std::string botResponse = processIRCBotCommand(message, channelName);
+        if (!botResponse.empty()) {
+            std::string botMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) + " PRIVMSG " + channelName + " :" + botResponse;
+            const std::set<Client*>& members = channel.getMembers();
+            for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+                sendToClient((*it)->getFd(), botMsg);
+            }
+            return;
+        }
+    }
+    // ==========================================
+
     std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + channelName + " :" + message;
     const std::set<Client*>& members = channel.getMembers();
     int sentCount = 0;
@@ -166,4 +180,40 @@ bool Server::handleOperatorMode(bool adding, const std::vector<std::string>& par
 	}
 	paramIndex++;
 	return true;
+}
+
+std::string Server::processIRCBotCommand(const std::string& command, const std::string& channelName) {
+    // Éviter l'erreur de paramètre non utilisé
+    (void)channelName;
+
+    // Commandes du bot IRC
+    if (command == "!hello") {
+        return "Hello, I am your friendly IRC bot!";
+    }
+	else if (command == "!time") {
+        // Répondre avec l'heure actuelle
+        time_t now = time(0);
+        char* dt = ctime(&now);
+        std::string timeStr = dt;
+        // Enlever le \n final
+        if (!timeStr.empty() && timeStr[timeStr.length()-1] == '\n') {
+            timeStr.erase(timeStr.length()-1);
+        }
+        return "Current time: " + timeStr;
+    }
+	else if (command == "!help") {
+        return "Available commands: !hello, !time, !help, !users, !joke, !ping";
+    }
+	else if (command == "!users") {
+        std::ostringstream oss;
+        oss << "There are " << _clients.size() << " users connected to the server";
+        return oss.str();
+    }
+	else if (command == "!joke") {
+		return "A quoi sert Internet Explorer ? A télécharger Google Chrome. ";
+	}
+	else if (command == "!ping") {
+		return "!pong ";
+	}
+    return "";
 }

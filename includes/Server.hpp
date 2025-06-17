@@ -92,6 +92,9 @@ private:
                            std::string& appliedModes, std::string& appliedParams);
     void handleChannelMessage(const std::string& channelName, const std::string& message);
     void handlePrivateMessage(const std::string& targetNick, const std::string& message);
+
+    // ========== 🤖 BOT IRC FEATURE ==========
+    std::string processIRCBotCommand(const std::string& command, const std::string& channelName);
 };
 
 #endif
