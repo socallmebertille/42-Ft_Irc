@@ -579,95 +579,76 @@ void Server::whois() {
 }
 
 void Server::mode() {
-	if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
-		return;
+    if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+        return;
+    const std::string& args = _client->getArg();
+    if (args.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "MODE", "", "Not enough parameters");
+        return;
+    }
+    std::istringstream iss(args);
+    std::string target;
+    iss >> target;
+    std::string modeStr;
+    std::vector<std::string> params;
+    // Get modes & parameters
+    if (!(iss >> modeStr)) {
+        // If no mode : show current modes
+        Channel* chan = NULL;
+        if (!validateModeCommand(target, chan))
+            return;
+        showCurrentModes(target, *chan);
+        return;
+    }
+    std::string param;
+    while (iss >> param) {
+        params.push_back(param);
+    }
+    // Check if it's a user mode (target = client's nickname)
+    if (target == _client->getNickname()) {
+        return; // User mode - ignore
+    }
+    // Validate channel and get references
+    Channel* chan = NULL;
+    if (!validateModeCommand(target, chan)) {
+        return; //error already sent
+    }
+    if (!chan->isOperator(_client)) {
+        sendReply(ERR_CHANOPRIVSNEEDED, _client, target, "", "You're not channel operator");
+        return;
+    }
+    // Process modes with improved parsing
+    bool adding = true; // Start with + by default
+    size_t paramIndex = 0;
+    std::string appliedModes = "";
+    std::string appliedParams = "";
+    for (size_t i = 0; i < modeStr.length(); ++i) {
+        char flag = modeStr[i];
+        if (flag == '+') {
+            adding = true;
+            continue;
+        }
+        if (flag == '-') {
+            adding = false;
+            continue;
+        }
+        // If mode need param, he should be in params[paramIndex]
+        if (!processSingleMode(flag, adding, params, paramIndex, *chan, target, appliedModes, appliedParams)) {
+            continue;
+        }
+    }
 
-	const std::string& args = _client->getArg();
-	if (args.empty()) {
-		sendReply(ERR_NEEDMOREPARAMS, _client, "MODE", "", "Not enough parameters");
-		return;
-	}
-
-	std::istringstream iss(args);
-	std::string target, modeStr;
-	iss >> target >> modeStr;
-
-	// Check if it's a user mode (target = client's nickname)
-	if (target == _client->getNickname()) {
-		return; // User mode - ignore silently
-	}
-
-	// Validate channel and get reference
-	Channel* chan = NULL;
-	if (!validateModeCommand(target, chan)) {
-		return; // Error already sent
-	}
-
-	// If no mode string, show current modes
-	if (modeStr.empty()) {
-		showCurrentModes(target, *chan);
-		return;
-	}
-
-	if (!chan->isOperator(_client)) {
-		sendReply(ERR_CHANOPRIVSNEEDED, _client, target, "", "You're not channel operator");
-		return;
-	}
-
-	// Parse all remaining parameters into a vector
-	std::vector<std::string> params;
-	std::string param;
-	while (iss >> param) {
-		params.push_back(param);
-	}
-
-	// Process modes with improved parsing
-	bool adding = true; // Start with + by default
-	size_t paramIndex = 0;
-	std::string appliedModes = "";
-	std::string appliedParams = "";
-
-	for (size_t i = 0; i < modeStr.length(); ++i) {
-		char flag = modeStr[i];
-
-		if (flag == '+') {
-			adding = true;
-			continue;
-		}
-		if (flag == '-') {
-			adding = false;
-			continue;
-		}
-
-		// ========== DEBUG LOGS MODE ==========
-		std::cout << RED << "[DEBUG MODE] Processing flag: " << flag << " adding: " << (adding ? "YES" : "NO") << RESET << std::endl;
-		// ====================================
-
-		// Process the mode flag
-		if (!processSingleMode(flag, adding, params, paramIndex, *chan, target, appliedModes, appliedParams)) {
-			// Continue processing other modes even if one fails (IRC standard behavior)
-			continue;
-		}
-
-		// ========== DEBUG LOGS MODE AFTER ==========
-		if (flag == 't') {
-			std::cout << RED << "[DEBUG MODE] After processing +t: isTopicProtected = " << (chan->isTopicProtected() ? "OUI" : "NON") << RESET << std::endl;
-		}
-		// ==========================================
-	}
-
-	// Send notification to all channel members if any modes were applied
-	if (!appliedModes.empty()) {
-		std::string modeMsg = ":" + _client->getPrefix() + " MODE " + target + " " + appliedModes;
-		if (!appliedParams.empty()) {
-			modeMsg += " " + appliedParams;
-		}
-
-		const std::set<Client*>& members = chan->getMembers();
-		for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-			sendToClient((*it)->getFd(), modeMsg);
-		}
-	}
+    // Send notification to all channel members if any modes were applied
+    if (!appliedModes.empty()) {
+        std::string modeMsg = ":" + _client->getPrefix() + " MODE " + target + " " + appliedModes;
+        if (!appliedParams.empty()) {
+            modeMsg += " " + appliedParams;
+        }
+        const std::set<Client*>& members = chan->getMembers();
+        for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+            sendToClient((*it)->getFd(), modeMsg);
+        }
+    }
 }
 
 void Server::list() {
