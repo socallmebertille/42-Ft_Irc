@@ -187,7 +187,7 @@ void Server::privmsg() {
 }
 
 void Server::join() {
-    std::cout << RED << "[DEBUG] JOIN reçu avec argument : [" << _client->getArg() << "]" << RESET << std::endl;
+    // std::cout << RED << "[DEBUG] JOIN reçu avec argument : [" << _client->getArg() << "]" << RESET << std::endl;
 
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
@@ -252,23 +252,6 @@ void Server::join() {
     }
     if (!chan.isMember(_client)) {
         chan.join(_client);
-
-        // ========== DEBUG LOGS JOIN ==========
-        std::cout << RED << "[DEBUG JOIN] Canal: " << channelName << RESET << std::endl;
-        std::cout << RED << "[DEBUG JOIN] Nouveau membre: " << _client->getNickname() << RESET << std::endl;
-        std::cout << RED << "[DEBUG JOIN] Nombre total de membres: " << chan.getMemberCount() << RESET << std::endl;
-        std::cout << RED << "[DEBUG JOIN] Nombre d'opérateurs: " << chan.getOperators().size() << RESET << std::endl;
-        std::cout << RED << "[DEBUG JOIN] Est-ce que ce client est opérateur? " << (chan.isOperator(_client) ? "OUI" : "NON") << RESET << std::endl;
-
-        // Afficher la liste des opérateurs
-        const std::set<Client*>& ops = chan.getOperators();
-        std::cout << RED << "[DEBUG JOIN] Opérateurs actuels: ";
-        for (std::set<Client*>::const_iterator it = ops.begin(); it != ops.end(); ++it) {
-            std::cout << (*it)->getNickname() << " ";
-        }
-        std::cout << RESET << std::endl;
-        // ====================================
-
         std::string joinMsg = ":" + _client->getPrefix() + " JOIN :" + channelName;
         const std::set<Client*>& members = chan.getMembers();
         for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
@@ -393,22 +376,12 @@ void Server::topic() {
     size_t colonPos = args.find(" :");
     if (colonPos != std::string::npos) {
         std::string newTopic = args.substr(colonPos + 2); // Skip " :"
-
-        // ========== DEBUG LOGS TEMPORAIRES ==========
-        std::cout << RED << "[DEBUG TOPIC] Client: " << _client->getNickname() << RESET << std::endl;
-        std::cout << RED << "[DEBUG TOPIC] Canal: " << channelName << RESET << std::endl;
-        std::cout << RED << "[DEBUG TOPIC] Topic protégé: " << (chan.isTopicProtected() ? "OUI" : "NON") << RESET << std::endl;
-        std::cout << RED << "[DEBUG TOPIC] Client est opérateur: " << (chan.isOperator(_client) ? "OUI" : "NON") << RESET << std::endl;
-        std::cout << RED << "[DEBUG TOPIC] Nombre d'opérateurs: " << chan.getOperators().size() << RESET << std::endl;
-        // ===============================================
-
         if (chan.isTopicProtected() && !chan.isOperator(_client)) {
-            std::cout << RED << "[DEBUG TOPIC] BLOQUÉ - Envoi erreur 482" << RESET << std::endl;
+            // std::cout << RED << "[DEBUG TOPIC] BLOQUÉ - Envoi erreur 482" << RESET << std::endl;
             sendReply(ERR_CHANOPRIVSNEEDED, _client, channelName, "", "You're not channel operator");
             return;
         }
-
-        std::cout << RED << "[DEBUG TOPIC] AUTORISÉ - Changement de topic" << RESET << std::endl;
+        // std::cout << RED << "[DEBUG TOPIC] AUTORISÉ - Changement de topic" << RESET << std::endl;
         chan.setTopic(newTopic, _client->getNickname());
         std::string topicMsg = ":" + _client->getPrefix() + " TOPIC " + channelName + " :" + newTopic;
         const std::set<Client*>& members = chan.getMembers();
@@ -632,21 +605,11 @@ void Server::mode() {
             adding = false;
             continue;
         }
-        // ========== DEBUG LOGS MODE ==========
-        std::cout << RED << "[DEBUG MODE] Processing flag: " << flag << " adding: " << (adding ? "YES" : "NO") << RESET << std::endl;
-        // ====================================
-    
         // Process the mode flag : if mode need param, he should be in params[paramIndex]
         if (!processSingleMode(flag, adding, params, paramIndex, *chan, target, appliedModes, appliedParams)) {
             // Continue processing other modes even if one fails (IRC standard behavior)
             continue;
         }
-
-        // ========== DEBUG LOGS MODE AFTER ==========
-        if (flag == 't') {
-            std::cout << RED << "[DEBUG MODE] After processing +t: isTopicProtected = " << (chan->isTopicProtected() ? "OUI" : "NON") << RESET << std::endl;
-        }
-        // ==========================================
     }
 
     // Send notification to all channel members if any modes were applied
