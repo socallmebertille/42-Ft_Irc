@@ -1,4 +1,6 @@
 #include "Client.hpp"
+#include <algorithm>
+#include <cctype>
 
 Client::Client(int fd, const std::string& ip)
 	: _fd(fd), _ip(ip), _isRegistered(false), _passOk(false),
@@ -53,6 +55,7 @@ void Client::setPassErrorSent(bool v) { _passErrorSent = v; }
 
 void Client::registerUser(const std::string& nick, const std::string& user, const std::string& real) {
 	std::cout << "[DEBUG] → registerUser called" << std::endl;
+
 	setNickname(nick);
 	setUsername(user);
 	setRealname(real);
@@ -62,19 +65,15 @@ void Client::registerUser(const std::string& nick, const std::string& user, cons
 // void Client::parseLine() {
 // 	std::string line = _readBuf;
 // 	size_t pos = line.find("\r\n");
-
 // 	if (pos == std::string::npos)
 // 		pos = line.find('\n');
 // 	if (pos == std::string::npos)
 // 		return;
-
 // 	std::string cmd = line.substr(0, pos);
 // 	_readBuf = (pos + 2 <= line.length()) ? line.substr(pos + 2) : "";
-
 // 	if (!cmd.empty()) {
 // 		if (cmd[0] == ':')
 // 			cmd = cmd.substr(1);
-
 // 		std::istringstream iss(cmd);
 // 		iss >> _command;
 // 		std::getline(iss, _arg);
@@ -84,13 +83,19 @@ void Client::registerUser(const std::string& nick, const std::string& user, cons
 // }
 
 void Client::parseLine(const std::string& line) {
+	_command.clear();
+	_arg.clear();
+
 	std::istringstream iss(line);
 	iss >> _command;
+	std::transform(_command.begin(), _command.end(), _command.begin(), ::toupper);
 	std::getline(iss, _arg);
 	if (!_arg.empty() && _arg[0] == ' ')
 		_arg.erase(0, 1);
 }
 
-void Client::appendToBuffer(const std::string& data) { _readBuf += data; }
+void Client::appendToBuffer(const std::string& data) {
+	_readBuf += data;
+}
 
 void Client::setCapNegotiationDone(bool done) { _capNegotiationDone = done; }

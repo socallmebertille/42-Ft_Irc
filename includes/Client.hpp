@@ -4,6 +4,8 @@
 # include <iostream>
 # include <unistd.h>
 # include <sstream>
+# include "Replies.hpp"
+# include "Server.hpp"
 
 class Client
 {
@@ -11,19 +13,16 @@ private:
 	int _fd;                     // File descriptor du client
 	std::string _ip;             // Adresse IP du client
 
-	// État d'enregistrement
 	bool _isRegistered;
 	bool _passOk;
 	bool _hasUser;
 	bool _hasNick;
 	bool _passErrorSent;
 
-	// Infos utilisateur
 	std::string _username;
 	std::string _nickname;
 	std::string _realName;
 
-	// Buffer de lecture et parsing
 	std::string _readBuf;
 	std::string _command;
 	std::string _arg;
@@ -60,13 +59,14 @@ public:
 	void setPasswordOk(bool ok);
 	void setCommand(const std::string& cmd);
 	void setArg(const std::string& arg);
+	void setCapNegotiationDone(bool done);
+
+	// void setBuf(const std::string& buf);
 	void eraseBuf();
 	void setClientType(bool type);
 	void setPassErrorSent(bool v);
 	bool hasSentPassError() const;
-	bool isCapNegotiationDone() const;
-	
-	// Enregistrement
+
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
 	// void parseLine();
 	void parseLine(const std::string& line);

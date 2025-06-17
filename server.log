@@ -1,0 +1,16 @@
+Serveur IRC créé sur le port 6668 avec mot de passe : password123
+
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[DEBUG] → registerUser called
+[32mTestOp joined the channel #testchan[0m
+There are currently 1 members in the channel : #testchan.
+[0;31mTestOp left the channel #testchan[0m
+There are currently 0 members in the channel : #testchan.
+[0;31mCLEANUP client fd[5] nickname[TestOp][0m
+[32mENTER of client : [0mfd[5], ip[127.0.0.1]
+[DEBUG] → registerUser called
+[32mTestOp joined the channel #testchan[0m
+There are currently 1 members in the channel : #testchan.
+[0;31mUser2 left the channel #testchan[0m
+There are currently 0 members in the channel : #testchan.
+[0;31mCLEANUP client fd[5] nickname[User2][0m
