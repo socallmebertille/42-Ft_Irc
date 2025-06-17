@@ -46,6 +46,8 @@ void Channel::removeOperator(Client* client) { _operators.erase(client); }
 
 bool Channel::isOperator(Client* client) const { return _operators.find(client) != _operators.end(); }
 
+const std::set<Client*>& Channel::getOperators() const { return _operators; }
+
 void Channel::invite(Client* client) { _invited.insert(client); }
 
 bool Channel::isInvited(Client* client) const { return _invited.find(client) != _invited.end(); }
