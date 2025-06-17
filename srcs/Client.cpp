@@ -8,7 +8,6 @@ Client::Client(int fd, const std::string& ip)
 	_username(""), _nickname(""), _realName(""),
 	_readBuf(""), _command(""), _arg(""),
 	_clientType(false), _capNegotiationDone(false) {}
-	_clientType(false), _capNegotiationDone(false) {}
 
 Client::~Client() {}
 
