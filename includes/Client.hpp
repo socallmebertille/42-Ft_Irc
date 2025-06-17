@@ -10,8 +10,8 @@
 class Client
 {
 private:
-	int _fd;                     // File descriptor du client
-	std::string _ip;             // Adresse IP du client
+	int _fd;         // File descriptor of the client socket
+	std::string _ip; // IP address of the client
 
 	bool _isRegistered;
 	bool _passOk;
@@ -35,7 +35,6 @@ public:
 	Client(int fd, const std::string& ip);
 	~Client();
 
-	// Getters
 	int getFd() const;
 	std::string getIp() const;
 	bool isRegistered() const;
@@ -52,7 +51,6 @@ public:
 	std::string& getBuffer();
 	bool getClientType() const;
 
-	// Setters
 	void setUsername(const std::string& user);
 	void setNickname(const std::string& nick);
 	void setRealname(const std::string& real);
@@ -61,18 +59,14 @@ public:
 	void setArg(const std::string& arg);
 	void setCapNegotiationDone(bool done);
 
-	// void setBuf(const std::string& buf);
 	void eraseBuf();
 	void setClientType(bool type);
 	void setPassErrorSent(bool v);
 	bool hasSentPassError() const;
 
 	void registerUser(const std::string& nick, const std::string& user, const std::string& real);
-	// void parseLine();
 	void parseLine(const std::string& line);
-
 	void appendToBuffer(const std::string& data);
-
 };
 
 #endif

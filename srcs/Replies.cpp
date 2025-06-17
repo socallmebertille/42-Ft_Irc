@@ -9,24 +9,6 @@
 #include <cstring>
 #include <sys/socket.h>
 
-//modification sendToclient pour eviter doublons de fonctions
-// void Server::sendToClient(int fd, const std::string& msg) {
-//     std::string formattedMsg = msg;
-//     if (_client->getClientType() == false)
-//         formattedMsg += "\r\n";
-//     else
-//         formattedMsg += "\n";
-//     ssize_t bytesSent = send(fd, formattedMsg.c_str(), formattedMsg.length(), MSG_NOSIGNAL);
-// 	if (bytesSent < 0) {
-//         if (errno == EPIPE || errno == ECONNRESET) {
-//             std::cout << "[ERROR] Client " << fd << " disconnected during send" << std::endl;
-//             closeAndRemoveClient(fd);
-//         } else {
-//             std::cerr << "[ERROR] send() failed: " << strerror(errno) << std::endl;
-//         }
-//     }
-// }
-
 void Server::sendToClient(int fd, const std::string& msg) {
     std::string formattedMsg = msg;
 
@@ -39,7 +21,6 @@ void Server::sendToClient(int fd, const std::string& msg) {
     } else {
         formattedMsg += "\r\n";
     }
-
     ssize_t bytesSent = send(fd, formattedMsg.c_str(), formattedMsg.length(), MSG_NOSIGNAL);
     if (bytesSent < 0) {
         if (errno == EPIPE || errno == ECONNRESET) {

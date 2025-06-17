@@ -6,7 +6,6 @@
 #define SERVER_NAME "irc.ft_irc"
 
 // === Numeric Replies ===
-
 #define RPL_WELCOME           001
 #define RPL_YOURHOST          002
 #define RPL_CREATED           003
@@ -49,13 +48,11 @@
 
 #define ERR_CHANOPRIVSNEEDED  482
 
-// === Macros simples (pas de std::string) ===
-
+// === Simple Replies ===
 #define MSG_ERR_NONICKNAMEGIVEN         "431 * :No nickname given"
 #define MSG_ERR_PASSWDMISMATCH          "464 :Password required"
 
-// === Fonctions inline ===
-
+// === Inline Functions ===
 inline std::string msgWelcome(const std::string& nick) {
 	return ":irc.ft_irc 001 " + nick + " :Welcome to the IRC server!\r\n";
 }

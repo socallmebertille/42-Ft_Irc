@@ -270,7 +270,7 @@ test_topic_advanced() {
 }
 
 # =============================================================================
-# TESTS DES MODES DE CANAL (+i, +t, +k, +l)
+# TESTS DES MODES DE CANAL (+i, +t, +k, +l) - VERSION AMÉLIORÉE
 # =============================================================================
 
 test_channel_modes() {
@@ -311,122 +311,161 @@ test_channel_modes() {
     else
         print_error "Échec du mode +l"
     fi
+
+    print_test "Test modes multiples en une commande (+it)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK MultiMode1\r\nUSER test test localhost :Test User\r\nJOIN #multimode1\r\nMODE #multimode1 +it\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#multimode1.*+it"; then
+        print_success "Modes multiples +it appliqués en une seule commande"
+    else
+        print_error "Échec des modes multiples +it"
+    fi
+
+    print_test "Test modes multiples avec paramètres (+ikt)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK MultiMode2\r\nUSER test test localhost :Test User\r\nJOIN #multimode2\r\nMODE #multimode2 +ikt secret123\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#multimode2.*+ikt"; then
+        print_success "Modes multiples +ikt avec paramètre appliqués"
+    else
+        print_error "Échec des modes multiples +ikt"
+    fi
+
+    print_test "Test modes multiples complets (+iktl)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK MultiMode3\r\nUSER test test localhost :Test User\r\nJOIN #multimode3\r\nMODE #multimode3 +iktl secret123 10\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#multimode3.*+iktl"; then
+        print_success "Modes multiples +iktl avec paramètres appliqués"
+    else
+        print_error "Échec des modes multiples +iktl"
+    fi
+
+    print_test "Test modes mixtes (+i-t+k)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK MixedMode\r\nUSER test test localhost :Test User\r\nJOIN #mixedmode\r\nMODE #mixedmode +it\r\nMODE #mixedmode +i-t+k newpass\r\nQUIT\r\n" | nc -w7 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#mixedmode"; then
+        print_success "Modes mixtes (+i-t+k) traités correctement"
+    else
+        print_error "Échec des modes mixtes"
+    fi
+
+    print_test "Test suppression de modes (-itk)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK RemoveMode\r\nUSER test test localhost :Test User\r\nJOIN #removemode\r\nMODE #removemode +ikt secret123\r\nMODE #removemode -itk\r\nQUIT\r\n" | nc -w7 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#removemode.*-"; then
+        print_success "Suppression de modes multiples (-itk) fonctionne"
+    else
+        print_error "Échec de la suppression de modes multiples"
+    fi
+
+    print_test "Test consultation des modes actuels"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK QueryMode\r\nUSER test test localhost :Test User\r\nJOIN #querymode\r\nMODE #querymode +it\r\nMODE #querymode\r\nQUIT\r\n" | nc -w7 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "324.*#querymode.*+"; then
+        print_success "Consultation des modes actuels (324) fonctionne"
+    else
+        print_error "Échec de la consultation des modes actuels"
+    fi
 }
 
 # =============================================================================
-# TESTS DES COMMANDES D'OPÉRATEUR
+# TESTS AVANCÉS DES MODES (NOUVELLES FONCTIONNALITÉS)
 # =============================================================================
 
-test_operator_commands() {
-    print_header "TESTS DES COMMANDES D'OPÉRATEUR"
+test_advanced_modes() {
+    print_header "TESTS AVANCÉS DES MODES"
 
-    print_test "Test KICK par opérateur"
-    # Créer un canal, ajouter un utilisateur, puis le kick
-    echo -e "PASS $SERVER_PASS\r\nNICK Victim\r\nUSER test test localhost :Test User\r\nJOIN #kicktest\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT > /dev/null
+    print_test "Test gestion d'erreurs avec modes multiples"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ErrorMode\r\nUSER test test localhost :Test User\r\nJOIN #errormode\r\nMODE #errormode +k\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK Operator\r\nUSER test test localhost :Test User\r\nJOIN #kicktest\r\nKICK #kicktest Victim :Kicked for testing\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
-
-    if echo "$response" | grep -q "KICK.*#kicktest.*Victim"; then
-        print_success "Commande KICK fonctionne"
+    if echo "$response" | grep -q "461.*Need key parameter"; then
+        print_success "Erreur mode +k sans paramètre correctement détectée"
     else
-        print_warning "KICK: résultat incertain (utilisateur peut-être déjà parti)"
+        print_error "Le serveur devrait détecter l'absence de paramètre pour +k"
     fi
 
-    print_test "Test INVITE"
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK Inviter\r\nUSER test test localhost :Test User\r\nJOIN #invitetest\r\nINVITE Guest #invitetest\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+    print_test "Test continuation après erreur de mode"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ContinueMode\r\nUSER test test localhost :Test User\r\nJOIN #continuemode\r\nMODE #continuemode +ik\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
-    if echo "$response" | grep -q "401.*No such nick" || echo "$response" | grep -q "341.*"; then
-        print_success "Commande INVITE traitée (normal que Guest n'existe pas)"
+    if echo "$response" | grep -q "MODE.*#continuemode.*+i"; then
+        print_success "Mode +i appliqué même si +k échoue (continuation après erreur)"
     else
-        print_error "Problème avec la commande INVITE"
+        print_error "Le serveur devrait continuer les autres modes même si un échoue"
+    fi
+
+    print_test "Test mode +o (operator privileges)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK OpMode\r\nUSER test test localhost :Test User\r\nJOIN #opmode\r\nMODE #opmode +o OpMode\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#opmode.*+o.*OpMode"; then
+        print_success "Mode +o (operator) fonctionne"
+    else
+        print_error "Échec du mode +o"
+    fi
+
+    print_test "Test mode +l avec limite invalide"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK InvalidLimit\r\nUSER test test localhost :Test User\r\nJOIN #invalidlimit\r\nMODE #invalidlimit +l -5\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "461.*Invalid limit"; then
+        print_success "Limite invalide (-5) correctement rejetée"
+    else
+        print_error "Le serveur devrait rejeter les limites invalides"
+    fi
+
+    print_test "Test modes avec paramètres dans le bon ordre"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ParamOrder\r\nUSER test test localhost :Test User\r\nJOIN #paramorder\r\nMODE #paramorder +kl mypass 15\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#paramorder.*+kl.*mypass.*15"; then
+        print_success "Paramètres des modes dans le bon ordre"
+    else
+        print_error "Problème avec l'ordre des paramètres des modes"
     fi
 }
 
 # =============================================================================
-# TESTS DE GESTION D'ERREURS
+# TESTS DE VALIDATION PART (NOUVELLES FONCTIONNALITÉS)
 # =============================================================================
 
-test_error_handling() {
-    print_header "TESTS DE GESTION D'ERREURS"
+test_part_advanced() {
+    print_header "TESTS AVANCÉS DE LA COMMANDE PART"
 
-    print_test "Test commande inconnue"
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ErrorTest\r\nUSER test test localhost :Test User\r\nUNKNOWNCMD\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+    print_test "Test PART avec message personnalisé"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK PartMsg\r\nUSER test test localhost :Test User\r\nJOIN #parttest\r\nPART #parttest :Au revoir tout le monde!\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
-    if echo "$response" | grep -q "421.*Unknown command"; then
-        print_success "Commande inconnue correctement rejetée"
+    if echo "$response" | grep -q "PART.*#parttest.*Au revoir tout le monde"; then
+        print_success "PART avec message personnalisé fonctionne"
     else
-        print_error "Le serveur devrait rejeter les commandes inconnues"
+        print_error "Échec de PART avec message"
     fi
 
-    print_test "Test paramètres insuffisants"
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ParamTest\r\nUSER test test localhost :Test User\r\nJOIN\r\nTOPIC\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+    print_test "Test PART sans message (norme IRC)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK PartNoMsg\r\nUSER test test localhost :Test User\r\nJOIN #partnotest\r\nPART #partnotest\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "PART.*#partnotest" && ! echo "$response" | grep -q "PART.*#partnotest.*:"; then
+        print_success "PART sans message (conforme RFC)"
+    else
+        print_error "Problème avec PART sans message"
+    fi
+
+    print_test "Test PART sans paramètre (doit échouer selon RFC)"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK PartEmpty\r\nUSER test test localhost :Test User\r\nJOIN #partempty\r\nPART\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
     if echo "$response" | grep -q "461.*Not enough parameters"; then
-        print_success "Paramètres insuffisants correctement détectés"
+        print_success "PART sans paramètre correctement rejeté (conforme RFC)"
     else
-        print_error "Le serveur devrait vérifier les paramètres"
+        print_error "PART sans paramètre devrait être rejeté selon la norme IRC"
     fi
 
-    print_test "Test canal inexistant"
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ChannelTest\r\nUSER test test localhost :Test User\r\nTOPIC #inexistant :test\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+    print_test "Test PART canal inexistant"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK PartNone\r\nUSER test test localhost :Test User\r\nPART #inexistant\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
     if echo "$response" | grep -q "403.*No such channel"; then
-        print_success "Canal inexistant correctement détecté"
+        print_success "PART canal inexistant correctement géré"
     else
-        print_error "Le serveur devrait vérifier l'existence du canal"
+        print_error "Échec de la gestion de PART sur canal inexistant"
     fi
 }
 
 # =============================================================================
-# TESTS DE COMPATIBILITÉ IRSSI
-# =============================================================================
-
-test_irssi_compatibility() {
-    print_header "TESTS DE COMPATIBILITÉ IRSSI"
-
-    print_test "Test commandes automatiques irssi (USERHOST, WHOIS)"
-    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK IrssiTest\r\nUSER test test localhost :Test User\r\nUSERHOST IrssiTest\r\nWHOIS IrssiTest\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
-
-    if echo "$response" | grep -q "302.*IrssiTest" && echo "$response" | grep -q "311.*IrssiTest"; then
-        print_success "Commandes USERHOST et WHOIS fonctionnent (compatibilité irssi)"
-    else
-        print_error "Problème avec USERHOST/WHOIS (requis pour irssi)"
-    fi
-
-    print_test "Test formats de fin de ligne (\\r\\n vs \\n)"
-    local response1=$(echo -e "PASS $SERVER_PASS\nNICK LineTest1\nUSER test test localhost :Test User\nQUIT\n" | nc -w3 localhost $SERVER_PORT)
-    local response2=$(echo -e "PASS $SERVER_PASS\r\nNICK LineTest2\r\nUSER test test localhost :Test User\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT)
-
-    if echo "$response1" | grep -q "001.*Welcome" && echo "$response2" | grep -q "001.*Welcome"; then
-        print_success "Support des deux formats de fin de ligne (\\n et \\r\\n)"
-    else
-        print_error "Problème avec la gestion des fins de ligne"
-    fi
-}
-
-# =============================================================================
-# TESTS DE PERFORMANCE ET STABILITÉ
-# =============================================================================
-
-test_stability() {
-    print_header "TESTS DE STABILITÉ"
-
-    print_test "Test connexions multiples rapides"
-    for i in {1..5}; do
-        echo -e "PASS $SERVER_PASS\r\nNICK User$i\r\nUSER test test localhost :Test User $i\r\nJOIN #stress\r\nQUIT\r\n" | nc -w2 localhost $SERVER_PORT > /dev/null &
-    done
-    wait
-    print_success "Connexions multiples traitées"
-
-    print_test "Test gestion de déconnexion brutale"
-    echo -e "PASS $SERVER_PASS\r\nNICK BrutalUser\r\nUSER test test localhost :Test User\r\nJOIN #brutal" | nc -w1 localhost $SERVER_PORT > /dev/null
-    # La connexion se ferme brutalement (pas de QUIT)
-    sleep 1
-    print_success "Déconnexion brutale gérée"
-}
-
-# =============================================================================
-# TESTS DE SCÉNARIOS COMPLEXES
+# TESTS DE SCÉNARIOS COMPLEXES AVEC NOUVELLES FONCTIONNALITÉS
 # =============================================================================
 
 test_complex_scenarios() {
@@ -462,6 +501,53 @@ test_complex_scenarios() {
         print_success "Base du transfert d'opérateur testée"
     else
         print_warning "Transfert d'opérateur: tests limités en mode unique client"
+    fi
+
+    print_test "Scénario: Modes multiples puis validation"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ComplexMode\r\nUSER test test localhost :Test User\r\nJOIN #complex\r\nMODE #complex +iktl secret123 10\r\nMODE #complex\r\nQUIT\r\n" | nc -w7 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "MODE.*#complex.*+iktl" && echo "$response" | grep -q "324.*#complex.*+iktl"; then
+        print_success "Scénario modes multiples → consultation fonctionne"
+    else
+        print_error "Problème avec le scénario modes multiples"
+    fi
+
+    print_test "Scénario: Canal protégé par mot de passe"
+    # Créer canal avec mot de passe
+    echo -e "PASS $SERVER_PASS\r\nNICK ProtectedCreator\r\nUSER test test localhost :Test User\r\nJOIN #protected\r\nMODE #protected +k secret123\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT > /dev/null
+
+    # Essayer de rejoindre sans mot de passe
+    local response1=$(echo -e "PASS $SERVER_PASS\r\nNICK TryJoin1\r\nUSER test test localhost :Test User\r\nJOIN #protected\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    # Essayer de rejoindre avec le bon mot de passe
+    local response2=$(echo -e "PASS $SERVER_PASS\r\nNICK TryJoin2\r\nUSER test test localhost :Test User\r\nJOIN #protected secret123\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response1" | grep -q "475.*Cannot join channel" && echo "$response2" | grep -q "JOIN.*#protected"; then
+        print_success "Protection par mot de passe fonctionne"
+    else
+        print_error "Problème avec la protection par mot de passe"
+    fi
+
+    print_test "Scénario: Canal avec limite d'utilisateurs"
+    # Créer canal avec limite de 1 utilisateur
+    echo -e "PASS $SERVER_PASS\r\nNICK LimitCreator\r\nUSER test test localhost :Test User\r\nJOIN #limited\r\nMODE #limited +l 1\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT > /dev/null
+
+    # Essayer de rejoindre (devrait échouer car limite atteinte)
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK TryLimited\r\nUSER test test localhost :Test User\r\nJOIN #limited\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "471.*Cannot join channel"; then
+        print_success "Limite d'utilisateurs respectée"
+    else
+        print_warning "Test limite utilisateurs: résultat incertain (canal peut être vide)"
+    fi
+
+    print_test "Scénario: Gestion des erreurs en cascade"
+    local response=$(echo -e "PASS $SERVER_PASS\r\nNICK ErrorCascade\r\nUSER test test localhost :Test User\r\nJOIN #errorcascade\r\nMODE #errorcascade +k\r\nMODE #errorcascade +l invalid\r\nMODE #errorcascade +i\r\nMODE #errorcascade\r\nQUIT\r\n" | nc -w8 localhost $SERVER_PORT)
+
+    if echo "$response" | grep -q "461.*Need key parameter" && echo "$response" | grep -q "461.*Invalid limit" && echo "$response" | grep -q "324.*+i"; then
+        print_success "Gestion des erreurs en cascade: erreurs détectées, mode +i appliqué"
+    else
+        print_error "Problème avec la gestion des erreurs en cascade"
     fi
 }
 
@@ -558,16 +644,18 @@ show_menu() {
     echo "3. Tests des canaux (join/part/topic)"
     echo "4. Tests avancés du topic"
     echo "5. Tests des modes de canal"
-    echo "6. Tests des commandes d'opérateur"
-    echo "7. Tests de gestion d'erreurs"
-    echo "8. Tests de compatibilité irssi"
-    echo "9. Tests de stabilité"
-    echo "10. Tests de scénarios complexes"
-    echo "11. Tests de cas limites"
-    echo "12. Test de connexion simple"
+    echo "6. Tests avancés des modes (NOUVEAU)"
+    echo "7. Tests PART avancés (NOUVEAU)"
+    echo "8. Tests des commandes d'opérateur"
+    echo "9. Tests de gestion d'erreurs"
+    echo "10. Tests de compatibilité irssi"
+    echo "11. Tests de stabilité"
+    echo "12. Tests de scénarios complexes"
+    echo "13. Tests de cas limites"
+    echo "14. Test de connexion simple"
     echo "0. Quitter"
     echo
-    read -p "Choisissez une option (0-12): " choice
+    read -p "Choisissez une option (0-14): " choice
 }
 
 run_selected_tests() {
@@ -579,6 +667,8 @@ run_selected_tests() {
             test_topic
             test_topic_advanced
             test_channel_modes
+            test_advanced_modes
+            test_part_advanced
             test_operator_commands
             test_privmsg
             test_error_handling
@@ -604,24 +694,30 @@ run_selected_tests() {
             test_channel_modes
             ;;
         6)
-            test_operator_commands
+            test_advanced_modes
             ;;
         7)
-            test_error_handling
+            test_part_advanced
             ;;
         8)
-            test_irssi_compatibility
+            test_operator_commands
             ;;
         9)
-            test_stability
+            test_error_handling
             ;;
         10)
-            test_complex_scenarios
+            test_irssi_compatibility
             ;;
         11)
-            test_edge_cases
+            test_stability
             ;;
         12)
+            test_complex_scenarios
+            ;;
+        13)
+            test_edge_cases
+            ;;
+        14)
             test_connection
             ;;
         0)

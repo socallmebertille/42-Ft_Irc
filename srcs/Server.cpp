@@ -1,5 +1,26 @@
 #include "Server.hpp"
 
+Server::Server(int port, const std::string& password):
+_port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password),
+_channels(), _clients(), _client(NULL), _clientsToRemove()
+{
+	// std::cout << "[DEBUG]" << "Serveur IRC créé sur le port " << _port
+	// 		  << " avec mot de passe : " << _password << std::endl << std::endl;
+	initServerSocket();
+}
+
+Server::~Server()
+{
+	close(_serverSocket);
+	close(_epollFd);
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		close(it->first);
+		delete it->second;
+	}
+}
+
+// ========== STATIC MEMBERS INITIALIZATION ==========
 const std::string Server::_type[18] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
     "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG",
@@ -13,24 +34,7 @@ Server::CommandFunc Server::_function[18] = {
     &Server::userhost, &Server::whois
 };
 
-Server::Server(int port, const std::string& password):
-_port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password), _client(NULL)
-{
-    std::cout << "Serveur IRC créé sur le port " << _port
-              << " avec mot de passe : " << _password << std::endl << std::endl;
-    initServerSocket();
-}
-Server::~Server()
-{
-    close(_serverSocket);
-    close(_epollFd);
-    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-    {
-        close(it->first);
-        delete it->second;
-    }
-}
-
+// ========== SOCKET CONFIGURATION ==========
 void Server::setNonBlocking(int fd) {
     // non-blocking mode = allow multiple connections without blocking
     // modif_opt_socket (socker_id, modif_flag, active_non-blockant_mode)
@@ -67,6 +71,7 @@ void Server::initServerSocket() {
         throw std::runtime_error("epoll_ctl() failed");
 }
 
+// ========== CONNECTION MANAGEMENT ==========
 void Server::handleNewConnection() {
     // EDGE-TRIGGERED MODE: loop until accept() returns EAGAIN or EWOULDBLOCK
     while (true) {
@@ -92,287 +97,6 @@ void Server::handleNewConnection() {
 
         std::cout << GREEN << "ENTER of client : " << RESET;
         std::cout << "fd[" << clientFd << "], ip[" << ip << "]" << std::endl;
-    }
-}
-
-//modification run pour eviter doublons de fonctions
-// void Server::run() {
-//     struct epoll_event events[MAX_EVENTS];
-//     while (true) {
-//         // nb_events = wait_for_events (fd_to_monitor, events, max_events, infinite timeout)
-//         int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
-//         if (nfds < 0) throw std::runtime_error("epoll_wait() failed");
-//         for (int i = 0; i < nfds; ++i) {
-//             int fd = events[i].data.fd;
-//             if (fd == _serverSocket) {
-//                 handleNewConnection();
-//                 continue;
-//             }
-//             if (events[i].events & EPOLLIN) {
-//                 char buffer[1024];
-//                 _client = _clients[fd];
-//                 int bytesRead = recv(fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
-//                 if (bytesRead > 0) {
-//                     buffer[bytesRead] = '\0';
-//                     std::cout << "[RECV FD " << fd << "] >>> [" << buffer << "]" << std::endl;
-//                     _clients[fd]->appendToBuffer(buffer);
-//                     handleCommand(fd);
-//                 }
-//                 else if (bytesRead == 0) {
-//                     closeAndRemoveClient(fd);
-//                     break;
-//                 }
-//                 else if (bytesRead < 0) {
-//                     if (errno == EAGAIN || errno == EWOULDBLOCK) break;// nothing to read & still non-blockant mode
-//                     if (errno == EINTR) continue;// signal => retry
-//                     closeAndRemoveClient(fd);
-//                     break;
-//                 }
-//             }
-//         }
-// 		cleanupClients();
-//     }
-// }
-
-void Server::run() {
-    struct epoll_event events[MAX_EVENTS];
-    while (true) {
-        int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
-        if (nfds < 0)
-            throw std::runtime_error("epoll_wait() failed");
-        for (int i = 0; i < nfds; ++i) {
-            int fd = events[i].data.fd;
-
-            if (fd == _serverSocket) {
-                handleNewConnection();
-                continue;
-            }
-            if (events[i].events & EPOLLIN) {
-                char buffer[1024];
-                _client = _clients[fd];
-                int bytesRead = recv(fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
-
-                if (bytesRead > 0) {
-                    buffer[bytesRead] = '\0';
-                    // std::cout << "[RECV FD " << fd << "] >>> [" << buffer << "]" << std::endl;
-                    _clients[fd]->appendToBuffer(buffer);
-                    handleCommand(fd);
-                }
-                else if (bytesRead == 0 || (bytesRead < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
-                    // std::cout << "[DEBUG] Client fd[" << fd << "] marked for removal (recv error or disconnect)" << std::endl;
-                    if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), fd) == _clientsToRemove.end())
-                        _clientsToRemove.push_back(fd);
-                    break; // évite de continuer avec ce fd
-                }
-            }
-        }
-        cleanupClients();
-    }
-}
-
-Client* Server::getClientByNick(const std::string& nickname) {
-    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-        if (it->second->getNickname() == nickname)
-            return it->second;
-    }
-    return NULL;
-}
-
-//Old version handleCommand modifie pour adapter a quit
-// void Server::handleCommand(int clientFd) {
-// 	_clientFd = clientFd;
-// 	_client = _clients[clientFd];
-// 	if (!_client)
-// 		return;
-//     _clientFd = clientFd;
-//     _client = _clients[clientFd];
-// 	while (true) {
-// 		std::string& buf = _client->getBuffer();
-// 		if (buf.empty())
-// 			break;
-// 		size_t pos = buf.find("\r\n");
-// 		if (pos == std::string::npos)
-// 			break;
-// 		std::string fullLine = buf.substr(0, pos);
-// 		buf.erase(0, pos + 2);
-// 		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
-//     while (true) {
-//         std::string& buf = _client->getBuffer();
-//         size_t pos = buf.find("\r\n");
-//         size_t posNc = buf.find("\n");
-//         std::string fullLine;
-//         if (pos != std::string::npos)
-//         {
-//             fullLine = buf.substr(0, pos);
-//             buf.erase(0, pos + 2);
-//             _client->setClientType(false); // Client normal (avec \r\n)
-//         }
-//         else if (posNc != std::string::npos)
-//         {
-//             fullLine = buf.substr(0, posNc);
-//             buf.erase(0, posNc + 1);
-//             _client->setClientType(true); // Client spécial (e.g. netcat sans \r)
-//         }
-//         else
-//             break;
-//         std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
-// 		_client->parseLine(fullLine);
-// 		if (_client->getCmd().empty())
-// 			continue;
-// 		execCommand();
-// 		checkRegistration();
-// 	}
-//         _client->parseLine(fullLine);
-//         if (_client->getCmd().empty())
-//             continue;
-//         execCommand();
-//     }
-// }
-
-void Server::handleCommand(int clientFd) {
-	_clientFd = clientFd;
-	_client = _clients[clientFd];
-	if (!_client)
-		return;
-
-	while (true) {
-		std::string& buf = _client->getBuffer();
-		size_t pos = buf.find("\r\n");
-		size_t posNc = buf.find("\n");
-		std::string fullLine;
-		if (pos != std::string::npos)
-		{
-			fullLine = buf.substr(0, pos);
-			buf.erase(0, pos + 2);
-			_client->setClientType(false); // Client normal (avec \r\n)
-		}
-		else if (posNc != std::string::npos)
-		{
-			fullLine = buf.substr(0, posNc);
-			buf.erase(0, posNc + 1);
-			_client->setClientType(true); // Client spécial (e.g. netcat sans \r)
-		}
-		else
-			break;
-		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
-		_client->parseLine(fullLine);
-		if (_client->getCmd().empty())
-			continue;
-		execCommand();
-		checkRegistration();
-	}
-}
-
-//Old version exec cmd modifie pour adapter a quit
-// void Server::execCommand() {
-// 	 // DEBUG:
-//     std::cout << "[DEBUG] Commande reçue : " << _client->getCmd()
-//               << " | passOk=" << _client->isPasswordOk()
-//               << ", nick=" << _client->getNickname()
-//               << ", user=" << _client->getUsername()
-//               << ", isReg=" << _client->isRegistered() << std::endl;
-//     // Empêche toute commande (sauf PASS et CAP) tant que le mot de passe n’est pas validé
-//     if (!_client->isPasswordOk() && _client->getCmd() != "PASS" && _client->getCmd() != "CAP") {
-//         if (!_client->hasSentPassError()) {
-//             sendToClient(_clientFd, "464 :Password required");
-//             _client->setPassErrorSent(true);
-//         }
-//         return;
-//     }
-//     if (_client->getCmd().empty()) {
-//         sendToClient(_clientFd, "421 * :Empty command");
-//         return;
-//     }
-//     const std::string& cmd = _client->getCmd();
-//     if (cmd == "CAP") {
-//         cap();
-//         return;
-//     }
-//     if (!_client->isPasswordOk() && _client->getCmd() != "PASS" && _client->getCmd() != "CAP") {
-//         if (!_client->hasSentPassError()) {
-//             sendToClient(_clientFd, "464 :Password required");
-//             _client->setPassErrorSent(true);  // pour éviter les spams
-//         }
-//         return;
-//     }
-//     for (int i = 0; i < 16; i++) {
-//         if (cmd == _type[i]) {
-//             try {
-// 				(this->*_function[i])();
-// 			} catch (const std::exception& e) {
-// 				std::cerr << "[CRASH] Exception during command " << cmd << ": " << e.what() << std::endl;
-// 			}
-//             checkRegistration();
-//             return;
-//         }
-//     }
-//     // sendToClient(_clientFd, "421 " + cmd + " :Unknown command");
-// }
-
-void Server::execCommand() {
-    if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
-        return;
-
-    const std::string& cmd = _client->getCmd();
-    if (cmd.empty()) {
-        sendReply(ERR_UNKNOWNCOMMAND, _client, "*", "", "Empty command");
-        return;
-    }
-
-    // Ordre strict : PASS → NICK → USER
-    // Seules CAP, PASS et JOIN sont autorisées sans mot de passe validé
-    // (JOIN est autorisé pour gérer "JOIN :" envoyé par certains clients)
-    if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP" && cmd != "JOIN") {
-        if (!_client->hasSentPassError()) {
-            sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
-            _client->setPassErrorSent(true);
-        }
-        return;
-    }
-
-    // Empêcher USER si NICK n'est pas encore défini (ordre strict)
-    if (cmd == "USER" && !_client->hasNick()) {
-        sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "You must set a nickname first");
-        return;
-    }
-
-    if (cmd == "CAP") {
-        cap();
-        return;
-    }
-    for (int i = 0; i < 18; i++) {
-        if (cmd == _type[i]) {
-            try {
-                (this->*_function[i])();
-            } catch (const std::exception& e) {
-                std::cerr << "[CRASH] Exception during command " << cmd << ": " << e.what() << std::endl;
-            }
-            checkRegistration();
-            return;
-        }
-    }
-    sendReply(ERR_UNKNOWNCOMMAND, _client, cmd, "", "Unknown command");
-}
-
-void Server::checkRegistration() {
-    // Vérifier que TOUTES les conditions sont remplies pour l'enregistrement
-    if (!_client->isRegistered()
-        && _client->isPasswordOk()  // ← Le mot de passe DOIT être validé
-        && _client->hasNick()
-        && !_client->getNickname().empty()
-        && _client->hasUser()
-        && !_client->getUsername().empty()) {
-        // std::cout << "[DEBUG] → registerUser called" << std::endl;
-        _client->registerUser(_client->getNickname(), _client->getUsername(), _client->getRealname());
-        sendReply(RPL_WELCOME, _client, "", "", "Welcome to the IRC server!");
-        // std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
-    }
-    // Si le mot de passe n'est pas OK mais que le client essaie d'utiliser d'autres commandes
-    else if (!_client->isPasswordOk() && _client->hasNick() && _client->hasUser()) {
-        if (!_client->hasSentPassError()) {
-            sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
-            _client->setPassErrorSent(true);
-        }
     }
 }
 
@@ -409,4 +133,145 @@ void Server::cleanupClients() {
 		close(fd);
 	}
 	_clientsToRemove.clear();
+}
+
+// ========== CLIENT UTILITIES ==========
+Client* Server::getClientByNick(const std::string& nickname) {
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (it->second->getNickname() == nickname)
+            return it->second;
+    }
+    return NULL;
+}
+
+void Server::run() {
+    struct epoll_event events[MAX_EVENTS];
+    while (true) {
+        // nb_events = wait_for_events (fd_to_monitor, events, max_events, infinite timeout)
+        int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
+        if (nfds < 0)
+            throw std::runtime_error("epoll_wait() failed");
+        for (int i = 0; i < nfds; ++i) {
+            int fd = events[i].data.fd;
+
+            if (fd == _serverSocket) {
+                handleNewConnection();
+                continue;
+            }
+            if (events[i].events & EPOLLIN) {
+                char buffer[1024];
+                _client = _clients[fd];
+                int bytesRead = recv(fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
+
+                if (bytesRead > 0) {
+                    buffer[bytesRead] = '\0';
+                    // std::cout << "[RECV FD " << fd << "] >>> [" << buffer << "]" << std::endl;
+                    _clients[fd]->appendToBuffer(buffer);
+                    handleCommand(fd);
+                }
+                else if (bytesRead == 0 || (bytesRead < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
+                    // std::cout << "[DEBUG] Client fd[" << fd << "] marked for removal (recv error or disconnect)" << std::endl;
+                    // évite de continuer avec ce fd
+                    if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), fd) == _clientsToRemove.end())
+                        _clientsToRemove.push_back(fd);
+                    break;
+                }
+            }
+        }
+        cleanupClients();
+    }
+}
+
+void Server::handleCommand(int clientFd) {
+	_clientFd = clientFd;
+	_client = _clients[clientFd];
+	if (!_client)
+		return;
+
+	while (true) {
+		std::string& buf = _client->getBuffer();
+		size_t pos = buf.find("\r\n");
+		size_t posNc = buf.find("\n");
+		std::string fullLine;
+		if (pos != std::string::npos)
+		{
+			fullLine = buf.substr(0, pos);
+			buf.erase(0, pos + 2);
+			_client->setClientType(false); // Client normal (avec \r\n)
+		}
+		else if (posNc != std::string::npos)
+		{
+			fullLine = buf.substr(0, posNc);
+			buf.erase(0, posNc + 1);
+			_client->setClientType(true); // Client spécial (e.g. netcat sans \r)
+		}
+		else
+			break;
+		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
+		_client->parseLine(fullLine);
+		if (_client->getCmd().empty())
+			continue;
+		execCommand();
+		checkRegistration();
+	}
+}
+
+void Server::execCommand() {
+    if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+        return;
+
+    const std::string& cmd = _client->getCmd();
+    if (cmd.empty()) {
+        sendReply(ERR_UNKNOWNCOMMAND, _client, "*", "", "Empty command");
+        return;
+    }
+    if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP" && cmd != "JOIN") {
+        if (!_client->hasSentPassError()) {
+            sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
+            _client->setPassErrorSent(true);
+        }
+		_clientsToRemove.push_back(_clientFd);
+        return;
+    }
+    if (cmd == "USER" && !_client->hasNick()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "You must set a nickname first");
+        return;
+    }
+    if (cmd == "CAP") {
+        cap();
+        return;
+    }
+    for (int i = 0; i < 18; i++) {
+        if (cmd == _type[i]) {
+            try {
+                (this->*_function[i])();
+            } catch (const std::exception& e) {
+                std::cerr << "[CRASH] Exception during command " << cmd << ": " << e.what() << std::endl;
+            }
+            checkRegistration();
+            return;
+        }
+    }
+    sendReply(ERR_UNKNOWNCOMMAND, _client, cmd, "", "Unknown command");
+}
+
+// ========== USER REGISTRATION ==========
+void Server::checkRegistration() {
+    if (!_client->isRegistered()
+        && _client->isPasswordOk()
+        && _client->hasNick()
+        && !_client->getNickname().empty()
+        && _client->hasUser()
+        && !_client->getUsername().empty()) {
+        // std::cout << "[DEBUG] → registerUser called" << std::endl;
+        _client->registerUser(_client->getNickname(), _client->getUsername(), _client->getRealname());
+        sendReply(RPL_WELCOME, _client, "", "", "Welcome to the IRC server!");
+        // std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
+    }
+    else if (!_client->isPasswordOk() && _client->hasNick() && _client->hasUser()) {
+        if (!_client->hasSentPassError()) {
+            sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
+            _client->setPassErrorSent(true);
+        }
+    }
 }

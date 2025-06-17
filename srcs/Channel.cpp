@@ -6,22 +6,25 @@
 #include <ctime>
 
 Channel::Channel(const std::string& name)
-	: _name(name), _topic(""), _topicSetBy(""), _topicSetTime(0), _creator(""), _inviteOnly(false), _topicProtected(false),
+	: _name(name), _topic(""), _topicSetBy(""), _topicSetTime(0), _creator(""),
+	  _members(), _operators(), _invited(),
+	  _inviteOnly(false), _topicProtected(false),
 	  _key(""), _hasKey(false), _userLimit(0), _limitActive(false) {}
 
 Channel::~Channel() {}
 
-const std::string& Channel::getName() const {
-	return _name;
-}
+// ========== GETTERS ==========
+const std::string& Channel::getName() const { return _name; }
 
-void Channel::addMember(Client* client) {
-	_members.insert(client);
-}
+size_t Channel::getMemberCount() const { return _members.size(); }
 
-bool Channel::isMember(Client* client) const {
-	return _members.find(client) != _members.end();
-}
+const std::set<Client*>& Channel::getMembers() const { return _members; }
+
+// ========== MEMBERS MANAGEMENT ==========
+
+void Channel::addMember(Client* client) { _members.insert(client); }
+
+bool Channel::isMember(Client* client) const { return _members.find(client) != _members.end(); }
 
 void Channel::join(Client* client) {
 	_members.insert(client);
@@ -35,25 +38,23 @@ void Channel::part(Client* client) {
 	std::cout << "There are currently " << getMemberCount() << " members in the channel : " << getName() << "." << std::endl;
 }
 
-size_t Channel::getMemberCount() const {
-	return _members.size();
-}
+// ========== OPERATORS ==========
 
-const std::set<Client*>& Channel::getMembers() const {
-	return _members;
-}
+void Channel::addOperator(Client* client) { _operators.insert(client); }
 
-void Channel::addOperator(Client* client) {
-	_operators.insert(client);
-}
+void Channel::removeOperator(Client* client) { _operators.erase(client); }
 
-void Channel::removeOperator(Client* client) {
-	_operators.erase(client);
-}
+bool Channel::isOperator(Client* client) const { return _operators.find(client) != _operators.end(); }
 
-bool Channel::isOperator(Client* client) const {
-	return _operators.find(client) != _operators.end();
-}
+void Channel::invite(Client* client) { _invited.insert(client); }
+
+bool Channel::isInvited(Client* client) const { return _invited.find(client) != _invited.end(); }
+
+void Channel::setCreator(const std::string& nickname) { _creator = nickname; }
+
+bool Channel::isCreator(Client* client) const { return client && client->getNickname() == _creator; }
+
+// ========== COMMUNICATION ==========
 
 void Channel::sendToAll(const std::string& msg) const {
 	for (std::set<Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it) {
@@ -61,24 +62,24 @@ void Channel::sendToAll(const std::string& msg) const {
 	}
 }
 
-// ========== MODES ==========
-
-void Channel::setInviteOnly(bool value) {
-	_inviteOnly = value;
+// ========== TOPIC ==========
+void Channel::setTopic(const std::string& topic, const std::string& setBy) {
+	_topic = topic;
+	_topicSetBy = setBy;
+	_topicSetTime = time(NULL);
 }
 
-bool Channel::isInviteOnly() const {
-	return _inviteOnly;
-}
+// ========== MODE +i (INVITE ONLY) ==========
+void Channel::setInviteOnly(bool value) { _inviteOnly = value;}
 
-void Channel::setTopicProtected(bool value) {
-	_topicProtected = value;
-}
+bool Channel::isInviteOnly() const { return _inviteOnly;}
 
-bool Channel::isTopicProtected() const {
-	return _topicProtected;
-}
+// ========== MODE +t (TOPIC PROTECTED) ==========
+void Channel::setTopicProtected(bool value) { _topicProtected = value;}
 
+bool Channel::isTopicProtected() const { return _topicProtected;}
+
+// ========== MODE +k (KEY/PASSWORD) ==========
 void Channel::setKey(const std::string& key) {
 	_key = key;
 	_hasKey = true;
@@ -89,14 +90,11 @@ void Channel::removeKey() {
 	_hasKey = false;
 }
 
-bool Channel::hasKey() const {
-	return _hasKey;
-}
+bool Channel::hasKey() const { return _hasKey; }
 
-const std::string& Channel::getKey() const {
-	return _key;
-}
+const std::string& Channel::getKey() const { return _key; }
 
+// ========== MODE +l (USER LIMIT) ==========
 void Channel::setUserLimit(int limit) {
 	_userLimit = limit;
 	_limitActive = true;
@@ -107,36 +105,6 @@ void Channel::removeUserLimit() {
 	_limitActive = false;
 }
 
-bool Channel::hasUserLimit() const {
-	return _limitActive;
-}
+bool Channel::hasUserLimit() const { return _limitActive; }
 
-int Channel::getUserLimit() const {
-	return _userLimit;
-}
-
-void Channel::invite(Client* client) {
-	_invited.insert(client);
-}
-
-bool Channel::isInvited(Client* client) const {
-	return _invited.find(client) != _invited.end();
-}
-
-// ========== CREATOR ==========
-
-void Channel::setCreator(const std::string& nickname) {
-	_creator = nickname;
-}
-
-bool Channel::isCreator(Client* client) const {
-	return client && client->getNickname() == _creator;
-}
-
-// ========== TOPIC ==========
-
-void Channel::setTopic(const std::string& topic, const std::string& setBy) {
-	_topic = topic;
-	_topicSetBy = setBy;
-	_topicSetTime = time(NULL);
-}
+int Channel::getUserLimit() const { return _userLimit; }

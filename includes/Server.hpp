@@ -31,7 +31,6 @@ public:
 	void checkRegistration();
     void run();
     typedef void (Server::*CommandFunc)();
-
 	void disconnectClient(int fd);
 
 private:
@@ -80,9 +79,8 @@ private:
     void pong();
     void userhost();
     void whois();
-    // void parseAndExecuteCommand(const std::string& line);
 
-    // Helper functions for mode command
+    // ModeCommand utility methods
     bool validateModeCommand(const std::string& target, Channel*& chan);
     void showCurrentModes(const std::string& channelName, const Channel& chan);
     bool processSingleMode(char flag, bool adding, const std::vector<std::string>& params,
@@ -91,7 +89,6 @@ private:
     bool handleOperatorMode(bool adding, const std::vector<std::string>& params, size_t& paramIndex,
                            Channel& chan, const std::string& channelName,
                            std::string& appliedModes, std::string& appliedParams);
-
     void handleChannelMessage(const std::string& channelName, const std::string& message);
     void handlePrivateMessage(const std::string& targetNick, const std::string& message);
 };

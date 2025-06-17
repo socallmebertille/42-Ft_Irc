@@ -12,9 +12,9 @@ class Channel {
 private:
 	std::string _name;
 	std::string _topic;
-	std::string _topicSetBy;     // Qui a défini le topic
-	time_t _topicSetTime;        // Quand le topic a été défini
-	std::string _creator;        // Créateur du canal
+	std::string _topicSetBy;     // Who define the topic
+	time_t _topicSetTime;        // When the topic was set
+	std::string _creator;        // Creator of the channel
 
 	std::set<Client*> _members;
 	std::set<Client*> _operators;// +o
@@ -73,10 +73,9 @@ public:
 	int getUserLimit() const;
 
 	// Gestion du topic
-	// void setTopic(const std::string& topic) { _topic = topic; }
-	void setTopic(const std::string& topic, const std::string& setBy);
 	const std::string& getTopic() const { return _topic; }
 	const std::string& getTopicSetBy() const { return _topicSetBy; }
+	void setTopic(const std::string& topic, const std::string& setBy);
 	time_t getTopicSetTime() const { return _topicSetTime; }
 	bool hasTopic() const { return !_topic.empty(); }
 
