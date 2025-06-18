@@ -24,7 +24,7 @@ Server::~Server()
 const std::string Server::_type[20] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
     "MODE", "TOPIC", "INVITE", "KICK", "PING", "PONG", "USERHOST",
-    "WHOIS", "SEND", "BOT", "ACCEPT", "REFUSE"
+    "WHOIS", "BOT", "SEND", "ACCEPT", "REFUSE"
 };
 
 Server::CommandFunc Server::_function[20] = {

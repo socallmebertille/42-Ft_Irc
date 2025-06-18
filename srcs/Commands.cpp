@@ -788,7 +788,7 @@ void Server::sendfile() {
     transfer.filename = filename;
     _pendingTransfers[transferKey] = transfer;
     // notif to target client
-    std::string msg = ":" + _client->getPrefix() + " SEND " + filename + " :File transfer request\r\n";
+    std::string msg = ":" + _client->getPrefix() + " SEND " + filename + " :File transfer request from " + _client->getNickname() + "\r\n";
     sendToClient(target->getFd(), msg);
 }
 
