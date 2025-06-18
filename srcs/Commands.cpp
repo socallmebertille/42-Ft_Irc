@@ -512,7 +512,6 @@ void Server::invite() {
         sendReply(ERR_NEEDMOREPARAMS, _client, "INVITE", "", "Not enough parameters");
         return;
     }
-    std::cout << "[DEBUG INVITE] targetNick='" << targetNick << "', channelName='" << channelName << "'" << std::endl;
     Client* target = getClientByNick(targetNick);
     if (!target) {
         sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick/channel");
@@ -651,10 +650,12 @@ void Server::bot() {
     // Commande BOT - Contrôle complet du bot IRC
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
+
     if (!_client->isRegistered()) {
         sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
         return;
     }
+
     std::string args = _client->getArg();
     if (args.empty()) {
         std::string helpMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
@@ -736,13 +737,25 @@ void Server::bot() {
     }
     std::string botResponse = processIRCBotCommand(args, "");
     if (!botResponse.empty()) {
-        std::string botMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
-                           " PRIVMSG " + _client->getNickname() + " :" + botResponse;
-        sendToClient(_clientFd, botMsg);
+        if (_client->isNetcatLike()) {
+            std::string botMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                               " PRIVMSG " + _client->getNickname() + " :" + botResponse;
+            sendToClient(_clientFd, botMsg);
+        } else {
+            if (_ircBotCreated && _ircBotClient) {
+                std::string botMsg = ":" + _ircBotClient->getPrefix() +
+                                   " PRIVMSG " + _client->getNickname() + " :" + botResponse;
+                sendToClient(_clientFd, botMsg);
+            } else {
+                std::string botMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                   " PRIVMSG " + _client->getNickname() + " :" + botResponse;
+                sendToClient(_clientFd, botMsg);
+            }
+        }
     } else {
         std::string errorMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
                               " PRIVMSG " + _client->getNickname() +
-                              " :Unknown BOT command. Use BOT help for available commands.";
+                              " :❌ Unknown BOT command. Use BOT help for available commands.";
         sendToClient(_clientFd, errorMsg);
     }
 }

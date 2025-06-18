@@ -165,7 +165,6 @@ void Server::handleChannelMessage(const std::string& channelName, const std::str
         }
     }
 	updateBotStats("message", _client->getNickname(), channelName);
-
     moderateMessage(message, channelName);
     if (!channel.isMember(_client)) {
         return;
@@ -198,7 +197,6 @@ void Server::handlePrivateMessage(const std::string& targetNick, const std::stri
     if (!target->isRegistered()) {
         return;
     }
-
     std::string fullMsg = ":" + _client->getPrefix() + " PRIVMSG " + targetNick + " :" + message;
     sendToClient(target->getFd(), fullMsg);
 }
@@ -251,7 +249,8 @@ bool Server::processSingleMode(char flag, bool adding, const std::vector<std::st
 				if (!appliedParams.empty()) appliedParams += " ";
 				appliedParams += params[paramIndex];
 				paramIndex++;
-			} else {
+			}
+			else {
 				chan.removeKey();
 				appliedModes += "-k";
 			}
@@ -272,7 +271,8 @@ bool Server::processSingleMode(char flag, bool adding, const std::vector<std::st
 				if (!appliedParams.empty()) appliedParams += " ";
 				appliedParams += params[paramIndex];
 				paramIndex++;
-			} else {
+			}
+			else {
 				chan.removeUserLimit();
 				appliedModes += "-l";
 			}
@@ -310,7 +310,8 @@ bool Server::handleOperatorMode(bool adding, const std::vector<std::string>& par
 			if (!appliedParams.empty()) appliedParams += " ";
 			appliedParams += targetNick;
 		}
-	} else {
+	}
+	else {
 		if (chan.isOperator(targetClient)) {
 			chan.removeOperator(targetClient);
 			appliedModes += "-o";
@@ -330,15 +331,17 @@ std::string Server::processIRCBotCommand(const std::string& command, const std::
         if (!_botEnabled) {
             _botEnabled = true;
             return "🤖 Bot is now ENABLED! ✅";
-        } else {
-            return "🤖 Bot is going sleepy... I'm already ENABLED! ❌";
+        }
+		else {
+            return "🤖 Bot is going sleepy... I'm already ENABLED! ✅";
         }
     }
     if (cmd == "disable" || cmd == "bot disable" || cmd == "disable bot") {
         if (_botEnabled) {
             _botEnabled = false;
             return "🤖 Bot is now DISABLED. Use '!bot enable' to reactivate me.";
-        } else {
+        }
+		else {
             return "🤖 Bot is going sleepy... I'm already ENABLED! ✅";
         }
     }
@@ -460,6 +463,24 @@ std::string Server::processIRCBotCommand(const std::string& command, const std::
         return jokes[rand() % 6];
     }
 
+    if (cmd == "hello") {
+        updateBotStats("interaction", _client->getNickname());
+        return "👋 Hello! How can I assist you today?";
+    }
+    if (cmd == "time") {
+        updateBotStats("interaction", _client->getNickname());
+        time_t now = time(0);
+        char* dt = ctime(&now);
+        std::string timeStr = dt;
+        if (!timeStr.empty() && timeStr[timeStr.length()-1] == '\n') {
+            timeStr.erase(timeStr.length()-1);
+        }
+        return "⏰ Current time: " + timeStr;
+    }
+    if (cmd == "bye") {
+        updateBotStats("interaction", _client->getNickname());
+        return "👋 Goodbye! Have a great day!";
+    }
     if (cmd == "bot" || cmd == "help") {
         return "🤖 Bot Control Commands:\n"
                "• BOT enable/disable - Activate/deactivate bot\n"
@@ -585,7 +606,6 @@ bool Server::isAwaitingChatModeResponse(int clientFd) {
 
 void Server::handleChatModeResponse(int clientFd, const std::string& response) {
     _clientChatModePrompt[clientFd] = false;
-
     if (response == "yes" || response == "YES" || response == "y" || response == "Y") {
         std::string targetChannel = "";
         for (std::map<std::string, Channel>::const_iterator it = _channels.begin(); it != _channels.end(); ++it) {
@@ -594,7 +614,6 @@ void Server::handleChatModeResponse(int clientFd, const std::string& response) {
                 break;
             }
         }
-
         if (!targetChannel.empty()) {
             setChatMode(clientFd, targetChannel);
             std::string successMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
@@ -602,13 +621,15 @@ void Server::handleChatModeResponse(int clientFd, const std::string& response) {
                                    " :Chat Mode ENABLED for " + targetChannel + "!\n"
                                    "Now type messages directly. Use '!chat exit' to disable.";
             sendToClient(clientFd, successMsg);
-        } else {
+        }
+		else {
             std::string errorMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
                                  " PRIVMSG " + _client->getNickname() +
                                  " :Please join a channel first with: JOIN #channelname";
             sendToClient(clientFd, errorMsg);
         }
-    } else {
+    }
+	else {
         std::string cancelMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
                               " PRIVMSG " + _client->getNickname() +
                               " :No problem! Continue using normal IRC commands.";

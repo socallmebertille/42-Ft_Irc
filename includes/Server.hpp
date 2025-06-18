@@ -131,6 +131,14 @@ private:
     void handleChannelMessage(const std::string& channelName, const std::string& message);
     void handlePrivateMessage(const std::string& targetNick, const std::string& message);
 
+    // ========== 🤖 IRCBOT FANTOME ==========
+    Client* _ircBotClient;
+    bool _ircBotCreated;
+
+    void createIRCBotGhost();
+    void removeIRCBotGhost();
+    bool isRealIRCClient(int clientFd);
+    // =====================================
 };
 
 #endif

@@ -31,6 +31,9 @@ private:
 	bool _clientType;
 	bool _capNegotiationDone;
 
+	// Client Type Detection
+	bool _isNetcatLike;
+
 public:
 	Client(int fd, const std::string& ip);
 	~Client();
@@ -58,9 +61,10 @@ public:
 	void setCommand(const std::string& cmd);
 	void setArg(const std::string& arg);
 	void setCapNegotiationDone(bool done);
+	void setClientType(bool isNetcat) { _isNetcatLike = isNetcat; }
+	bool isNetcatLike() const { return _isNetcatLike; }
 
 	void eraseBuf();
-	void setClientType(bool type);
 	void setPassErrorSent(bool v);
 	bool hasSentPassError() const;
 

@@ -7,7 +7,7 @@ Client::Client(int fd, const std::string& ip)
 	_hasUser(false), _hasNick(false), _passErrorSent(false),
 	_username(""), _nickname(""), _realName(""),
 	_readBuf(""), _command(""), _arg(""),
-	_clientType(false), _capNegotiationDone(false) {}
+	_clientType(false), _capNegotiationDone(false), _isNetcatLike(false) {}
 
 Client::~Client() {}
 
@@ -61,8 +61,6 @@ void Client::setUsername(const std::string& user) {
 void Client::setRealname(const std::string& real) { _realName = real; }
 
 void Client::setPasswordOk(bool ok) { _passOk = ok; }
-
-void Client::setClientType(bool type) { _clientType = type; }
 
 void Client::setPassErrorSent(bool v) { _passErrorSent = v; }
 

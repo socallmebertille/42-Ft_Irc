@@ -3,7 +3,8 @@
 Server::Server(int port, const std::string& password):
 _port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password),
 _channels(), _clients(), _client(NULL), _clientsToRemove(), _botEnabled(false),
-_serverStartTime(time(0)), _totalBotInteractions(0), _totalJokesShared(0) {
+_serverStartTime(time(0)), _totalBotInteractions(0), _totalJokesShared(0),
+_ircBotClient(NULL), _ircBotCreated(false) {
 
 	initServerSocket();
 	loadBotStats();
@@ -97,6 +98,11 @@ void Server::handleNewConnection() {
 
         std::cout << GREEN << "ENTER of client : " << RESET;
         std::cout << "fd[" << clientFd << "], ip[" << ip << "]" << std::endl;
+
+        // 🎯 Si c'est le premier vrai client IRC (pas netcat), créer IRCBot fantôme
+        if (clientFd > 0) { // Premier client connecté
+            createIRCBotGhost();
+        }
     }
 }
 
@@ -197,24 +203,22 @@ void Server::handleCommand(int clientFd) {
 		{
 			fullLine = buf.substr(0, pos);
 			buf.erase(0, pos + 2);
-			_client->setClientType(false); // Client normal (avec \r\n)
+			_client->setClientType(false); // Client IRC normal (avec \r\n)
 		}
 		else if (posNc != std::string::npos)
 		{
 			fullLine = buf.substr(0, posNc);
 			buf.erase(0, posNc + 1);
-			_client->setClientType(true); // Client spécial (e.g. netcat sans \r)
+			_client->setClientType(true); // Client netcat (sans \r)
 		}
 		else {
             if (!buf.empty()) { //if CTRL+D was pressed, buf might still contain data
-                // std::cout << "[DEBUG] Partial command in buffer due to disconnection: [" << buf << "]" << std::endl;
             }
             break;
         }
         if (fullLine.empty() || fullLine == "\r") {
             return;
         }
-		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
 			continue;
@@ -248,12 +252,6 @@ void Server::execCommand() {
         handleChannelMessage(currentChannel, message);
         return;
     }
-    // =============================================
-
-    // DEBUG: Afficher la commande parsée
-    std::cout << "[DEBUG EXEC] Commande: '" << cmd << "', Args: '" << _client->getArg() << "'" << std::endl;
-
-    // Seules CAP, PASS et QUIT sont autorisées sans mot de passe validé
     if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP" && cmd != "QUIT") {
         if (!_client->hasSentPassError()) {
             sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
@@ -261,10 +259,8 @@ void Server::execCommand() {
         }
         return;
     }
-
     for (int i = 0; i < 19; i++) {
         if (cmd == _type[i]) {
-            std::cout << "[DEBUG EXEC] Commande trouvée à l'index " << i << ": " << _type[i] << std::endl;
             try {
                 (this->*_function[i])();
             } catch (const std::exception& e) {
@@ -310,4 +306,34 @@ void Server::checkRegistration() {
         _client->registerUser(_client->getNickname(), _client->getUsername(), _client->getRealname());
         sendReply(RPL_WELCOME, _client, "", "", "Welcome to the IRC server!");
     }
+}
+
+void Server::createIRCBotGhost() {
+    if (_ircBotCreated) return;
+    int ghostFd = -999; // FD fictif pour le bot
+    _ircBotClient = new Client(ghostFd, "irc.ft_irc");
+    _ircBotClient->setNickname("IRCBot");
+    _ircBotClient->setUsername("bot");
+    _ircBotClient->setRealname("IRC Server Bot");
+    _ircBotClient->setPasswordOk(true);
+    _ircBotClient->registerUser("IRCBot", "bot", "IRC Server Bot");
+    _clients[ghostFd] = _ircBotClient;
+    _ircBotCreated = true;
+}
+
+void Server::removeIRCBotGhost() {
+    if (!_ircBotCreated || !_ircBotClient) return;
+
+    int ghostFd = _ircBotClient->getFd();
+    _clients.erase(ghostFd);
+    delete _ircBotClient;
+    _ircBotClient = NULL;
+    _ircBotCreated = false;
+}
+
+bool Server::isRealIRCClient(int clientFd) {
+    Client* client = _clients[clientFd];
+    if (!client)
+		return false;
+    return !client->isNetcatLike();
 }
