@@ -243,6 +243,48 @@ PONG :12345
 
 ---
 
+
+
+!bot enable 		- Active le bot autonome
+!bot disable 		- Désactive le bot
+!bot status 		- Vérifie l'état du bot
+!bot ou !help 		- Aide sur les commandes
+
+
+# 1. Activer le bot
+PRIVMSG #42 :!bot enable
+
+# 2. Découvrir le Chat Mode
+PRIVMSG #42 :!chat
+
+# 3. Entrer en Chat Mode pour #42
+PRIVMSG #42 :!chat #42
+
+# 4. 🎉 MAINTENANT TAPEZ DIRECTEMENT SANS PRIVMSG !
+Hello everyone!
+How are you doing?
+This is so much easier!
+
+# 5. Vérifier le statut
+!chat status
+
+# 6. Sortir du Chat Mode
+!chat exit
+
+# 7. Retour au mode normal
+PRIVMSG #42 :back to normal IRC mode
+
+nc localhost 6667
+PASS test
+NICK ChatTester
+USER test test localhost :Chat Tester
+JOIN #42
+PRIVMSG #42 :!bot enable
+PRIVMSG #42 :!chat #42
+hello
+cava
+!chat exit
+
 ## ✅ Conclusion
 
 Si tous les tests ci-dessus passent dans `irssi` **sans `/quote` sauf pour `PASS`**, alors votre serveur est **conforme au sujet** ft_irc 👏

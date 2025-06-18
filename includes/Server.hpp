@@ -45,15 +45,53 @@ private:
     std::map<int, Client*> _clients;
     Client* _client;
 	std::vector<int> _clientsToRemove;
-    static const std::string _type[18];
-    static CommandFunc _function[18];
+
+    // ========== 🤖 BOT SEMI-AUTONOME ==========
+    bool _botEnabled;
+
+    // ========== 💬 CHAT MODE FEATURE ==========
+    std::map<int, std::string> _clientChatMode; // fd -> canal actuel
+    std::map<int, bool> _clientChatModePrompt; // fd -> en attente de réponse yes/no
+
+    bool isInChatMode(int clientFd);
+    std::string getCurrentChannel(int clientFd);
+    void setChatMode(int clientFd, const std::string& channel);
+    void exitChatMode(int clientFd);
+    void promptChatMode(int clientFd, const std::string& failedCommand);
+    bool isAwaitingChatModeResponse(int clientFd);
+    void handleChatModeResponse(int clientFd, const std::string& response);
+    // ========================================
+
+    time_t _serverStartTime;
+    std::map<std::string, int> _userMessageCount;
+    std::map<std::string, int> _channelMessageCount;
+    int _totalBotInteractions;
+    int _totalJokesShared;
+
+    void loadBotStats();
+    void saveBotStats();
+    void updateBotStats(const std::string& action, const std::string& user = "", const std::string& channel = "");
+    std::string getUptimeString();
+
+    std::vector<std::string> _bannedWords;
+    std::map<std::string, std::vector<std::string> > _channelBannedUsers; // canal -> liste users bannis
+
+    void loadBannedWords();
+    bool containsBannedWord(const std::string& message);
+    void moderateMessage(const std::string& message, const std::string& channelName);
+    bool isUserBannedFromChannel(const std::string& nickname, const std::string& channelName);
+    void banUserFromChannel(const std::string& nickname, const std::string& channelName);
+
+    std::string processIRCBotCommand(const std::string& command, const std::string& channelName);
+
+    static const std::string _type[19];
+    static CommandFunc _function[19];
 
     void initServerSocket();
     void handleNewConnection();
     void setNonBlocking(int fd);
 
     Client* getClientByNick(const std::string& nickname);
-    void closeAndRemoveClient(int fd);
     void handleCommand(int clientFd);
 
     void sendToClient(int fd, const std::string& msg);
@@ -72,7 +110,6 @@ private:
     void quit();
     void mode();
     void topic();
-    void list();
     void invite();
     void kick();
     void notice();
@@ -80,6 +117,7 @@ private:
     void pong();
     void userhost();
     void whois();
+    void bot();
 
     // ModeCommand utility methods
     bool validateModeCommand(const std::string& target, Channel*& chan);
@@ -93,8 +131,6 @@ private:
     void handleChannelMessage(const std::string& channelName, const std::string& message);
     void handlePrivateMessage(const std::string& targetNick, const std::string& message);
 
-    // ========== 🤖 BOT IRC FEATURE ==========
-    std::string processIRCBotCommand(const std::string& command, const std::string& channelName);
 };
 
 #endif

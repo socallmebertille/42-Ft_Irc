@@ -2,36 +2,36 @@
 
 Server::Server(int port, const std::string& password):
 _port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password),
-_channels(), _clients(), _client(NULL), _clientsToRemove()
-{
-	// std::cout << "[DEBUG]" << "Serveur IRC créé sur le port " << _port
-	// 		  << " avec mot de passe : " << _password << std::endl << std::endl;
+_channels(), _clients(), _client(NULL), _clientsToRemove(), _botEnabled(false),
+_serverStartTime(time(0)), _totalBotInteractions(0), _totalJokesShared(0) {
+
 	initServerSocket();
+	loadBotStats();
+	loadBannedWords();
 }
 
 Server::~Server()
 {
 	close(_serverSocket);
 	close(_epollFd);
-	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
 		close(it->first);
 		delete it->second;
 	}
 }
 
 // ========== STATIC MEMBERS INITIALIZATION ==========
-const std::string Server::_type[18] = {
+const std::string Server::_type[19] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
-    "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG",
-    "USERHOST", "WHOIS"
+    "MODE", "TOPIC", "INVITE", "KICK", "PING", "PONG",
+    "USERHOST", "WHOIS", "BOT"
 };
 
-Server::CommandFunc Server::_function[18] = {
+Server::CommandFunc Server::_function[19] = {
     &Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg,
     &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic,
-    &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong,
-    &Server::userhost, &Server::whois
+    &Server::invite, &Server::kick, &Server::ping, &Server::pong,
+    &Server::userhost, &Server::whois, &Server::bot
 };
 
 // ========== SOCKET CONFIGURATION ==========
@@ -108,7 +108,8 @@ void Server::disconnectClient(int fd) {
 void Server::cleanupClients() {
 	for (size_t i = 0; i < _clientsToRemove.size(); ++i) {
 		int fd = _clientsToRemove[i];
-		// std::cout << "[DEBUG] CLEANUP client fd[" << fd << "]" << std::endl;
+		exitChatMode(fd);
+		_clientChatModePrompt.erase(fd);
 		std::map<int, Client*>::iterator it = _clients.find(fd);
 		if (it != _clients.end()) {
 			std::cout << RED << "CLEANUP client fd[" << fd << "] nickname[" << it->second->getNickname() << "]" << RESET << std::endl;
@@ -135,7 +136,6 @@ void Server::cleanupClients() {
 	_clientsToRemove.clear();
 }
 
-// ========== CLIENT UTILITIES ==========
 Client* Server::getClientByNick(const std::string& nickname) {
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->second->getNickname() == nickname)
@@ -212,7 +212,6 @@ void Server::handleCommand(int clientFd) {
             break;
         }
         if (fullLine.empty() || fullLine == "\r") {
-            // std::cerr << "[DEBUG] Ligne vide ignorée pour fd " << clientFd << std::endl;
             return;
         }
 		std::cout << "[PARSE FD " << clientFd << "] >>> [" << fullLine << "]" << std::endl;
@@ -233,24 +232,39 @@ void Server::execCommand() {
         sendReply(ERR_UNKNOWNCOMMAND, _client, "*", "", "Empty command");
         return;
     }
-    if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP" && cmd != "JOIN") {
+    if (isAwaitingChatModeResponse(_clientFd)) {
+        handleChatModeResponse(_clientFd, cmd);
+        return;
+	}
+    if (isInChatMode(_clientFd) && cmd != "QUIT" && cmd != "PART" && cmd != "JOIN" && !cmd.empty() && cmd[0] != '!' && cmd != "BOT") {
+        std::string currentChannel = getCurrentChannel(_clientFd);
+        std::string message = cmd;
+
+        if (!_client->getArg().empty()) {
+            message += " " + _client->getArg();
+        }
+
+        std::cout << "[CHAT MODE] Sending '" << message << "' to " << currentChannel << std::endl;
+        handleChannelMessage(currentChannel, message);
+        return;
+    }
+    // =============================================
+
+    // DEBUG: Afficher la commande parsée
+    std::cout << "[DEBUG EXEC] Commande: '" << cmd << "', Args: '" << _client->getArg() << "'" << std::endl;
+
+    // Seules CAP, PASS et QUIT sont autorisées sans mot de passe validé
+    if (!_client->isPasswordOk() && cmd != "PASS" && cmd != "CAP" && cmd != "QUIT") {
         if (!_client->hasSentPassError()) {
             sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
             _client->setPassErrorSent(true);
         }
-		_clientsToRemove.push_back(_clientFd);
         return;
     }
-    if (cmd == "USER" && !_client->hasNick()) {
-        sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "You must set a nickname first");
-        return;
-    }
-    if (cmd == "CAP") {
-        cap();
-        return;
-    }
-    for (int i = 0; i < 18; i++) {
+
+    for (int i = 0; i < 19; i++) {
         if (cmd == _type[i]) {
+            std::cout << "[DEBUG EXEC] Commande trouvée à l'index " << i << ": " << _type[i] << std::endl;
             try {
                 (this->*_function[i])();
             } catch (const std::exception& e) {
@@ -260,26 +274,40 @@ void Server::execCommand() {
             return;
         }
     }
+    if (_client->isRegistered() && !isInChatMode(_clientFd)) {
+        bool isInAnyChannel = false;
+        std::string userChannel = "";
+        for (std::map<std::string, Channel>::const_iterator it = _channels.begin(); it != _channels.end(); ++it) {
+            if (it->second.isMember(_client)) {
+                isInAnyChannel = true;
+                userChannel = it->first;
+                break;
+            }
+        }
+
+        if (isInAnyChannel) {
+            std::string fullMessage = cmd;
+            if (!_client->getArg().empty()) {
+                fullMessage += " " + _client->getArg();
+            }
+            if (containsBannedWord(fullMessage)) {
+                moderateMessage(fullMessage, userChannel);
+                return;
+            }
+            promptChatMode(_clientFd, cmd);
+            return;
+        }
+    }
     sendReply(ERR_UNKNOWNCOMMAND, _client, cmd, "", "Unknown command");
 }
 
-// ========== USER REGISTRATION ==========
 void Server::checkRegistration() {
     if (!_client->isRegistered()
-        && _client->isPasswordOk()
         && _client->hasNick()
         && !_client->getNickname().empty()
         && _client->hasUser()
         && !_client->getUsername().empty()) {
-        // std::cout << "[DEBUG] → registerUser called" << std::endl;
         _client->registerUser(_client->getNickname(), _client->getUsername(), _client->getRealname());
         sendReply(RPL_WELCOME, _client, "", "", "Welcome to the IRC server!");
-        // std::cout << "[DEBUG] Client enregistré : " << _client->getNickname() << std::endl;
-    }
-    else if (!_client->isPasswordOk() && _client->hasNick() && _client->hasUser()) {
-        if (!_client->hasSentPassError()) {
-            sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
-            _client->setPassErrorSent(true);
-        }
     }
 }

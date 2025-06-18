@@ -4,6 +4,8 @@
 #include <cstdlib>
 
 void Server::cap() {
+	// CAP is used for capability negotiation in IRC
+	// it allows clients to request or list capabilities
     std::string arg = _client->getArg();
     if (arg.empty())
         return;
@@ -26,6 +28,8 @@ void Server::cap() {
 }
 
 void Server::ping() {
+	// The PING command is used to check if the server is reachable
+
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
 
@@ -50,8 +54,9 @@ void Server::pong() {
 }
 
 void Server::pass() {
+	// The PASS command is used to set the password for the client
+
     if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end()) {
-        // std::cout << "[DEBUG] Command ignored (client marked for removal): " << _clientFd << std::endl;
         return;
     }
     if (_client->isRegistered()) {
@@ -67,16 +72,16 @@ void Server::pass() {
     if (inputPass == _password) {
         _client->setPasswordOk(true);
         _client->setPassErrorSent(false);
-        // std::cout << "[DEBUG] setPasswordOk(true) → " << _client->isPasswordOk() << std::endl;
     }
     else {
         sendReply(ERR_PASSWDMISMATCH, _client, "", "", "Password incorrect");
         _client->setPasswordOk(false);
-        _clientsToRemove.push_back(_clientFd);
     }
 }
 
 void Server::nick() {
+	// The NICK command is used to set the nickname for the client
+
     if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
     if (_client->getArg().empty()) {
@@ -95,7 +100,6 @@ void Server::nick() {
     }
     std::string oldNick = _client->getNickname();
     _client->setNickname(newNick);
-    // std::cout << "[DEBUG] setNickname(" << newNick << ") → " << _client->getNickname() << std::endl;
     std::string prefix;
     if (oldNick.empty())
         prefix = "*";
@@ -110,6 +114,8 @@ void Server::nick() {
 }
 
 void Server::user() {
+	// The USER command is used to set the username and real name for the client
+
     if (std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
     if (_client->isRegistered()) {
@@ -139,11 +145,11 @@ void Server::user() {
     _client->setUsername(username);
     _client->setRealname(realname);
     checkRegistration();
-    // std::cout << "[DEBUG] setUsername(" << username << ") → " << _client->getUsername() << std::endl;
-    // std::cout << "[DEBUG] setRealname(" << realname << ") → " << _client->getRealname() << std::endl;
 }
 
 void Server::privmsg() {
+	// The PRIVMSG command is used to send a private message to a user or a channel
+
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
     if (!_client->isRegistered()) {
@@ -178,38 +184,16 @@ void Server::privmsg() {
         sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "No text to send");
         return;
     }
-
-	if (_client->getNickname() == "irc_bot")
-		return; // Évite que le bot réagisse à ses propres messages
-	if (message[0] == '!') {
-	std::string botResponse = processIRCBotCommand(message, target);
-	if (!botResponse.empty()) {
-		std::string response = ":irc_bot!bot@localhost PRIVMSG " + target + " :" + botResponse + "\r\n";
-		if (target[0] == '#') {
-			// envoie à tous les membres du channel
-			std::map<std::string, Channel>::iterator it = _channels.find(target);
-			if (it != _channels.end()) {
-				const std::set<Client*>& members = it->second.getMembers();
-				for (std::set<Client*>::const_iterator itC = members.begin(); itC != members.end(); ++itC)
-					sendToClient((*itC)->getFd(), response);
-			}
-		}
-		else {
-			sendToClient(_clientFd, response);
-		}
-	}
-    	// std::cout << "[DEBUG] PRIVMSG - Target: '" << target << "', Message: '" << message << "'" << std::endl;
-    	if (target[0] == '#') {
-        	handleChannelMessage(target, message);
-    	}
-		else {
-        	handlePrivateMessage(target, message);
-    	}
-	}
+    if (target[0] == '#') {
+        handleChannelMessage(target, message);
+    }
+    else {
+        handlePrivateMessage(target, message);
+    }
 }
 
 void Server::join() {
-    // std::cout << RED << "[DEBUG] JOIN reçu avec argument : [" << _client->getArg() << "]" << RESET << std::endl;
+	// The JOIN command is used to join a channel
 
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
@@ -223,10 +207,10 @@ void Server::join() {
     iss >> channelName >> key;
     if (!channelName.empty() && channelName[0] == ':')
     channelName = channelName.substr(1);
-    if (channelName == ":") { // case clients sending "JOIN :"
+    if (channelName == ":") {
             return;
     }
-    if (!_client->isPasswordOk()) { // verification if password is ok
+    if (!_client->isPasswordOk()) {
         if (!_client->hasSentPassError()) {
             sendReply(ERR_PASSWDMISMATCH, _client, "*", "", "Password required");
             _client->setPassErrorSent(true);
@@ -240,6 +224,15 @@ void Server::join() {
 
     if (channelName.empty() || channelName[0] != '#') {
         sendReply(ERR_NOSUCHCHANNEL, _client, channelName.empty() ? "*" : channelName, "", "No such channel");
+        return;
+    }
+    if (isUserBannedFromChannel(_client->getNickname(), channelName)) {
+        std::string banMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                            " PRIVMSG " + _client->getNickname() +
+                            " :You are BANNED from " + channelName +
+                            " for inappropriate language. Access denied 🚫 .";
+        sendToClient(_client->getFd(), banMsg);
+        sendReply(ERR_BANNEDFROMCHAN, _client, channelName, "", "Cannot join channel (+b) - you are banned 🚫 ");
         return;
     }
     std::pair<std::map<std::string, Channel>::iterator, bool> result =
@@ -294,6 +287,8 @@ void Server::join() {
 }
 
 void Server::part() {
+	// The PART command is used to leave a channel
+
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
     if (!_client->isRegistered()) {
@@ -305,7 +300,6 @@ void Server::part() {
         sendReply(ERR_NEEDMOREPARAMS, _client, "PART", "", "Not enough parameters");
         return;
     }
-    // Parse channel name and optional part message
     std::string channelName, partMessage;
     size_t colonPos = args.find(" :");
     if (colonPos != std::string::npos) {
@@ -314,14 +308,11 @@ void Server::part() {
     } else {
         std::istringstream iss(args);
         iss >> channelName;
-        // No part message provided
     }
-    // Validate channel name format
     if (channelName.empty() || channelName[0] != '#') {
         sendReply(ERR_NOSUCHCHANNEL, _client, channelName.empty() ? "*" : channelName, "", "No such channel");
         return;
     }
-    // Check if channel exists
     std::map<std::string, Channel>::iterator it = _channels.find(channelName);
     if (it == _channels.end()) {
         sendReply(ERR_NOSUCHCHANNEL, _client, channelName, "", "No such channel");
@@ -332,29 +323,25 @@ void Server::part() {
         sendReply(ERR_NOTONCHANNEL, _client, channelName, "", "You're not on that channel");
         return;
     }
-    // Create PART message with optional part message
     std::string partMsg = ":" + _client->getPrefix() + " PART " + channelName;
     if (!partMessage.empty()) {
         partMsg += " :" + partMessage;
     }
-    // Send PART message to all channel members
     const std::set<Client*>& members = chan.getMembers();
     for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
         sendToClient((*it)->getFd(), partMsg);
     if (chan.isOperator(_client)) {
-        // If the client was an operator, remove them from the operators list
-        std::cout << RED << "[DEBUG PART] Client " << _client->getNickname() << " was an operator in channel " << channelName << RESET << std::endl;
-        chan.removeOperator(_client); // Remove client from operators if they were one
+        chan.removeOperator(_client);
     }
-    // Remove client from channel
     chan.part(_client);
-    // Remove empty channel
     if (chan.getMemberCount() == 0) {
         _channels.erase(channelName);
     }
 }
 
 void Server::quit() {
+	// The QUIT command is used to disconnect the client from the server
+
     if (!_client)
         return;
     std::string quitMessage = _client->getArg().empty() ? "Client Quit" : _client->getArg();
@@ -370,11 +357,84 @@ void Server::quit() {
         }
         chan.part(_client);
     }
-    // std::cout << "[DEBUG] QUIT received → adding to _clientsToRemove: fd[" << _clientFd << "]" << std::endl;
     _clientsToRemove.push_back(_clientFd);
 }
 
+void Server::mode() {
+    // The MODE command is used to set or retrieve channel modes
+    if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+        return;
+
+    if (!_client->isRegistered()) {
+        sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+        return;
+    }
+
+    std::string args = _client->getArg();
+    if (args.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "MODE", "", "Not enough parameters");
+        return;
+    }
+
+    std::vector<std::string> params = ft_split(args, ' ');
+    if (params.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "MODE", "", "Not enough parameters");
+        return;
+    }
+
+    std::string target = params[0];
+    Channel* chan = NULL;
+    if (!validateModeCommand(target, chan)) {
+        return;
+    }
+
+    if (params.size() == 1) {
+        showCurrentModes(target, *chan);
+        return;
+    }
+
+    if (!chan->isOperator(_client)) {
+        sendReply(ERR_CHANOPRIVSNEEDED, _client, target, "", "You're not channel operator");
+        return;
+    }
+
+    std::string modeString = params[1];
+    std::vector<std::string> modeParams(params.begin() + 2, params.end());
+
+    std::string appliedModes;
+    std::string appliedParams;
+    size_t paramIndex = 0;
+    bool adding = true;
+
+    for (size_t i = 0; i < modeString.length(); i++) {
+        char c = modeString[i];
+        if (c == '+') {
+            adding = true;
+        } else if (c == '-') {
+            adding = false;
+        } else {
+            if (!processSingleMode(c, adding, modeParams, paramIndex, *chan, target, appliedModes, appliedParams)) {
+                continue;
+            }
+        }
+    }
+
+    if (!appliedModes.empty()) {
+        std::string modeMsg = ":" + _client->getPrefix() + " MODE " + target + " " + appliedModes;
+        if (!appliedParams.empty()) {
+            modeMsg += " " + appliedParams;
+        }
+
+        const std::set<Client*>& members = chan->getMembers();
+        for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+            sendToClient((*it)->getFd(), modeMsg);
+        }
+    }
+}
+
 void Server::topic() {
+	// The TOPIC command is used to set or retrieve the topic of a channel
+
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
 
@@ -404,11 +464,9 @@ void Server::topic() {
     if (colonPos != std::string::npos) {
         std::string newTopic = args.substr(colonPos + 2); // Skip " :"
         if (chan.isTopicProtected() && !chan.isOperator(_client)) {
-            // std::cout << RED << "[DEBUG TOPIC] BLOQUÉ - Envoi erreur 482" << RESET << std::endl;
             sendReply(ERR_CHANOPRIVSNEEDED, _client, channelName, "", "You're not channel operator");
             return;
         }
-        // std::cout << RED << "[DEBUG TOPIC] AUTORISÉ - Changement de topic" << RESET << std::endl;
         chan.setTopic(newTopic, _client->getNickname());
         std::string topicMsg = ":" + _client->getPrefix() + " TOPIC " + channelName + " :" + newTopic;
         const std::set<Client*>& members = chan.getMembers();
@@ -433,28 +491,45 @@ void Server::topic() {
 
 
 void Server::invite() {
+	// The INVITE command is used to invite a user to a channel
+
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
-    return;
-    std::vector<std::string> args = ft_split(_client->getArg(), ' ');
-    if (args.size() < 2) {
+        return;
+
+    if (!_client->isRegistered()) {
+        sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+        return;
+    }
+    std::string args = _client->getArg();
+    if (args.empty()) {
         sendReply(ERR_NEEDMOREPARAMS, _client, "INVITE", "", "Not enough parameters");
         return;
     }
-    const std::string& targetNick = args[0];
-    const std::string& channelName = args[1];
+    std::istringstream iss(args);
+    std::string targetNick, channelName;
+
+    if (!(iss >> targetNick >> channelName)) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "INVITE", "", "Not enough parameters");
+        return;
+    }
+    std::cout << "[DEBUG INVITE] targetNick='" << targetNick << "', channelName='" << channelName << "'" << std::endl;
+    Client* target = getClientByNick(targetNick);
+    if (!target) {
+        sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick/channel");
+        return;
+    }
     std::map<std::string, Channel>::iterator it = _channels.find(channelName);
     if (it == _channels.end()) {
         sendReply(ERR_NOSUCHCHANNEL, _client, channelName, "", "No such channel");
         return;
     }
     Channel& chan = it->second;
-    if (!chan.isOperator(_client)) {
-        sendReply(ERR_CHANOPRIVSNEEDED, _client, channelName, "", "You're not channel operator");
+    if (!chan.isMember(_client)) {
+        sendReply(ERR_NOTONCHANNEL, _client, channelName, "", "You're not on that channel");
         return;
     }
-    Client* target = getClientByNick(targetNick);
-    if (!target) {
-        sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick/channel");
+    if (chan.isInviteOnly() && !chan.isOperator(_client)) {
+        sendReply(ERR_CHANOPRIVSNEEDED, _client, channelName, "", "You're not channel operator");
         return;
     }
     if (chan.isMember(target)) {
@@ -468,6 +543,8 @@ void Server::invite() {
 }
 
 void Server::kick() {
+	// The KICK command is used to remove a user from a channel
+
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
     return;
     if (!_client->isRegistered()) {
@@ -510,24 +587,19 @@ void Server::kick() {
 }
 
 void Server::userhost() {
-    // The USERHOST command returns information about one or more users
-    // Format: USERHOST nick1 [nick2 ...]
-
+	// The USERHOST command returns information about a user
+	// Format: USERHOST <nick1>  ...
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
     return;
-
     if (!_client->isRegistered()) {
         sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
         return;
     }
-
     std::string args = _client->getArg();
     if (args.empty()) {
         sendReply(ERR_NEEDMOREPARAMS, _client, "USERHOST", "", "Not enough parameters");
         return;
     }
-
-    // Parse the requested nicknames
     std::istringstream iss(args);
     std::string nickname;
     std::string response;
@@ -537,12 +609,9 @@ void Server::userhost() {
         if (target && target->isRegistered()) {
             if (!response.empty())
             response += " ";
-            // Format: nick=+user@host (+ indicates user is available)
             response += target->getNickname() + "=+" + target->getUsername() + "@localhost";
         }
     }
-
-    // USERHOST response (code 302)
     sendReply(302, _client, "", "", response);
 }
 
@@ -573,93 +642,108 @@ void Server::whois() {
         sendReply(ERR_NOSUCHNICK, _client, nickname, "", "No such nick/channel");
         return;
     }
-    // RPL_WHOISUSER (311): nick user host * :realname
     sendReply(311, _client, nickname, target->getUsername() + " localhost *", target->getRealname());
-    // RPL_WHOISSERVER (312): nick server :server info
     sendReply(312, _client, nickname, SERVER_NAME, "IRC Server");
-    // RPL_ENDOFWHOIS (318): nick :End of /WHOIS list
     sendReply(318, _client, nickname, "", "End of /WHOIS list");
-    // std::cout << "[DEBUG] WHOIS for " << nickname << " completed" << std::endl;
 }
 
-void Server::mode() {
+void Server::bot() {
+    // Commande BOT - Contrôle complet du bot IRC
     if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
         return;
-    const std::string& args = _client->getArg();
+    if (!_client->isRegistered()) {
+        sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+        return;
+    }
+    std::string args = _client->getArg();
     if (args.empty()) {
-        sendReply(ERR_NEEDMOREPARAMS, _client, "MODE", "", "Not enough parameters");
+        std::string helpMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                             " PRIVMSG " + _client->getNickname() +
+                             " :🤖 BOT COMMAND USAGE:\n"
+                             "• BOT enable/disable - Control bot activation\n"
+                             "• BOT status - Check bot status\n"
+                             "• BOT stats - Server statistics\n"
+                             "• BOT uptime - Server uptime\n"
+                             "• BOT users - Connected users\n"
+                             "• BOT channels - Active channels\n"
+                             "• BOT chat #channel - Enable chat mode\n"
+                             "• BOT chat exit - Disable chat mode\n"
+                             "• BOT help - Show this help";
+        sendToClient(_clientFd, helpMsg);
         return;
     }
-    std::istringstream iss(args);
-    std::string target;
-    iss >> target;
-    std::string modeStr;
-    std::vector<std::string> params;
-    // Get modes & parameters
-    if (!(iss >> modeStr)) {
-        // If no mode : show current modes
-        Channel* chan = NULL;
-        if (!validateModeCommand(target, chan))
+    std::string botCommand = args;
+    if (args.find("chat ") == 0) {
+        std::string chatArgs = args.substr(5);
+        if (chatArgs == "exit") {
+            if (isInChatMode(_clientFd)) {
+                std::string currentChannel = getCurrentChannel(_clientFd);
+                exitChatMode(_clientFd);
+                std::string exitMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                     " PRIVMSG " + _client->getNickname() +
+                                     " :Chat mode DISABLED for " + currentChannel + ". Back to normal IRC mode.";
+                sendToClient(_clientFd, exitMsg);
+            } else {
+                std::string errorMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                      " PRIVMSG " + _client->getNickname() +
+                                      " :You are not in chat mode.";
+                sendToClient(_clientFd, errorMsg);
+            }
             return;
-        showCurrentModes(target, *chan);
-        return;
-    }
-    std::string param;
-    while (iss >> param) {
-        params.push_back(param);
-    }
-    // Check if it's a user mode (target = client's nickname)
-    if (target == _client->getNickname()) {
-        return; // User mode - ignore
-    }
-    // Validate channel and get references
-    Channel* chan = NULL;
-    if (!validateModeCommand(target, chan)) {
-        return; //error already sent
-    }
-    if (!chan->isOperator(_client)) {
-        sendReply(ERR_CHANOPRIVSNEEDED, _client, target, "", "You're not channel operator");
-        return;
-    }
-    // Process modes with improved parsing
-    bool adding = true; // Start with + by default
-    size_t paramIndex = 0;
-    std::string appliedModes = "";
-    std::string appliedParams = "";
-    for (size_t i = 0; i < modeStr.length(); ++i) {
-        char flag = modeStr[i];
-        if (flag == '+') {
-            adding = true;
-            continue;
         }
-        if (flag == '-') {
-            adding = false;
-            continue;
+        else if (chatArgs == "status") {
+            if (isInChatMode(_clientFd)) {
+                std::string currentChannel = getCurrentChannel(_clientFd);
+                std::string statusMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                       " PRIVMSG " + _client->getNickname() +
+                                       " :Chat mode ACTIVE for " + currentChannel + ". Type directly to send messages!";
+                sendToClient(_clientFd, statusMsg);
+            } else {
+                std::string statusMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                       " PRIVMSG " + _client->getNickname() +
+                                       " :Chat mode DISABLED. Use BOT chat #channel to enable.";
+                sendToClient(_clientFd, statusMsg);
+            }
+            return;
         }
-        // Process the mode flag : if mode need param, he should be in params[paramIndex]
-        if (!processSingleMode(flag, adding, params, paramIndex, *chan, target, appliedModes, appliedParams)) {
-            // Continue processing other modes even if one fails (IRC standard behavior)
-            continue;
+        else if (chatArgs[0] == '#') {
+            std::string channelName = chatArgs;
+            std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+            if (it == _channels.end()) {
+                std::string errorMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                      " PRIVMSG " + _client->getNickname() +
+                                      " :Channel " + channelName + " does not exist. Join it first with: JOIN " + channelName;
+                sendToClient(_clientFd, errorMsg);
+                return;
+            }
+            Channel& chan = it->second;
+            if (!chan.isMember(_client)) {
+                std::string errorMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                      " PRIVMSG " + _client->getNickname() +
+                                      " :You are not a member of " + channelName + ". Join it first with: JOIN " + channelName;
+                sendToClient(_clientFd, errorMsg);
+                return;
+            }
+            setChatMode(_clientFd, channelName);
+            std::string successMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                                   " PRIVMSG " + _client->getNickname() +
+                                   " :Chat mode ENABLED for " + channelName + "! \n"
+                                   "Now type messages directly (no need for PRIVMSG)\n"
+                                   "Use BOT chat exit to return to normal IRC mode";
+            sendToClient(_clientFd, successMsg);
+            return;
         }
     }
-
-    // Send notification to all channel members if any modes were applied
-    if (!appliedModes.empty()) {
-        std::string modeMsg = ":" + _client->getPrefix() + " MODE " + target + " " + appliedModes;
-        if (!appliedParams.empty()) {
-            modeMsg += " " + appliedParams;
-        }
-        const std::set<Client*>& members = chan->getMembers();
-        for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-            sendToClient((*it)->getFd(), modeMsg);
-        }
+    std::string botResponse = processIRCBotCommand(args, "");
+    if (!botResponse.empty()) {
+        std::string botMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                           " PRIVMSG " + _client->getNickname() + " :" + botResponse;
+        sendToClient(_clientFd, botMsg);
+    } else {
+        std::string errorMsg = ":IRCBot!bot@" + std::string(SERVER_NAME) +
+                              " PRIVMSG " + _client->getNickname() +
+                              " :Unknown BOT command. Use BOT help for available commands.";
+        sendToClient(_clientFd, errorMsg);
     }
 }
 
-void Server::list() {
-    return;
-}
-
-void Server::notice() {
-    return;
-}
