@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include <sstream>
+# include <fstream>
 # include <unistd.h>
 # include <map>
 # include <vector>
@@ -16,13 +17,19 @@
 # include <algorithm>
 # include <cerrno>
 # include <vector>
-#include "Utils.hpp"
+# include "Utils.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "colors.hpp"
 # include "Replies.hpp"
 
 # define MAX_EVENTS 64
+
+struct PendingTransfer {
+    std::string sender;
+    std::string content;
+    std::string filename;
+};
 
 class Server {
 public:
@@ -84,8 +91,10 @@ private:
 
     std::string processIRCBotCommand(const std::string& command, const std::string& channelName);
 
-    static const std::string _type[19];
-    static CommandFunc _function[19];
+    static const std::string _type[20];
+    static CommandFunc _function[20];
+
+    std::map<std::string, PendingTransfer> _pendingTransfers; // key: receiver_filename
 
     void initServerSocket();
     void handleNewConnection();
@@ -112,11 +121,13 @@ private:
     void topic();
     void invite();
     void kick();
-    void notice();
     void ping();
     void pong();
     void userhost();
     void whois();
+    void sendfile();
+    void acceptFile();
+    void refuseFile();
     void bot();
 
     // ModeCommand utility methods

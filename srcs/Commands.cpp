@@ -184,6 +184,18 @@ void Server::privmsg() {
         sendReply(ERR_NEEDMOREPARAMS, _client, "PRIVMSG", "", "No text to send");
         return;
     }
+    if (message.find("\001DCC") == 0) { // get file transfer from irssi
+        std::string dccMsg = message;
+        if (dccMsg[0] == '\001')
+            dccMsg = dccMsg.substr(1);
+        if (dccMsg[dccMsg.length() - 1] == '\001')
+            dccMsg = dccMsg.substr(0, dccMsg.length() - 1);
+        std::string fullDccMsg = ":" + _client->getPrefix() + " PRIVMSG " + target + " :\001" + dccMsg + "\001\r\n";
+        Client* targetClient = getClientByNick(target);
+        if (targetClient)
+            sendToClient(targetClient->getFd(), fullDccMsg);
+        return;
+    }
     if (target[0] == '#') {
         handleChannelMessage(target, message);
     }
@@ -758,5 +770,98 @@ void Server::bot() {
                               " :❌ Unknown BOT command. Use BOT help for available commands.";
         sendToClient(_clientFd, errorMsg);
     }
+}
+
+void Server::sendfile() {
+    std::istringstream iss(_client->getArg());
+    std::string targetNick, filename;
+    iss >> targetNick >> filename;
+    if (targetNick.empty() || filename.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "SEND", "", "Usage: SEND <nick> <filename>");
+        return;
+    }
+    Client* target = getClientByNick(targetNick);
+    if (!target) {
+        sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick");
+        return;
+    }
+    std::ifstream file(filename.c_str());
+    if (!file.is_open()) {
+        sendReply(ERR_FILEERROR, _client, filename, "", "Cannot open file");
+        return;
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf(); // read file
+    std::string content = buffer.str();
+    file.close();
+    std::string transferKey = targetNick + "_" + filename;
+    PendingTransfer transfer; // keep track of the transfer
+    transfer.sender = _client->getNickname();
+    transfer.content = content;
+    transfer.filename = filename;
+    _pendingTransfers[transferKey] = transfer;
+    // notif to target client
+    std::string msg = ":" + _client->getPrefix() + " SEND " + filename + " :File transfer request from " + _client->getNickname() + "\r\n";
+    sendToClient(target->getFd(), msg);
+}
+
+void Server::acceptFile() {
+    std::istringstream iss(_client->getArg());
+    std::string targetNick, filename;
+    iss >> targetNick >> filename;
+    if (targetNick.empty() || filename.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "ACCEPT", "", "Usage: ACCEPT <nick> <filename>");
+        return;
+    }
+    // check if the transfer exists
+    std::string transferKey = _client->getNickname() + "_" + filename;
+    std::map<std::string, PendingTransfer>::iterator it = _pendingTransfers.find(transferKey);
+    if (it == _pendingTransfers.end()) {
+        sendReply(ERR_FILEERROR, _client, filename, "", "No pending transfer for this file");
+        return;
+    }
+    Client* sender = getClientByNick(targetNick);
+    if (!sender) {
+        sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick");
+        _pendingTransfers.erase(transferKey);
+        return;
+    }
+    // Notif sender
+    std::string acceptMsg = ":" + _client->getPrefix() + " ACCEPT " + filename + "\r\n";
+    sendToClient(sender->getFd(), acceptMsg);
+    // get file
+    std::string contentMsg = ":" + _client->getPrefix() + " NOTICE " + _client->getNickname() 
+                         + " :File content of " + filename + ":\r\n" + it->second.content + "\r\n";
+    sendToClient(_clientFd, contentMsg);
+    // delete the tracker
+    _pendingTransfers.erase(transferKey);
+}
+
+void Server::refuseFile() {
+    std::istringstream iss(_client->getArg());
+    std::string targetNick, filename;
+    iss >> targetNick >> filename;
+    
+    if (targetNick.empty() || filename.empty()) {
+        sendReply(ERR_NEEDMOREPARAMS, _client, "REFUSE", "", "Usage: REFUSE <nick> <filename>");
+        return;
+    }
+    // check if the transfer exists
+    std::string transferKey = _client->getNickname() + "_" + filename;
+    std::map<std::string, PendingTransfer>::iterator it = _pendingTransfers.find(transferKey);
+    if (it == _pendingTransfers.end()) {
+        sendReply(ERR_FILEERROR, _client, filename, "", "No pending transfer for this file");
+        return;
+    }
+    Client* target = getClientByNick(targetNick);
+    if (!target) {
+        sendReply(ERR_NOSUCHNICK, _client, targetNick, "", "No such nick");
+        return;
+    }
+    // Notif sender
+    std::string msg = ":" + _client->getPrefix() + " REFUSE " + filename + "\r\n";
+    sendToClient(target->getFd(), msg);
+    // delete the tracker
+    _pendingTransfers.erase(transferKey);
 }
 

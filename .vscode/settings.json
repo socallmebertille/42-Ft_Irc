@@ -68,6 +68,8 @@
 		"numbers": "cpp",
 		"ostream": "cpp",
 		"ranges": "cpp",
-		"span": "cpp"
+		"span": "cpp",
+		"csignal": "cpp",
+		"fstream": "cpp"
 	}
 }
