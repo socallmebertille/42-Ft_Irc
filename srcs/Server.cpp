@@ -23,15 +23,16 @@ Server::~Server()
 // ========== STATIC MEMBERS INITIALIZATION ==========
 const std::string Server::_type[20] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
-    "MODE", "TOPIC", "INVITE", "KICK", "PING", "PONG",
-    "USERHOST", "WHOIS", "SEND", "BOT", "ACCEPT", "REFUSE"
+    "MODE", "TOPIC", "INVITE", "KICK", "PING", "PONG", "USERHOST",
+    "WHOIS", "SEND", "BOT", "ACCEPT", "REFUSE"
 };
 
 Server::CommandFunc Server::_function[20] = {
     &Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg,
     &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic,
     &Server::invite, &Server::kick, &Server::ping, &Server::pong,
-    &Server::userhost, &Server::whois, &Server::bot, &Server::sendfile, &Server::acceptFile, &Server::refuseFile
+    &Server::userhost, &Server::whois, &Server::bot, &Server::sendfile,
+    &Server::acceptFile, &Server::refuseFile
 };
 
 // ========== SOCKET CONFIGURATION ==========

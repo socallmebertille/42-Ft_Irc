@@ -91,8 +91,8 @@ private:
 
     std::string processIRCBotCommand(const std::string& command, const std::string& channelName);
 
-    static const std::string _type[19];
-    static CommandFunc _function[19];
+    static const std::string _type[20];
+    static CommandFunc _function[20];
 
     std::map<std::string, PendingTransfer> _pendingTransfers; // key: receiver_filename
 
