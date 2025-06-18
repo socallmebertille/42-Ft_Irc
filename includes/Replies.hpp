@@ -47,6 +47,7 @@
 #define ERR_BADCHANNELKEY     475
 #define ERR_BADCHANMASK       476
 
+#define ERR_FILEERROR         481
 #define ERR_CHANOPRIVSNEEDED  482
 
 // === Simple Replies ===

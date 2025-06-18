@@ -21,17 +21,17 @@ Server::~Server()
 }
 
 // ========== STATIC MEMBERS INITIALIZATION ==========
-const std::string Server::_type[18] = {
+const std::string Server::_type[19] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
-    "MODE", "TOPIC", "LIST", "INVITE", "KICK", "NOTICE", "PING", "PONG",
-    "USERHOST", "WHOIS"
+    "MODE", "TOPIC", "INVITE", "KICK", "PING", "PONG",
+    "USERHOST", "WHOIS", "SEND", "ACCEPT", "REFUSE"
 };
 
-Server::CommandFunc Server::_function[18] = {
+Server::CommandFunc Server::_function[19] = {
     &Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg,
     &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic,
-    &Server::list, &Server::invite, &Server::kick, &Server::notice, &Server::ping, &Server::pong,
-    &Server::userhost, &Server::whois
+    &Server::invite, &Server::kick, &Server::ping, &Server::pong,
+    &Server::userhost, &Server::whois, &Server::sendfile, &Server::acceptFile, &Server::refuseFile
 };
 
 // ========== SOCKET CONFIGURATION ==========
@@ -249,7 +249,7 @@ void Server::execCommand() {
         cap();
         return;
     }
-    for (int i = 0; i < 18; i++) {
+    for (int i = 0; i < 19; i++) {
         if (cmd == _type[i]) {
             try {
                 (this->*_function[i])();

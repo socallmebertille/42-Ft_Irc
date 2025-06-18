@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include <sstream>
+# include <fstream>
 # include <unistd.h>
 # include <map>
 # include <vector>
@@ -16,13 +17,19 @@
 # include <algorithm>
 # include <cerrno>
 # include <vector>
-#include "Utils.hpp"
+# include "Utils.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "colors.hpp"
 # include "Replies.hpp"
 
 # define MAX_EVENTS 64
+
+struct PendingTransfer {
+    std::string sender;
+    std::string content;
+    std::string filename;
+};
 
 class Server {
 public:
@@ -45,15 +52,16 @@ private:
     std::map<int, Client*> _clients;
     Client* _client;
 	std::vector<int> _clientsToRemove;
-    static const std::string _type[18];
-    static CommandFunc _function[18];
+    static const std::string _type[19];
+    static CommandFunc _function[19];
+
+    std::map<std::string, PendingTransfer> _pendingTransfers; // key: receiver_filename
 
     void initServerSocket();
     void handleNewConnection();
     void setNonBlocking(int fd);
 
     Client* getClientByNick(const std::string& nickname);
-    void closeAndRemoveClient(int fd);
     void handleCommand(int clientFd);
 
     void sendToClient(int fd, const std::string& msg);
@@ -72,14 +80,15 @@ private:
     void quit();
     void mode();
     void topic();
-    void list();
     void invite();
     void kick();
-    void notice();
     void ping();
     void pong();
     void userhost();
     void whois();
+    void sendfile();
+    void acceptFile();
+    void refuseFile();
 
     // ModeCommand utility methods
     bool validateModeCommand(const std::string& target, Channel*& chan);
