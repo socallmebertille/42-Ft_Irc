@@ -33,7 +33,9 @@ void Channel::join(Client* client) {
 }
 
 void Channel::part(Client* client) {
-	_members.erase(client);
+	_operators.erase(client);  // Remove from operators first
+	_members.erase(client);    // Then remove from members
+	_invited.erase(client);    // Clean up invited list as well
 	std::cout << RED << client->getNickname() << " left the channel " << getName() << RESET << std::endl;
 	std::cout << "There are currently " << getMemberCount() << " members in the channel : " << getName() << "." << std::endl;
 }

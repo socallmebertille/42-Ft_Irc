@@ -81,6 +81,20 @@ void Server::nick() {
         username = "*";
     std::string nickMsg = ":" + prefix + "!" + username + "@localhost NICK :" + newNick;
     sendToClient(_clientFd, nickMsg);
+
+    // Update members and operator status in all channels where the user is present
+    for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        Channel& chan = it->second;
+        if (chan.isMember(_client)) {
+            // Notify all members in the channel about the nickname change
+            const std::set<Client*>& members = chan.getMembers();
+            for (std::set<Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt) {
+                if ((*memberIt) != _client) { // Don't send to the user themselves since they already got the message
+                    sendToClient((*memberIt)->getFd(), nickMsg);
+                }
+            }
+        }
+    }
     checkRegistration();
 }
 

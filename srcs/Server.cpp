@@ -3,8 +3,8 @@
 Server::Server(int port, const std::string& password):
 _port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password),
 _channels(), _clients(), _client(NULL), _clientsToRemove(), _botEnabled(false),
-_serverStartTime(time(0)), _totalBotInteractions(0), _totalJokesShared(0),
-_ircBotClient(NULL), _ircBotCreated(false) {
+_ircBotClient(NULL), _ircBotCreated(false), _serverStartTime(time(0)),
+_totalBotInteractions(0), _totalJokesShared(0) {
 
 	initServerSocket();
 	loadBotStats();
