@@ -248,8 +248,6 @@ void Server::execCommand() {
         if (!_client->getArg().empty()) {
             message += " " + _client->getArg();
         }
-
-        std::cout << "[CHAT MODE] Sending '" << message << "' to " << currentChannel << std::endl;
         handleChannelMessage(currentChannel, message);
         return;
     }
@@ -310,32 +308,4 @@ void Server::checkRegistration() {
     }
 }
 
-void Server::createIRCBotGhost() {
-    if (_ircBotCreated) return;
-    int ghostFd = -999; // FD fictif pour le bot
-    _ircBotClient = new Client(ghostFd, "irc.ft_irc");
-    _ircBotClient->setNickname("IRCBot");
-    _ircBotClient->setUsername("bot");
-    _ircBotClient->setRealname("IRC Server Bot");
-    _ircBotClient->setPasswordOk(true);
-    _ircBotClient->registerUser("IRCBot", "bot", "IRC Server Bot");
-    _clients[ghostFd] = _ircBotClient;
-    _ircBotCreated = true;
-}
 
-void Server::removeIRCBotGhost() {
-    if (!_ircBotCreated || !_ircBotClient) return;
-
-    int ghostFd = _ircBotClient->getFd();
-    _clients.erase(ghostFd);
-    delete _ircBotClient;
-    _ircBotClient = NULL;
-    _ircBotCreated = false;
-}
-
-bool Server::isRealIRCClient(int clientFd) {
-    Client* client = _clients[clientFd];
-    if (!client)
-		return false;
-    return !client->isNetcatLike();
-}

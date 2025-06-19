@@ -3,7 +3,7 @@ NAME		=	ircserv
 C			=	c++
 CFLAGS		=	-Wall -Wextra -Werror -std=c++98
 
-SRCS_NAMES  = 	main.cpp Server.cpp Client.cpp Channel.cpp Commands.cpp UtilitiesCommands.cpp Replies.cpp Utils.cpp
+SRCS_NAMES  = 	main.cpp Server.cpp Client.cpp Channel.cpp Replies.cpp Utils.cpp Commands/Commands.cpp Commands/UtilitiesCmds.cpp Commands/ConnectionCmds.cpp  bonus/ChatMode.cpp bonus/Bot.cpp bonus/BonusCmds.cpp
 OBJS_NAMES  =	$(SRCS_NAMES:.cpp=.o)
 
 SRC_DIR		=	srcs

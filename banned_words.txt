@@ -1,24 +1,9 @@
-# Mots interdits pour le système de modération automatique
-
 idiot
 stupid
 cretin
 imbecile
-moron
-fool
 
-damn
-hell
-crap
-shit
 fuck
 bitch
-
-noob
 loser
-trash
-garbage
-
-# Ajoutez d'autres mots si nécessaire
-# Les mots ne tiennent pas compte de la casse
 
