@@ -86,7 +86,7 @@ std::string Server::processIRCBotCommand(const std::string& command, const std::
     if (cmd == "disable" || cmd == "bot disable" || cmd == "disable bot") {
         if (_botEnabled) {
             _botEnabled = false;
-            return "🤖 Bot is now DISABLED. Use '!bot enable' to reactivate me.";
+            return "🤖 Bot is now DISABLED. Use 'bot enable' to reactivate me.";
         }
 		else {
             return "🤖 I'm already ENABLED! ✅";

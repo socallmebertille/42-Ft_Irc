@@ -188,6 +188,11 @@ bool Server::processSingleMode(char flag, bool adding, const std::vector<std::st
 			break;
 		case 'o':
 			return handleOperatorMode(adding, params, paramIndex, chan, channelName, appliedModes, appliedParams);
+		case 'b':
+			if (adding && paramIndex < params.size()){
+				paramIndex++;
+			}
+			break;
 		default:
 			sendReply(ERR_UNKNOWNMODE, _client, std::string(1, flag), "", "is unknown mode char to me");
 			return false;

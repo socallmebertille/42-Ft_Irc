@@ -67,15 +67,19 @@ void Server::privmsg() {
         return;
     }
     if (message.find("\001DCC") == 0) { // get file transfer from irssi
-        std::string dccMsg = message;
-        if (dccMsg[0] == '\001')
-            dccMsg = dccMsg.substr(1);
-        if (dccMsg[dccMsg.length() - 1] == '\001')
-            dccMsg = dccMsg.substr(0, dccMsg.length() - 1);
-        std::string fullDccMsg = ":" + _client->getPrefix() + " PRIVMSG " + target + " :\001" + dccMsg + "\001\r\n";
-        Client* targetClient = getClientByNick(target);
-        if (targetClient)
-            sendToClient(targetClient->getFd(), fullDccMsg);
+        std::istringstream iss(message);
+        std::string dcc, send, filename, dccMsg;
+        if (!(iss >> dcc >> send >> filename)) {
+            sendReply(ERR_NEEDMOREPARAMS, _client, "USER", "", "Not enough parameters");
+            return;
+        }
+        if (send != "SEND") {
+            sendReply(ERR_UNKNOWNCOMMAND, _client, send, "", "Unknown DCC command");
+            return;
+        }
+        dccMsg = target + " " + filename;
+        _client->setArg(dccMsg);
+        sendfile();
         return;
     }
     if (target[0] == '#') {
@@ -537,5 +541,89 @@ void Server::whois() {
     sendReply(311, _client, nickname, target->getUsername() + " localhost *", target->getRealname());
     sendReply(312, _client, nickname, SERVER_NAME, "IRC Server");
     sendReply(318, _client, nickname, "", "End of /WHOIS list");
+}
+
+void Server::who() {
+    // WHO command returns information about users in a channel or matching a pattern
+    if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+        return;
+    if (!_client->isRegistered()) {
+        sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+        return;
+    }
+    std::string args = _client->getArg();
+    if (args.empty()) {
+        for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it) {
+            if (it->second->isRegistered()) {
+                sendReply(352, _client, "*", it->second->getUsername() + " localhost " + SERVER_NAME + " " + it->second->getNickname(), "H :0 " + it->second->getRealname());
+            }
+        }
+        sendReply(315, _client, "*", "", "End of /WHO list");
+        return;
+    }
+    std::istringstream iss(args);
+    std::string target;
+    iss >> target;
+    if (target[0] == '#') {
+        std::map<std::string, Channel>::iterator chanIt = _channels.find(target);
+        if (chanIt != _channels.end()) {
+            const std::set<Client*>& members = chanIt->second.getMembers();
+            for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+                std::string status = chanIt->second.isOperator(*it) ? "@" : "";
+                sendReply(352, _client, target, (*it)->getUsername() + " localhost " + SERVER_NAME + " " + (*it)->getNickname(), "H" + status + " :0 " + (*it)->getRealname());
+            }
+        }
+        sendReply(315, _client, target, "", "End of /WHO list");
+    } else {
+        Client* targetClient = getClientByNick(target);
+        if (targetClient && targetClient->isRegistered()) {
+            sendReply(352, _client, "*", targetClient->getUsername() + " localhost " + SERVER_NAME + " " + targetClient->getNickname(), "H :0 " + targetClient->getRealname());
+        }
+        sendReply(315, _client, target, "", "End of /WHO list");
+    }
+}
+
+void Server::names() {
+    // NAMES command returns the list of users in a channel
+    if (!_client || std::find(_clientsToRemove.begin(), _clientsToRemove.end(), _clientFd) != _clientsToRemove.end())
+        return;
+    
+    if (!_client->isRegistered()) {
+        sendReply(ERR_NOTREGISTERED, _client, "", "", "You have not registered");
+        return;
+    }
+    
+    std::string args = _client->getArg();
+    if (args.empty()) {
+        for (std::map<std::string, Channel>::const_iterator it = _channels.begin(); it != _channels.end(); ++it) {
+            std::string names = "";
+            const std::set<Client*>& members = it->second.getMembers();
+            for (std::set<Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt) {
+                if (!names.empty()) names += " ";
+                if (it->second.isOperator(*memberIt)) names += "@";
+                names += (*memberIt)->getNickname();
+            }
+            sendReply(353, _client, "=", it->first, names);
+        }
+        sendReply(366, _client, "*", "", "End of /NAMES list");
+        return;
+    }
+    std::istringstream iss(args);
+    std::string channelName;
+    iss >> channelName;
+    if (channelName[0] == '#') {
+        std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+        if (it != _channels.end()) {
+            std::string names = "";
+            const std::set<Client*>& members = it->second.getMembers();
+            for (std::set<Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt) {
+                if (!names.empty()) names += " ";
+                if (it->second.isOperator(*memberIt)) names += "@";
+                names += (*memberIt)->getNickname();
+            }
+            sendReply(353, _client, "=", channelName, names);
+        }
+        sendReply(366, _client, channelName, "", "End of /NAMES list");
+    }
 }
 

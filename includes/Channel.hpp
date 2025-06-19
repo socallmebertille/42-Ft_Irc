@@ -26,6 +26,7 @@ private:
     bool _hasKey;
     int _userLimit;					// +l
     bool _limitActive;
+    std::set<std::string> _banList;  // +b ban masks
 
 public:
 	Channel(const std::string& name);
@@ -72,6 +73,12 @@ public:
 	void removeUserLimit();
 	bool hasUserLimit() const;
 	int getUserLimit() const;
+
+	// Modes +b (ban list)
+	void addBan(const std::string& banMask);
+	void removeBan(const std::string& banMask);
+	bool isBanned(const std::string& mask) const;
+	const std::set<std::string>& getBanList() const;
 
 	// Gestion du topic
 	const std::string& getTopic() const { return _topic; }

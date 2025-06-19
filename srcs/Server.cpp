@@ -22,18 +22,18 @@ Server::~Server()
 }
 
 // ========== STATIC MEMBERS INITIALIZATION ==========
-const std::string Server::_type[20] = {
+const std::string Server::_type[22] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
     "MODE", "TOPIC", "INVITE", "KICK", "PING", "PONG", "USERHOST",
-    "WHOIS", "BOT", "SEND", "ACCEPT", "REFUSE"
+    "WHOIS", "BOT", "SEND", "ACCEPT", "REFUSE", "WHO", "NAMES"
 };
 
-Server::CommandFunc Server::_function[20] = {
+Server::CommandFunc Server::_function[22] = {
     &Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg,
     &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic,
     &Server::invite, &Server::kick, &Server::ping, &Server::pong,
     &Server::userhost, &Server::whois, &Server::bot, &Server::sendfile,
-    &Server::acceptFile, &Server::refuseFile
+    &Server::acceptFile, &Server::refuseFile, &Server::who, &Server::names
 };
 
 // ========== SOCKET CONFIGURATION ==========
@@ -99,9 +99,7 @@ void Server::handleNewConnection() {
 
         std::cout << GREEN << "ENTER of client : " << RESET;
         std::cout << "fd[" << clientFd << "], ip[" << ip << "]" << std::endl;
-
-        // 🎯 Si c'est le premier vrai client IRC (pas netcat), créer IRCBot fantôme
-        if (clientFd > 0) { // Premier client connecté
+        if (clientFd > 0) {
             createIRCBotGhost();
         }
     }
@@ -214,12 +212,14 @@ void Server::handleCommand(int clientFd) {
 		}
 		else {
             if (!buf.empty()) { //if CTRL+D was pressed, buf might still contain data
+                std::cout << "[DEBUG] Buffer without end of line: [" << buf << "]" << std::endl;
             }
             break;
         }
         if (fullLine.empty() || fullLine == "\r") {
             return;
         }
+        std::cout << "[CMD] nick[" << _client->getNickname() << "] : [" << fullLine << "]" << std::endl;
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
 			continue;
@@ -259,7 +259,7 @@ void Server::execCommand() {
         return;
     }
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 22; i++) {
         if (cmd == _type[i]) {
             try {
                 (this->*_function[i])();
