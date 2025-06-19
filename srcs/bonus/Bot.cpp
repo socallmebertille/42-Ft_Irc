@@ -155,7 +155,7 @@ std::string Server::processIRCBotCommand(const std::string& command, const std::
             }
         }
         if (count % 3 != 0) oss << "\n";
-        oss << "✨ All users are welcomed by IRCBot!";
+        oss << "All users are welcomed by IRCBot!";
         return oss.str();
     }
     if (cmd == "channels") {

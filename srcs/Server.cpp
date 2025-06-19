@@ -99,9 +99,6 @@ void Server::handleNewConnection() {
 
         std::cout << GREEN << "ENTER of client : " << RESET;
         std::cout << "fd[" << clientFd << "], ip[" << ip << "]" << std::endl;
-        if (clientFd > 0) {
-            createIRCBotGhost();
-        }
     }
 }
 
@@ -123,6 +120,10 @@ void Server::cleanupClients() {
 				Channel& chan = chanIt->second;
 				if (chan.isMember(it->second)) {
 					chan.part(it->second);
+                    std::string partMsg = ":" + _client->getPrefix() + " PART " + chan.getName();
+                    const std::set<Client*>& members = chan.getMembers();
+                    for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
+                        sendToClient((*it)->getFd(), partMsg);
 					if (chan.getMemberCount() == 0) {
 						std::map<std::string, Channel>::iterator toErase = chanIt;
 						++chanIt;

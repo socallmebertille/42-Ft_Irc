@@ -74,11 +74,6 @@ public:
 	bool hasUserLimit() const;
 	int getUserLimit() const;
 
-	// Modes +b (ban list)
-	void addBan(const std::string& banMask);
-	void removeBan(const std::string& banMask);
-	bool isBanned(const std::string& mask) const;
-	const std::set<std::string>& getBanList() const;
 
 	// Gestion du topic
 	const std::string& getTopic() const { return _topic; }

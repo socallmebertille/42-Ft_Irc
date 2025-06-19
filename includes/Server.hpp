@@ -53,10 +53,11 @@ private:
     Client* _client;
 	std::vector<int> _clientsToRemove;
 
-    // ========== 🤖 BOT SEMI-AUTONOME ==========
+    // ========================================
     bool _botEnabled;
+    Client* _ircBotClient;
+    bool _ircBotCreated;
 
-    // ========== 💬 CHAT MODE FEATURE ==========
     std::map<int, std::string> _clientChatMode; // fd -> canal actuel
     std::map<int, bool> _clientChatModePrompt; // fd -> en attente de réponse yes/no
 
@@ -67,7 +68,10 @@ private:
     void promptChatMode(int clientFd, const std::string& failedCommand);
     bool isAwaitingChatModeResponse(int clientFd);
     void handleChatModeResponse(int clientFd, const std::string& response);
-    // ========================================
+
+    void createIRCBotGhost();
+    void removeIRCBotGhost();
+    bool isRealIRCClient(int clientFd);
 
     time_t _serverStartTime;
     std::map<std::string, int> _userMessageCount;
@@ -143,15 +147,6 @@ private:
                            std::string& appliedModes, std::string& appliedParams);
     void handleChannelMessage(const std::string& channelName, const std::string& message);
     void handlePrivateMessage(const std::string& targetNick, const std::string& message);
-
-    // ========== 🤖 IRCBOT FANTOME ==========
-    Client* _ircBotClient;
-    bool _ircBotCreated;
-
-    void createIRCBotGhost();
-    void removeIRCBotGhost();
-    bool isRealIRCClient(int clientFd);
-    // =====================================
 };
 
 #endif
