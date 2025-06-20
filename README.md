@@ -2,7 +2,6 @@
   <h1>42-IRC</h1>
 
   <p><em>Internet Relay Chat</em></p>
-  <img alt="last-commit" src="https://img.shields.io/github/last-commit/socallmebertille/42-IRC?style=flat&amp;logo=git&amp;logoColor=white&amp;color=0080ff" class="inline-block mx-1" style="margin: 0px 2px;">
   <img alt="repo-top-language" src="https://img.shields.io/github/languages/top/socallmebertille/42-IRC?style=flat&amp;color=0080ff" class="inline-block mx-1" style="margin: 0px 2px;">
   <img alt="repo-language-count" src="https://img.shields.io/github/languages/count/socallmebertille/42-IRC?style=flat&amp;color=0080ff" class="inline-block mx-1" style="margin: 0px 2px;">
   <p><em>Built with the tools and technologies:</em></p>
