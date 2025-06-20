@@ -13,7 +13,7 @@
 
 # 🚀 ft_irc - Serveur IRC Complet
 
-Un serveur IRC moderne implémenté en C++98, conforme aux standards RFC avec une architecture robuste et des extensions innovantes.
+Un serveur IRC moderne implémenté en C++98, conforme aux standards RFC avec une architecture robuste.
 
 ## 📋 Table des Matières
 
@@ -27,12 +27,12 @@ Un serveur IRC moderne implémenté en C++98, conforme aux standards RFC avec un
 
 ## 🎯 Présentation du Projet
 
-Ce projet implémente un **serveur IRC complet** dans le cadre du cursus de l'École 42. Il respecte scrupuleusement les standards IRC (RFC 1459, RFC 2812) tout en offrant une architecture moderne et des fonctionnalités étendues.
+Ce projet implémente un **serveur IRC complet** dans le cadre du cursus de l'École 42. Il respecte scrupuleusement les standards IRC (RFC 1459, RFC 2812).
 
 ### ✨ Réalisations Principales
 
 - **Serveur IRC Standard** : Support complet du protocole IRC
-- **Gestion Multi-clients** : Architecture epoll haute performance
+- **Gestion Multi-clients** : Architecture epoll
 - **Conformité RFC** : Toutes les commandes IRC requises
 - **Sécurité** : Authentification, modes de canal, gestion des permissions
 - **Stabilité** : Memory-safe, gestion d'erreurs robuste
@@ -56,11 +56,11 @@ Ce projet vise à maîtriser :
 
 ### Contraintes du Projet
 
-- ✅ **C++98** uniquement (pas de C++11+)
+- ✅ **C++98** uniquement
 - ✅ **Pas de threads** : gestion par événements uniquement
 - ✅ **Pas de fork** : un seul processus serveur
 - ✅ **Memory-safe** : aucune fuite mémoire autorisée
-- ✅ **Compatible** avec clients IRC standard (Irssi, HexChat)
+- ✅ **Compatible** avec clients IRC standard (Irssi, NetCat)
 
 ### Standards IRC Implémentés
 
@@ -116,11 +116,9 @@ IRC/
 ```
 Client IRC (Irssi) ──┐
                      │
-Client IRC (HexChat) ─┤    ┌─────────────┐
                      ├────┤   Server    ├──── Channels (#general, #random)
 netcat ──────────────┤    │   (epoll)   │
-                     │    └─────────────┘
-Client IRC (WeeChat) ─┘
+                          └─────────────┘
 ```
 
 ### Gestion des Événements
@@ -167,13 +165,6 @@ irssi
 /NICK alice
 /JOIN #general
 /MSG #general Hello everyone!
-```
-
-#### HexChat
-```
-Nouveau serveur → localhost:6667
-Mot de passe → secretpassword
-Se connecter
 ```
 
 #### Test avec netcat
@@ -236,7 +227,7 @@ QUIT
 
 ## 🎯 Fonctionnalités Bonus
 
-*Les fonctionnalités suivantes vont au-delà des exigences de base du projet et démontrent une maîtrise avancée.*
+*Deux fonctionnalités requises : inclure un Bot et gérer le transfert de fichiers.*
 
 ### 🤖 Bot IRC Intelligent
 
@@ -245,7 +236,6 @@ Un système de bot intégré avec des capacités d'interaction avancées :
 #### Caractéristiques Techniques
 - **Architecture Dual-Mode** : Détection automatique du type de client
 - **Utilisateur Fantôme** : IRCBot apparaît comme un vrai utilisateur pour les clients standard
-- **Compatibilité Universelle** : Fonctionne avec Irssi, HexChat, netcat, WeeChat
 
 #### Commandes Bot Disponibles
 
@@ -279,7 +269,7 @@ Le bot répond automatiquement dans les canaux :
 - **Logs de modération** : Traçabilité des actions
 - **Actions graduées** : Avertissement → Exclusion temporaire → Ban permanent
 
-### 💬 Chat Mode Révolutionnaire
+### 💬 Chat Mode 
 
 Interface de communication simplifiée pour une expérience moderne :
 
