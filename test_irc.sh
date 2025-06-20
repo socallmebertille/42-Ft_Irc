@@ -1,33 +1,20 @@
 #!/bin/bash
 
-# =============================================================================
-# Script de test modulaire pour serveur IRC ft_irc
-# École 42 - Projet IRC
-# =============================================================================
-
-# Couleurs pour l'affichage
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YIGHLLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m' #
 
-# Configuration
 SERVER_PORT=6667
 SERVER_PASS="test"
 SERVER_BIN="./ircserv"
-
-# Variables globales
 TEST_COUNT=0
 PASSED_COUNT=0
 FAILED_COUNT=0
 SERVER_PID=""
-
-# =============================================================================
-# FONCTIONS UTILITAIRES
-# =============================================================================
 
 print_header() {
     echo -e "${BLUE}============================================${NC}"
@@ -57,12 +44,7 @@ print_info() {
     echo -e "${PURPLE}[INFO] $1${NC}"
 }
 
-# =============================================================================
-# GESTION DU SERVEUR
-# =============================================================================
-
 start_server() {
-    # Arrêter le serveur s'il est déjà en cours
     if [ -n "$SERVER_PID" ] && kill -0 $SERVER_PID 2>/dev/null; then
         stop_server
     fi
@@ -75,11 +57,9 @@ start_server() {
         exit 1
     fi
 
-    # Démarrer le serveur en arrière-plan
     $SERVER_BIN $SERVER_PORT $SERVER_PASS > server.log 2>&1 &
     SERVER_PID=$!
 
-    # Attendre que le serveur soit prêt
     sleep 2
 
     if kill -0 $SERVER_PID 2>/dev/null; then
@@ -100,9 +80,6 @@ stop_server() {
     fi
 }
 
-# =============================================================================
-# FONCTIONS DE TEST IRC
-# =============================================================================
 
 send_irc_command() {
     local command="$1"
@@ -135,9 +112,6 @@ test_connection() {
     fi
 }
 
-# =============================================================================
-# TESTS DES COMMANDES DE BASE
-# =============================================================================
 
 test_auth() {
     print_header "TESTS D'AUTHENTIFICATION"
@@ -201,9 +175,6 @@ test_nick() {
     fi
 }
 
-# =============================================================================
-# TESTS DES CANAUX
-# =============================================================================
 
 test_channels() {
     print_header "TESTS DES CANAUX"
@@ -217,9 +188,6 @@ test_channels() {
     fi
 }
 
-# =============================================================================
-# TESTS DU TOPIC
-# =============================================================================
 
 test_topic() {
     print_header "TESTS DU TOPIC"
@@ -249,15 +217,11 @@ test_topic() {
     fi
 }
 
-# =============================================================================
-# TESTS DES MESSAGES
-# =============================================================================
 
 test_privmsg() {
     print_header "TESTS DES MESSAGES PRIVÉS"
 
     print_test "Test PRIVMSG vers canal"
-    # Ce test nécessiterait deux connexions simultanées, on le simplifie
     local response=$(echo -e "PASS $SERVER_PASS\r\nNICK MsgSender\r\nUSER test test localhost :Test User\r\nJOIN #msgtest\r\nPRIVMSG #msgtest :Hello world\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
     if echo "$response" | grep -q "JOIN.*#msgtest"; then
         print_success "PRIVMSG vers canal traité (connexion réussie)"
@@ -266,9 +230,6 @@ test_privmsg() {
     fi
 }
 
-# =============================================================================
-# TESTS AVANCÉS DU TOPIC
-# =============================================================================
 
 test_topic_advanced() {
     print_header "TESTS AVANCÉS DU TOPIC"
@@ -276,7 +237,6 @@ test_topic_advanced() {
     print_test "Test topic sans permission (utilisateur normal)"
     echo -e "${CYAN}[DEBUG] Test: Protection du topic avec mode +t${NC}"
 
-    # Test corrigé : Le changement de nickname conserve les privilèges selon RFC 2812
     echo -e "${CYAN}[DEBUG] Test 1: Vérification que +t fonctionne correctement${NC}"
 
     local response=$(echo -e "PASS test\r\nNICK TestOperator\r\nUSER op op localhost :Test Operator\r\nJOIN #protection_test\r\nMODE #protection_test +t\r\nTOPIC #protection_test :Topic protégé par opérateur\r\nNICK TestOperatorRenamed\r\nTOPIC #protection_test :Changement par opérateur renommé\r\nQUIT :Test terminé\r\n" | nc -w10 localhost $SERVER_PORT)
@@ -285,7 +245,6 @@ test_topic_advanced() {
     echo "$response"
     echo
 
-    # Vérification : Le mode +t est-il activé ?
     if echo "$response" | grep -q "MODE.*#protection_test.*+t"; then
         echo -e "${GREEN}✅ Mode +t correctement activé${NC}"
     else
@@ -293,7 +252,6 @@ test_topic_advanced() {
         return
     fi
 
-    # Vérification : L'opérateur peut-il changer le topic après changement de nickname ?
     if echo "$response" | grep -q "TOPIC.*#protection_test.*Changement par opérateur renommé"; then
         print_success "Comportement conforme RFC 2812 : Opérateur garde ses privilèges après changement de nickname"
         echo -e "${GREEN}→ Changement de nickname conserve les privilèges d'opérateur (correct selon IRC)${NC}"
@@ -302,10 +260,8 @@ test_topic_advanced() {
         return
     fi
 
-    # Test 2: Vérification avec un vrai utilisateur non-opérateur (connexion séparée)
     echo -e "${CYAN}[DEBUG] Test 2: Vérification avec un vrai non-opérateur${NC}"
 
-    # Créer canal avec opérateur qui reste connecté
     (
         echo -e "PASS test\r\nNICK ChannelOwner\r\nUSER owner owner localhost :Channel Owner\r\nJOIN #realtest\r\nMODE #realtest +t\r\nTOPIC #realtest :Topic initial protégé\r\n"
         sleep 5  # Rester connecté
@@ -314,13 +270,10 @@ test_topic_advanced() {
 
     local owner_pid=$!
 
-    # Attendre que le canal soit créé
     sleep 1
 
-    # Utilisateur normal essaie de rejoindre et changer le topic
     local response2=$(echo -e "PASS test\r\nNICK RealNormalUser\r\nUSER normal normal localhost :Normal User\r\nJOIN #realtest\r\nTOPIC #realtest :Tentative par vrai non-opérateur\r\nQUIT :Test utilisateur normal terminé\r\n" | nc -w8 localhost $SERVER_PORT)
 
-    # Nettoyer le processus propriétaire
     kill $owner_pid 2>/dev/null || true
     wait $owner_pid 2>/dev/null || true
 
@@ -328,7 +281,6 @@ test_topic_advanced() {
     echo "$response2"
     echo
 
-    # Vérification : Y a-t-il une erreur 482 pour le vrai utilisateur normal ?
     if echo "$response2" | grep -q "482.*not channel operator\|482.*channel operator"; then
         print_success "Protection +t fonctionne : Vrai non-opérateur correctement bloqué (482)"
         echo -e "${GREEN}→ Code 482 ERR_CHANOPRIVSNEEDED trouvé pour le vrai non-opérateur${NC}"
@@ -345,10 +297,6 @@ test_topic_advanced() {
     echo -e "${GREEN}✅ Changement de nickname conserve les privilèges (conforme RFC 2812)${NC}"
     echo -e "${GREEN}✅ Vrais non-opérateurs sont bloqués par +t${NC}"
 }
-
-# =============================================================================
-# TESTS DES MODES DE CANAL (+i, +t, +k, +l) - VERSION AMÉLIORÉE
-# =============================================================================
 
 test_channel_modes() {
     print_header "TESTS DES MODES DE CANAL"
@@ -407,7 +355,6 @@ test_channel_modes() {
         print_error "Échec des modes multiples +it"
         echo -e "${RED}[DEBUG] Modes multiples +it non détectés dans la réponse${NC}"
 
-        # Vérification alternative : modes appliqués séparément
         if echo "$response" | grep -q "MODE.*#multimode1.*+i" && echo "$response" | grep -q "MODE.*#multimode1.*+t"; then
             echo -e "${YELLOW}[INFO] Les modes sont appliqués séparément (+i et +t individuellement)${NC}"
         elif echo "$response" | grep -q "324.*#multimode1.*+.*i" && echo "$response" | grep -q "324.*#multimode1.*+.*t"; then
@@ -461,9 +408,6 @@ test_channel_modes() {
     fi
 }
 
-# =============================================================================
-# TESTS AVANCÉS DES MODES (NOUVELLES FONCTIONNALITÉS)
-# =============================================================================
 
 test_advanced_modes() {
     print_header "TESTS AVANCÉS DES MODES"
@@ -530,9 +474,6 @@ test_advanced_modes() {
     fi
 }
 
-# =============================================================================
-# TESTS DE VALIDATION PART (NOUVELLES FONCTIONNALITÉS)
-# =============================================================================
 
 test_part_advanced() {
     print_header "TESTS AVANCÉS DE LA COMMANDE PART"
@@ -574,18 +515,13 @@ test_part_advanced() {
     fi
 }
 
-# =============================================================================
-# TESTS DE SCÉNARIOS COMPLEXES AVEC NOUVELLES FONCTIONNALITÉS
-# =============================================================================
 
 test_complex_scenarios() {
     print_header "TESTS DE SCÉNARIOS COMPLEXES"
 
     print_test "Scénario: Création canal → Topic → Utilisateur rejoint → Voit topic"
-    # Étape 1: Créer canal et définir topic
     echo -e "PASS $SERVER_PASS\r\nNICK Creator\r\nUSER test test localhost :Test User\r\nJOIN #scenario\r\nTOPIC #scenario :Topic du scénario\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT > /dev/null
 
-    # Étape 2: Nouveau utilisateur rejoint
     local response=$(echo -e "PASS $SERVER_PASS\r\nNICK Joiner\r\nUSER test test localhost :Test User\r\nJOIN #scenario\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
     if echo "$response" | grep -q "332.*Topic du scénario" && echo "$response" | grep -q "333.*Creator"; then
@@ -604,7 +540,6 @@ test_complex_scenarios() {
     fi
 
     print_test "Scénario: Transfert d'opérateur et permissions topic"
-    # Simuler un transfert d'opérateur (pour l'instant, juste tester la base)
     local response=$(echo -e "PASS $SERVER_PASS\r\nNICK OpTransfer\r\nUSER test test localhost :Test User\r\nJOIN #optransfer\r\nTOPIC #optransfer :Topic initial\r\nMODE #optransfer +o OpTransfer\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
     if echo "$response" | grep -q "TOPIC.*Topic initial"; then
@@ -645,7 +580,6 @@ test_complex_scenarios() {
     print_test "Scénario: Canal protégé par mot de passe"
     echo -e "${CYAN}[DEBUG] Test: Création canal avec +k puis tentative d'accès${NC}"
 
-    # Créer canal avec mot de passe ET garder le créateur connecté
     (
         echo -e "PASS $SERVER_PASS\r\nNICK ProtectedCreator\r\nUSER test test localhost :Test User\r\nJOIN #protected\r\nMODE #protected +k secret123\r\n"
         sleep 8  # Rester connecté pendant que les autres essaient de rejoindre
@@ -654,16 +588,12 @@ test_complex_scenarios() {
 
     local creator_pid=$!
 
-    # Attendre que le canal soit créé avec protection
     sleep 1
 
-    # Essayer de rejoindre sans mot de passe
     local response1=$(echo -e "PASS $SERVER_PASS\r\nNICK TryJoin1\r\nUSER test test localhost :Test User\r\nJOIN #protected\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
-    # Essayer de rejoindre avec le bon mot de passe
     local response2=$(echo -e "PASS $SERVER_PASS\r\nNICK TryJoin2\r\nUSER test test localhost :Test User\r\nJOIN #protected secret123\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
 
-    # Nettoyer le processus créateur
     kill $creator_pid 2>/dev/null || true
     wait $creator_pid 2>/dev/null || true
 
@@ -688,9 +618,6 @@ test_complex_scenarios() {
     fi
 }
 
-# =============================================================================
-# TESTS DE ROBUSTESSE ET CAS LIMITES
-# =============================================================================
 
 test_edge_cases() {
     print_header "TESTS DE CAS LIMITES ET ROBUSTESSE"
@@ -737,9 +664,6 @@ test_edge_cases() {
     fi
 }
 
-# =============================================================================
-# TESTS FINAUX ET NETTOYAGE
-# =============================================================================
 
 test_cleanup() {
     print_header "TESTS DE NETTOYAGE"
@@ -754,9 +678,6 @@ test_cleanup() {
     fi
 }
 
-# =============================================================================
-# FONCTION PRINCIPALE ET MENU
-# =============================================================================
 
 print_summary() {
     echo
@@ -867,35 +788,26 @@ run_selected_tests() {
     esac
 }
 
-# =============================================================================
-# FONCTION PRINCIPALE
-# =============================================================================
 
 main() {
-    # Vérifier que le serveur peut être compilé
     if ! [ -f "Makefile" ]; then
         print_error "Makefile non trouvé. Êtes-vous dans le bon répertoire?"
         exit 1
     fi
 
-    # Compiler le serveur
     print_info "Compilation du serveur..."
     if ! make > /dev/null 2>&1; then
         print_error "Échec de la compilation. Vérifiez votre code."
         exit 1
     fi
 
-    # Démarrer le serveur
     start_server
 
-    # Piège pour nettoyer à la sortie
     trap 'stop_server; exit' EXIT SIGINT SIGTERM
 
-    # Si un argument est passé, exécuter directement
     if [ $# -gt 0 ]; then
         run_selected_tests $1
     else
-        # Sinon afficher le menu
         while true; do
             show_menu
             run_selected_tests $choice
@@ -905,29 +817,18 @@ main() {
         done
     fi
 
-    # Arrêter le serveur
     stop_server
 
-    # Afficher le résumé final
     print_summary
 }
 
-# =============================================================================
-# POINT D'ENTRÉE
-# =============================================================================
 
-# Vérifier les dépendances
 if ! command -v nc &> /dev/null; then
     print_error "netcat (nc) n'est pas installé. Installez-le avec: sudo apt-get install netcat"
     exit 1
 fi
 
-# Exécuter le programme principal
 main "$@"
-
-# =============================================================================
-# TESTS COMPLETS ET DÉTAILLÉS DU TOPIC (INSPIRÉ DU SCRIPT EXTERNE)
-# =============================================================================
 
 test_topic_complete() {
     print_header "TESTS COMPLETS DU TOPIC (VERSION DÉTAILLÉE)"
@@ -935,7 +836,6 @@ test_topic_complete() {
     print_test "Test complet du topic - Scénario séquentiel"
     echo -e "${CYAN}[DEBUG] Test inspiré du script externe - Scénario complet avec un seul client${NC}"
 
-    # Script complet inspiré de votre exemple, mais avec tous les détails
     local response=$(cat << 'EOF' | nc -w10 localhost $SERVER_PORT
 PASS test
 NICK TopicTestUser
@@ -970,7 +870,6 @@ EOF
     echo "$response"
     echo
 
-    # Analyser les résultats étape par étape
     echo -e "${CYAN}[DEBUG] Analyse des résultats par étape:${NC}"
 
     if echo "$response" | grep -q "331.*No topic is set\|331.*topic"; then
@@ -1085,7 +984,6 @@ EOF
     print_test "Test persistence et métadonnées du topic"
     echo -e "${CYAN}[DEBUG] Test métadonnées : qui a défini le topic et quand${NC}"
 
-    # Créer un topic puis vérifier les métadonnées
     echo -e "PASS test\r\nNICK MetaTopicSetter\r\nUSER meta meta localhost :Meta User\r\nJOIN #metatest\r\nTOPIC #metatest :Topic avec métadonnées\r\nQUIT\r\n" | nc -w3 localhost $SERVER_PORT > /dev/null
 
     local response_meta=$(echo -e "PASS test\r\nNICK MetaTopicReader\r\nUSER meta meta localhost :Meta Reader\r\nJOIN #metatest\r\nQUIT\r\n" | nc -w5 localhost $SERVER_PORT)
@@ -1151,23 +1049,17 @@ EOF
     fi
 }
 
-# =============================================================================
-# TESTS DE TOPIC AVEC CONNEXIONS SIMULTANÉES
-# =============================================================================
-
 test_topic_multi_client() {
     print_header "TESTS TOPIC MULTI-CLIENTS"
 
     print_test "Test topic avec plusieurs clients simultanés"
     echo -e "${CYAN}[DEBUG] Simulation de plusieurs clients pour tester la synchronisation${NC}"
 
-    # Client 1: Créateur du canal
     (
         sleep 1
         echo -e "PASS test\r\nNICK MultiClient1\r\nUSER multi1 multi1 localhost :Multi Client 1\r\nJOIN #multiclient\r\nTOPIC #multiclient :Topic du créateur\r\nMODE #multiclient +t\r\nsleep 5\r\nQUIT\r\n" | nc -w8 localhost $SERVER_PORT
     ) &
 
-    # Client 2: Rejoint et teste
     (
         sleep 2
         echo -e "PASS test\r\nNICK MultiClient2\r\nUSER multi2 multi2 localhost :Multi Client 2\r\nJOIN #multiclient\r\nTOPIC #multiclient\r\nTOPIC #multiclient :Tentative de changement\r\nsleep 3\r\nQUIT\r\n" | nc -w8 localhost $SERVER_PORT
@@ -1177,9 +1069,6 @@ test_topic_multi_client() {
     print_success "Test multi-clients terminé (vérifier manuellement la synchronisation)"
 }
 
-# =============================================================================
-# TESTS DE VALIDATION MANQUANTS AJOUTÉS
-# =============================================================================
 
 test_operator_commands() {
     print_header "TESTS DES COMMANDES D'OPÉRATEUR"
@@ -1201,35 +1090,25 @@ test_stability() {
     print_warning "Tests de stabilité non implémentés - Placeholder"
 }
 
-# =============================================================================
-# FONCTION PRINCIPALE CORRIGÉE
-# =============================================================================
-
 main() {
-    # Vérifier que le serveur peut être compilé
     if ! [ -f "Makefile" ]; then
         print_error "Makefile non trouvé. Êtes-vous dans le bon répertoire?"
         exit 1
     fi
 
-    # Compiler le serveur
     print_info "Compilation du serveur..."
     if ! make > /dev/null 2>&1; then
         print_error "Échec de la compilation. Vérifiez votre code."
         exit 1
     fi
 
-    # Démarrer le serveur
     start_server
 
-    # Piège pour nettoyer à la sortie
     trap 'stop_server; exit' EXIT SIGINT SIGTERM
 
-    # Si un argument est passé, exécuter directement
     if [ $# -gt 0 ]; then
         run_selected_tests $1
     else
-        # Sinon afficher le menu
         while true; do
             show_menu
             run_selected_tests $choice
@@ -1239,9 +1118,7 @@ main() {
         done
     fi
 
-    # Arrêter le serveur
     stop_server
 
-    # Afficher le résumé final
     print_summary
 }

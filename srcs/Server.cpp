@@ -3,8 +3,8 @@
 Server::Server(int port, const std::string& password):
 _port(port), _serverSocket(-1), _epollFd(-1), _clientFd(-1), _password(password),
 _channels(), _clients(), _client(NULL), _clientsToRemove(), _botEnabled(false),
-_ircBotClient(NULL), _ircBotCreated(false), _serverStartTime(time(0)),
-_totalBotInteractions(0), _totalJokesShared(0) {
+_serverStartTime(time(0)), _totalBotInteractions(0), _totalJokesShared(0),
+_ircBotClient(NULL), _ircBotCreated(false) {
 
 	initServerSocket();
 	loadBotStats();
@@ -22,18 +22,18 @@ Server::~Server()
 }
 
 // ========== STATIC MEMBERS INITIALIZATION ==========
-const std::string Server::_type[22] = {
+const std::string Server::_type[20] = {
     "CAP", "PASS", "NICK", "USER", "PRIVMSG", "JOIN", "PART", "QUIT",
     "MODE", "TOPIC", "INVITE", "KICK", "PING", "PONG", "USERHOST",
-    "WHOIS", "BOT", "SEND", "ACCEPT", "REFUSE", "WHO", "NAMES"
+    "WHOIS", "BOT", "SEND", "ACCEPT", "REFUSE"
 };
 
-Server::CommandFunc Server::_function[22] = {
+Server::CommandFunc Server::_function[20] = {
     &Server::cap, &Server::pass, &Server::nick, &Server::user, &Server::privmsg,
     &Server::join, &Server::part, &Server::quit, &Server::mode, &Server::topic,
     &Server::invite, &Server::kick, &Server::ping, &Server::pong,
     &Server::userhost, &Server::whois, &Server::bot, &Server::sendfile,
-    &Server::acceptFile, &Server::refuseFile, &Server::who, &Server::names
+    &Server::acceptFile, &Server::refuseFile
 };
 
 // ========== SOCKET CONFIGURATION ==========
@@ -99,6 +99,11 @@ void Server::handleNewConnection() {
 
         std::cout << GREEN << "ENTER of client : " << RESET;
         std::cout << "fd[" << clientFd << "], ip[" << ip << "]" << std::endl;
+
+        // 🎯 Si c'est le premier vrai client IRC (pas netcat), créer IRCBot fantôme
+        if (clientFd > 0) { // Premier client connecté
+            createIRCBotGhost();
+        }
     }
 }
 
@@ -120,10 +125,6 @@ void Server::cleanupClients() {
 				Channel& chan = chanIt->second;
 				if (chan.isMember(it->second)) {
 					chan.part(it->second);
-                    std::string partMsg = ":" + _client->getPrefix() + " PART " + chan.getName();
-                    const std::set<Client*>& members = chan.getMembers();
-                    for (std::set<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
-                        sendToClient((*it)->getFd(), partMsg);
 					if (chan.getMemberCount() == 0) {
 						std::map<std::string, Channel>::iterator toErase = chanIt;
 						++chanIt;
@@ -213,14 +214,12 @@ void Server::handleCommand(int clientFd) {
 		}
 		else {
             if (!buf.empty()) { //if CTRL+D was pressed, buf might still contain data
-                std::cout << "[DEBUG] Buffer without end of line: [" << buf << "]" << std::endl;
             }
             break;
         }
         if (fullLine.empty() || fullLine == "\r") {
             return;
         }
-        std::cout << "[CMD] nick[" << _client->getNickname() << "] : [" << fullLine << "]" << std::endl;
 		_client->parseLine(fullLine);
 		if (_client->getCmd().empty())
 			continue;
@@ -249,6 +248,8 @@ void Server::execCommand() {
         if (!_client->getArg().empty()) {
             message += " " + _client->getArg();
         }
+
+        std::cout << "[CHAT MODE] Sending '" << message << "' to " << currentChannel << std::endl;
         handleChannelMessage(currentChannel, message);
         return;
     }
@@ -260,7 +261,7 @@ void Server::execCommand() {
         return;
     }
 
-    for (int i = 0; i < 22; i++) {
+    for (int i = 0; i < 20; i++) {
         if (cmd == _type[i]) {
             try {
                 (this->*_function[i])();
@@ -309,4 +310,32 @@ void Server::checkRegistration() {
     }
 }
 
+void Server::createIRCBotGhost() {
+    if (_ircBotCreated) return;
+    int ghostFd = -999; // FD fictif pour le bot
+    _ircBotClient = new Client(ghostFd, "irc.ft_irc");
+    _ircBotClient->setNickname("IRCBot");
+    _ircBotClient->setUsername("bot");
+    _ircBotClient->setRealname("IRC Server Bot");
+    _ircBotClient->setPasswordOk(true);
+    _ircBotClient->registerUser("IRCBot", "bot", "IRC Server Bot");
+    _clients[ghostFd] = _ircBotClient;
+    _ircBotCreated = true;
+}
 
+void Server::removeIRCBotGhost() {
+    if (!_ircBotCreated || !_ircBotClient) return;
+
+    int ghostFd = _ircBotClient->getFd();
+    _clients.erase(ghostFd);
+    delete _ircBotClient;
+    _ircBotClient = NULL;
+    _ircBotCreated = false;
+}
+
+bool Server::isRealIRCClient(int clientFd) {
+    Client* client = _clients[clientFd];
+    if (!client)
+		return false;
+    return !client->isNetcatLike();
+}

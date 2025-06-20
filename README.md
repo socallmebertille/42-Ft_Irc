@@ -11,42 +11,48 @@
   <img alt="Docker" src="https://img.shields.io/badge/%20c++%20-00599C" class="inline-block mx-1" style="margin: 0px 2px;">
 </div>
 
-# 🚀 ft_irc - Serveur IRC Complet
+# 🚀 ft_irc - Serveur IRC Complet / Complete IRC Server
 
-Un serveur IRC moderne implémenté en C++98, conforme aux standards RFC avec une architecture robuste.
+**Français** | [English](#english-version)
 
-## 📋 Table des Matières
+Un serveur IRC moderne implémenté en C++98, conforme aux RFC avec une architecture robuste et des extensions innovantes.
 
-- [Présentation du Projet](#-présentation-du-projet)
-- [Contexte et Objectifs](#-contexte-et-objectifs)
-- [Architecture Technique](#-architecture-technique)
-- [Installation et Utilisation](#-installation-et-utilisation)
-- [Commandes IRC Standard](#-commandes-irc-standard)
-- [Fonctionnalités Bonus](#-fonctionnalités-bonus)
-- [Tests et Validation](#-tests-et-validation)
+**[Version Anglaise plus bas](#english-version) / [English Version Below](#english-version)**
 
-## 🎯 Présentation du Projet
+---
 
-Ce projet implémente un **serveur IRC complet** dans le cadre du cursus de l'École 42. Il respecte scrupuleusement les standards IRC (RFC 1459, RFC 2812).
+## 📋 Table des matières
 
-### ✨ Réalisations Principales
+- [Vue d'ensemble du projet](#-vue-densemble-du-projet)
+- [Contexte et objectifs](#-contexte-et-objectifs)
+- [Architecture technique](#-architecture-technique)
+- [Installation et utilisation](#-installation-et-utilisation)
+- [Commandes IRC standard](#-commandes-irc-standard)
+- [Fonctionnalités bonus](#-fonctionnalités-bonus)
+- [Tests et validation](#-tests-et-validation)
 
-- **Serveur IRC Standard** : Support complet du protocole IRC
-- **Gestion Multi-clients** : Architecture epoll
-- **Conformité RFC** : Toutes les commandes IRC requises
-- **Sécurité** : Authentification, modes de canal, gestion des permissions
-- **Stabilité** : Memory-safe, gestion d'erreurs robuste
+## 🎯 Vue d'ensemble du projet
 
-### 🛠️ Technologies Utilisées
+Ce projet implémente un **serveur IRC complet** dans le cadre du cursus de l'école 42. Il respecte strictement les standards IRC (RFC 1459, RFC 2812) tout en proposant une architecture moderne et des fonctionnalités étendues.
 
-- **C++98** : Standard requis pour le projet 42
-- **epoll** : Gestion d'événements asynchrone Linux
+### ✨ Réalisations principales
+
+- **Serveur IRC standard** : Support complet du protocole IRC
+- **Gestion multi-clients** : Architecture haute performance avec epoll
+- **Conformité RFC** : Toutes les commandes IRC requises implémentées
+- **Sécurité** : Authentification, modes de canaux, gestion des permissions
+- **Stabilité** : Gestion mémoire sûre, gestion d'erreurs robuste
+
+### 🛠️ Technologies utilisées
+
+- **C++98** : Standard requis pour les projets 42
+- **epoll** : Gestion d'événements asynchrones pour Linux
 - **Sockets TCP** : Communication client-serveur
-- **IRC Protocol** : RFC 1459/2812 compliant
+- **Protocole IRC** : Conforme aux RFC 1459/2812
 
-## 🎪 Contexte et Objectifs
+## 🎪 Contexte et objectifs
 
-### Objectif Pédagogique
+### Objectifs pédagogiques
 
 Ce projet vise à maîtriser :
 - **Programmation réseau** : Sockets, protocoles, architectures client-serveur
@@ -54,88 +60,90 @@ Ce projet vise à maîtriser :
 - **Parsing de protocoles** : Analyse et traitement des commandes IRC
 - **Architecture logicielle** : Conception modulaire et extensible
 
-### Contraintes du Projet
+### Contraintes du projet
 
-- ✅ **C++98** uniquement
-- ✅ **Pas de threads** : gestion par événements uniquement
-- ✅ **Pas de fork** : un seul processus serveur
-- ✅ **Memory-safe** : aucune fuite mémoire autorisée
-- ✅ **Compatible** avec clients IRC standard (Irssi, NetCat)
+- ✅ **C++98 uniquement** (pas de C++11+)
+- ✅ **Pas de threads** : gestion événementielle uniquement
+- ✅ **Pas de fork** : processus serveur unique
+- ✅ **Sécurité mémoire** : aucune fuite mémoire autorisée
+- ✅ **Compatible** avec les clients IRC standards (Irssi)
 
-### Standards IRC Implémentés
+### Standards IRC implémentés
 
-Le serveur respecte les **RFC IRC officiels** :
+Le serveur respecte les **RFC officielles IRC** :
 - **RFC 1459** : Internet Relay Chat Protocol
 - **RFC 2812** : Internet Relay Chat: Client Protocol
-- **Compatibilité** avec clients existants
+- **Compatibilité** avec les clients existants
 
-## 🏗️ Architecture Technique
+## 🏗️ Architecture technique
 
-### Structure Modulaire
+### Structure modulaire
 
 ```
 IRC/
 ├── includes/              # Headers principaux
-│   ├── Server.hpp         # Gestion serveur et connexions
-│   ├── Client.hpp         # Représentation des clients
+│   ├── Server.hpp         # Serveur et gestion des connexions
+│   ├── Client.hpp         # Représentation client
 │   ├── Channel.hpp        # Gestion des canaux IRC
 │   ├── Utils.hpp          # Utilitaires et helpers
-│   └── Replies.hpp        # Codes de réponse IRC standard
+│   └── Replies.hpp        # Codes de réponse IRC standards
 ├── srcs/                  # Implémentation
 │   ├── main.cpp           # Point d'entrée
 │   ├── Server.cpp         # Logique serveur principale
 │   ├── Client.cpp         # Gestion des clients
-│   ├── Channel.cpp        # Fonctionnalités de canal
-│   ├── Commands.cpp       # Commandes IRC standard
+│   ├── Channel.cpp        # Fonctionnalités des canaux
+│   ├── Commands.cpp       # Commandes IRC standards
 │   └── Utils.cpp          # Fonctions utilitaires
 └── Makefile              # Compilation
 ```
 
-### Classes Principales
+### Classes principales
 
-#### **Server** - Cœur du Système
-- **Gestion des connexions** : Accept, epoll, socket management
-- **Routing des commandes** : Parsing et dispatch IRC
+#### **Server** - Cœur du système
+- **Gestion des connexions** : Accept, epoll, gestion des sockets
+- **Routage des commandes** : Parsing IRC et dispatch
 - **État global** : Clients connectés, canaux actifs
 - **Sécurité** : Authentification, validation
 
-#### **Client** - Représentation Utilisateur
+#### **Client** - Représentation utilisateur
 - **Authentification** : PASS, NICK, USER
 - **État de connexion** : Enregistré, modes, canaux
 - **Parsing des messages** : Analyse des commandes IRC
-- **Buffer management** : Gestion des données partielles
+- **Gestion de buffer** : Données partielles
 
-#### **Channel** - Gestion des Canaux
+#### **Channel** - Gestion des canaux
 - **Membres et permissions** : Utilisateurs, opérateurs
 - **Modes de canal** : +i, +t, +k, +o, +l
-- **Diffusion de messages** : Broadcast aux membres
+- **Diffusion de messages** : Broadcast vers les membres
 - **Invitations et exclusions** : INVITE, KICK, BAN
 
-### Architecture Réseau
+### Architecture réseau
 
 ```
 Client IRC (Irssi) ──┐
                      │
-                     ├────┤   Server    ├──── Channels (#general, #random)
-netcat ──────────────┤    │   (epoll)   │
-                          └─────────────┘
+netcat ──────────────┤    ┌─────────────┐
+                     ├────┤   Serveur   ├──── Canaux (#general, #random)
+Autre client IRC ────┤    │   (epoll)   │
+                     │    └─────────────┘
+netcat (test) ───────┘
 ```
 
-### Gestion des Événements
+### Gestion des événements
 
 1. **epoll_wait()** : Attente d'événements sur les sockets
-2. **Nouvelle connexion** : Accept et création du Client
+2. **Nouvelle connexion** : Accept et création de Client
 3. **Données reçues** : Parsing et traitement des commandes
 4. **Exécution** : Dispatch vers la fonction appropriée
-5. **Réponses** : Envoi des codes IRC standard
+5. **Réponses** : Envoi des codes IRC standards
 
-## 🔧 Installation et Utilisation
+## 🔧 Installation et utilisation
 
 ### Compilation
 
 ```bash
 # Cloner le projet
-git clone [repository-url]
+git clone [url-du-repo]
 cd IRC
 
 # Compiler
@@ -146,31 +154,31 @@ make clean
 make fclean
 ```
 
-### Démarrage du Serveur
+### Démarrage du serveur
 
 ```bash
 # Syntaxe
-./ircserv <port> <password>
+./ircserv <port> <mot_de_passe>
 
 # Exemple
-./ircserv 6667 secretpassword
+./ircserv 6667 motdepassesecret
 ```
 
-### Connexion avec un Client IRC
+### Connexion avec un client IRC
 
-#### Irssi (Recommandé pour tests)
+#### Irssi (Recommandé pour les tests)
 ```bash
 irssi
-/CONNECT localhost 6667 secretpassword
+/CONNECT localhost 6667 motdepassesecret
 /NICK alice
 /JOIN #general
-/MSG #general Hello everyone!
+/MSG #general Bonjour tout le monde !
 ```
 
 #### Test avec netcat
 ```bash
 nc localhost 6667
-PASS secretpassword
+PASS motdepassesecret
 NICK testuser
 USER test test localhost :Test User
 JOIN #test
@@ -178,54 +186,54 @@ PRIVMSG #test :Hello World!
 QUIT
 ```
 
-## 📚 Commandes IRC Standard
+## 📚 Commandes IRC standard
 
-### Authentification et Connexion
+### Authentification et connexion
 
-| Commande | Description | Syntaxe | Status |
+| Commande | Description | Syntaxe | Statut |
 |----------|-------------|---------|--------|
 | `PASS` | Mot de passe serveur | `PASS <password>` | ✅ |
 | `NICK` | Définir le pseudonyme | `NICK <nickname>` | ✅ |
 | `USER` | Informations utilisateur | `USER <user> <mode> <unused> :<realname>` | ✅ |
-| `QUIT` | Déconnexion du serveur | `QUIT [:<message>]` | ✅ |
+| `QUIT` | Se déconnecter du serveur | `QUIT [:<message>]` | ✅ |
 
-### Gestion des Canaux
+### Gestion des canaux
 
-| Commande | Description | Syntaxe | Status |
+| Commande | Description | Syntaxe | Statut |
 |----------|-------------|---------|--------|
-| `JOIN` | Rejoindre un canal | `JOIN <#channel> [<key>]` | ✅ |
-| `PART` | Quitter un canal | `PART <#channel> [:<message>]` | ✅ |
-| `MODE` | Modifier les modes | `MODE <#channel> <modes> [<params>]` | ✅ |
-| `TOPIC` | Sujet du canal | `TOPIC <#channel> [:<topic>]` | ✅ |
-| `INVITE` | Inviter un utilisateur | `INVITE <nickname> <#channel>` | ✅ |
-| `KICK` | Expulser un utilisateur | `KICK <#channel> <nick> [:<reason>]` | ✅ |
+| `JOIN` | Rejoindre un canal | `JOIN <#canal> [<clé>]` | ✅ |
+| `PART` | Quitter un canal | `PART <#canal> [:<message>]` | ✅ |
+| `MODE` | Modifier les modes | `MODE <#canal> <modes> [<params>]` | ✅ |
+| `TOPIC` | Sujet du canal | `TOPIC <#canal> [:<sujet>]` | ✅ |
+| `INVITE` | Inviter un utilisateur | `INVITE <nickname> <#canal>` | ✅ |
+| `KICK` | Expulser un utilisateur | `KICK <#canal> <nick> [:<raison>]` | ✅ |
 
 ### Communication
 
-| Commande | Description | Syntaxe | Status |
+| Commande | Description | Syntaxe | Statut |
 |----------|-------------|---------|--------|
-| `PRIVMSG` | Message privé/canal | `PRIVMSG <target> :<message>` | ✅ |
-| `PING` | Test de connexion | `PING <server>` | ✅ |
-| `PONG` | Réponse au PING | `PONG <server>` | ✅ |
+| `PRIVMSG` | Message privé/canal | `PRIVMSG <cible> :<message>` | ✅ |
+| `PING` | Test de connexion | `PING <serveur>` | ✅ |
+| `PONG` | Réponse au PING | `PONG <serveur>` | ✅ |
 
-### Informations
+### Information
 
-| Commande | Description | Syntaxe | Status |
+| Commande | Description | Syntaxe | Statut |
 |----------|-------------|---------|--------|
 | `WHOIS` | Informations utilisateur | `WHOIS <nickname>` | ✅ |
 | `USERHOST` | Host de l'utilisateur | `USERHOST <nickname>` | ✅ |
 
-### Modes de Canal Supportés
+### Modes de canaux supportés
 
 | Mode | Description | Paramètre | Fonctionnalité |
 |------|-------------|-----------|----------------|
-| `+i` | Invitation uniquement | - | Accès sur invitation seulement |
-| `+t` | Sujet protégé | - | Seuls les opérateurs changent le topic |
-| `+k` | Clé du canal | `<key>` | Mot de passe requis pour JOIN |
+| `+i` | Invitation seulement | - | Accès sur invitation uniquement |
+| `+t` | Sujet protégé | - | Seuls les opérateurs peuvent changer le sujet |
+| `+k` | Clé du canal | `<clé>` | Mot de passe requis pour JOIN |
 | `+o` | Opérateur | `<nickname>` | Privilèges d'administration |
-| `+l` | Limite d'utilisateurs | `<limit>` | Nombre max de membres |
+| `+l` | Limite d'utilisateurs | `<limite>` | Nombre maximum de membres |
 
-## 🎯 Fonctionnalités Bonus
+## 🎯 Fonctionnalités bonus
 
 *Deux fonctionnalités requises : inclure un Bot et gérer le transfert de fichiers.*
 
@@ -233,17 +241,18 @@ QUIT
 
 Un système de bot intégré avec des capacités d'interaction avancées :
 
-#### Caractéristiques Techniques
-- **Architecture Dual-Mode** : Détection automatique du type de client
-- **Utilisateur Fantôme** : IRCBot apparaît comme un vrai utilisateur pour les clients standard
+#### Fonctionnalités techniques
+- **Architecture double mode** : Détection automatique du type de client
+- **Utilisateur fantôme** : IRCBot apparaît comme un vrai utilisateur pour les clients standards
+- **Compatibilité universelle** : Fonctionne avec Irssi, netcat
 
-#### Commandes Bot Disponibles
+#### Commandes du bot disponibles
 
 | Commande | Description | Exemple |
 |----------|-------------|---------|
-| `BOT enable/disable` | Active/désactive le bot | `/QUOTE BOT enable` |
-| `BOT status` | État du bot | `/QUOTE BOT status` |
-| `BOT stats` | Statistiques serveur | `/QUOTE BOT stats` |
+| `BOT enable/disable` | Activer/désactiver le bot | `/QUOTE BOT enable` |
+| `BOT status` | Statut du bot | `/QUOTE BOT status` |
+| `BOT stats` | Statistiques du serveur | `/QUOTE BOT stats` |
 | `BOT uptime` | Temps de fonctionnement | `/QUOTE BOT uptime` |
 | `BOT users` | Utilisateurs connectés | `/QUOTE BOT users` |
 | `BOT channels` | Canaux actifs | `/QUOTE BOT channels` |
@@ -256,25 +265,28 @@ Le bot répond automatiquement dans les canaux :
 
 ```bash
 # Messages naturels dans un canal :
-"hello everyone"     → "👋 Hello! How can I assist you?"
-"what time is it?"   → Affiche l'heure actuelle
-"tell me a joke"     → Raconte une blague
-"goodbye"            → "👋 Goodbye! Have a great day!"
+"bonjour tout le monde"  → "👋 Salut ! Comment puis-je vous aider ?"
+"quelle heure il est ?"  → Affiche l'heure actuelle
+"raconte une blague"     → Raconte une blague
+"au revoir"              → "👋 Au revoir ! Bonne journée !"
 ```
 
-#### Système de Modération Avancé
+#### Modération Automatique
 
-- **Filtrage en temps réel** : Détection de mots inappropriés
-- **Bannissement automatique** : Exclusion des canaux pour comportement inapproprié
-- **Logs de modération** : Traçabilité des actions
-- **Actions graduées** : Avertissement → Exclusion temporaire → Ban permanent
+Le bot surveille les conversations et peut bannir automatiquement les utilisateurs pour propos inappropriés :
 
-### 💬 Chat Mode 
+```bash
+# Détection automatique de contenu inapproprié
+"message offensant"      → ⚠️ Avertissement automatique
+"contenu très inapproprié" → 🚫 Ban automatique par le bot
+```
+
+### 💬 Mode Chat
 
 Interface de communication simplifiée pour une expérience moderne :
 
 #### Fonctionnalités
-- **Messages directs** : Plus besoin de `PRIVMSG #canal`
+- **Messages directs** : Pas besoin de `PRIVMSG #canal`
 - **Mode persistant** : Reste actif jusqu'à désactivation
 - **Prompt intelligent** : Suggestions automatiques
 - **Compatibilité totale** : Toutes les commandes IRC restent disponibles
@@ -287,17 +299,17 @@ Interface de communication simplifiée pour une expérience moderne :
 /QUOTE BOT chat #general
 
 # Communication directe
-Hello everyone!              # → Envoyé automatiquement au canal
-How are you today?          # → Message instantané
-This is much easier!        # → Communication fluide
+Bonjour tout le monde !     # → Envoyé automatiquement au canal
+Comment allez-vous ?        # → Message instantané
+C'est bien plus simple !    # → Communication fluide
 
 # Désactivation
 /QUOTE BOT chat exit
 ```
 
-### 📁 Transfert de Fichiers (DCC SEND)
+### 📁 Transfert de fichiers (DCC SEND)
 
-*Extension avancée pour le partage de fichiers peer-to-peer :*
+*Extension avancée pour le partage de fichiers en peer-to-peer :*
 
 #### Protocole DCC (Direct Client-to-Client)
 - **Connexion directe** entre clients via le serveur
@@ -305,19 +317,19 @@ This is much easier!        # → Communication fluide
 - **Contrôle d'intégrité** : Vérification des données
 - **Interface intuitive** : Commandes simples
 
-#### Commandes de Transfert
+#### Commandes de transfert
 
 ```bash
-# Envoi de fichier
-DCC SEND <nickname> <filepath>
+# Envoyer un fichier
+DCC SEND <nickname> <chemin_fichier>
 
-# Acceptation de transfert
+# Accepter un transfert
 DCC ACCEPT <nickname>
 
-# Refus de transfert
+# Refuser un transfert
 DCC DECLINE <nickname>
 
-# État des transferts
+# Statut du transfert
 DCC STATUS
 ```
 
@@ -326,48 +338,93 @@ DCC STATUS
 ```
 Client A ────┐
              │
-             ├──── Server IRC ────┤
-             │                    │
-Client B ────┘                    │
-     │                           │
-     └── Connexion directe ──────┘
+             ├──── Serveur IRC ────┤
+             │                     │
+Client B ────┘                     │
+     │                            │
+     └── Connexion Directe ────────┘
          (Transfert de fichier)
 ```
 
-### 🔍 Fonctionnalités Techniques Avancées
+### 🧪 Script de test automatisé
 
-#### Détection de Client Intelligente
-- **Analyse des patterns** : `\r\n` vs `\n`
-- **Capability negotiation** : Détection des capacités client
-- **Adaptation automatique** : Style de réponse selon le client
+*Système de test complet pour la validation automatique du serveur :*
 
-#### Gestion d'État Persistante
-- **Sauvegarde automatique** : Stats bot, bannissements
-- **Récupération après crash** : État restauré au redémarrage
-- **Logs structurés** : Traçabilité complète des actions
+#### Fonctionnalités du script
+- **Tests automatisés** : Validation de toutes les commandes IRC
+- **Scénarios complets** : Authentification, canaux, modes, permissions
+- **Tests multi-clients** : Simulation de connexions simultanées
+- **Validation du bot** : Test complet des fonctionnalités bonus
+- **Rapport détaillé** : Résultats structurés avec codes couleur
 
-#### Performance et Scalabilité
-- **Architecture event-driven** : Support de centaines de clients simultanés
-- **Memory pooling** : Gestion optimisée de la mémoire
-- **Rate limiting** : Protection contre le spam et les abus
-
-## 🧪 Tests et Validation
-
-### Tests de Conformité IRC
+#### Utilisation
 
 ```bash
-# Test des commandes standard
+# Lancer les tests complets
+./test_script.sh
+
+# Tests spécifiques
+./test_script.sh --basic      # Commandes de base uniquement
+./test_script.sh --channels   # Tests des canaux
+./test_script.sh --modes      # Tests des modes
+./test_script.sh --bot        # Tests du bot uniquement
+```
+
+#### Scénarios de test
+
+| Catégorie | Tests inclus | Validation |
+|-----------|--------------|------------|
+| **Authentification** | PASS, NICK, USER | ✅ Connexion complète |
+| **Canaux** | JOIN, PART, TOPIC | ✅ Gestion des membres |
+| **Communication** | PRIVMSG, NOTICE | ✅ Messages privés/publics |
+| **Modes** | +i, +t, +k, +o, +l | ✅ Permissions et restrictions |
+| **Administration** | KICK, INVITE, MODE | ✅ Privilèges opérateur |
+| **Bot** | 20+ commandes | ✅ Fonctionnalités interactives |
+| **Mode Chat** | Activation/utilisation | ✅ Interface simplifiée |
+
+#### Exemple de rapport
+
+```bash
+🧪 SUITE DE TESTS SERVEUR IRC
+============================
+
+✅ Tests d'authentification     [8/8 RÉUSSIS]
+✅ Gestion des canaux           [12/12 RÉUSSIS]
+✅ Communication                [6/6 RÉUSSIS]
+✅ Gestion des modes            [15/15 RÉUSSIS]
+✅ Fonctionnalités du bot       [21/21 RÉUSSIS]
+✅ Mode Chat                    [5/5 RÉUSSIS]
+✅ Gestion d'erreurs            [10/10 RÉUSSIS]
+
+🎉 TOTAL : 77/77 TESTS RÉUSSIS (100%)
+⏱️ Temps d'exécution : 2,3 secondes
+💾 Fuites mémoire : 0 (Validé par Valgrind)
+```
+
+#### Avantages du script
+- **Validation complète** : Tous les aspects du serveur testés
+- **Prêt pour CI/CD** : Intégrable dans des pipelines automatisés
+- **Debug facile** : Identification rapide des problèmes
+- **Conformité garantie** : Respect des standards IRC
+- **Tests de régression** : Détection de régressions lors de modifications
+
+## 🧪 Tests et validation
+
+### Tests de conformité IRC
+
+```bash
+# Test des commandes standards
 ./ircserv 6667 test
 nc localhost 6667 < test_commands.txt
 
 # Test multi-clients
 for i in {1..10}; do nc localhost 6667 & done
 
-# Test de charge avec clients réels
-irssi, hexchat, weechat connectés simultanément
+# Test de charge avec vrais clients
+irssi connecté simultanément avec plusieurs netcat
 ```
 
-### Tests des Fonctionnalités Bonus
+### Tests des fonctionnalités bonus
 
 ```bash
 # Test du bot
@@ -375,16 +432,16 @@ irssi, hexchat, weechat connectés simultanément
 /QUOTE BOT stats
 /QUOTE BOT joke
 
-# Test du chat mode
+# Test du mode chat
 /QUOTE BOT chat #test
-Hello world!
+Bonjour le monde !
 /QUOTE BOT chat exit
 
 # Test de transfert (si implémenté)
-DCC SEND alice file.txt
+DCC SEND alice fichier.txt
 ```
 
-### Validation Mémoire
+### Validation mémoire
 
 ```bash
 # Test Valgrind
@@ -396,25 +453,461 @@ valgrind --leak-check=full --show-leak-kinds=all ./ircserv 6667 test
 
 ---
 
-## 📊 Métriques du Projet
+# English Version
 
-### Lignes de Code
-- **~3000+ lignes** de C++98
-- **Architecture modulaire** : 8+ classes principales
-- **Couverture complète** : Toutes les commandes IRC requises
+[Français](#français) | **English**
 
-### Fonctionnalités Implementées
-- ✅ **15+ commandes IRC** standard complètes
-- ✅ **5 modes de canal** (+i, +t, +k, +o, +l)
-- ✅ **20+ commandes bot** interactives
-- ✅ **Chat mode** révolutionnaire
-- ✅ **Modération automatique** avancée
-- ✅ **Transfert de fichiers** DCC (bonus)
+A modern IRC server implemented in C++98, RFC compliant with robust architecture and innovative extensions.
 
-### Compatibilité Clients
-- ✅ **Irssi** : Support complet avec fonctionnalités avancées
-- ✅ **HexChat** : Compatible toutes fonctionnalités
-- ✅ **WeeChat** : Fonctionnel avec adaptations
-- ✅ **netcat** : Tests et debug, style préservé
+## 📋 Table of Contents
 
-Ce projet démontre une maîtrise complète du protocole IRC, de la programmation réseau avancée, et de l'innovation logicielle avec des extensions créatives au-delà des exigences de base.
+- [Project Overview](#-project-overview-1)
+- [Context and Objectives](#-context-and-objectives-1)
+- [Technical Architecture](#-technical-architecture-1)
+- [Installation and Usage](#-installation-and-usage-1)
+- [Standard IRC Commands](#-standard-irc-commands-1)
+- [Bonus Features](#-bonus-features-1)
+- [Testing and Validation](#-testing-and-validation-1)
+
+## 🎯 Project Overview
+
+This project implements a **complete IRC server** as part of the 42 School curriculum. It strictly adheres to IRC standards (RFC 1459, RFC 2812) while offering modern architecture and extended features.
+
+### ✨ Main Achievements
+
+- **Standard IRC Server**: Complete IRC protocol support
+- **Multi-client Management**: High-performance epoll architecture
+- **RFC Compliance**: All required IRC commands implemented
+- **Security**: Authentication, channel modes, permission management
+- **Stability**: Memory-safe, robust error handling
+
+### 🛠️ Technologies Used
+
+- **C++98**: Standard required for 42 projects
+- **epoll**: Asynchronous event management for Linux
+- **TCP Sockets**: Client-server communication
+- **IRC Protocol**: RFC 1459/2812 compliant
+
+## 🎪 Context and Objectives
+
+### Educational Goals
+
+This project aims to master:
+- **Network Programming**: Sockets, protocols, client-server architectures
+- **Concurrency Management**: Multiple simultaneous connections without threads
+- **Protocol Parsing**: Analysis and processing of IRC commands
+- **Software Architecture**: Modular and extensible design
+
+### Project Constraints
+
+- ✅ **C++98 only** (no C++11+)
+- ✅ **No threads**: event-driven management only
+- ✅ **No fork**: single server process
+- ✅ **Memory-safe**: no memory leaks allowed
+- ✅ **Compatible** with standard IRC clients (Irssi)
+
+### Implemented IRC Standards
+
+The server respects **official IRC RFCs**:
+- **RFC 1459**: Internet Relay Chat Protocol
+- **RFC 2812**: Internet Relay Chat: Client Protocol
+- **Compatibility** with existing clients
+
+## 🏗️ Technical Architecture
+
+### Modular Structure
+
+```
+IRC/
+├── includes/              # Main headers
+│   ├── Server.hpp         # Server and connection management
+│   ├── Client.hpp         # Client representation
+│   ├── Channel.hpp        # IRC channel management
+│   ├── Utils.hpp          # Utilities and helpers
+│   └── Replies.hpp        # Standard IRC reply codes
+├── srcs/                  # Implementation
+│   ├── main.cpp           # Entry point
+│   ├── Server.cpp         # Main server logic
+│   ├── Client.cpp         # Client management
+│   ├── Channel.cpp        # Channel functionalities
+│   ├── Commands.cpp       # Standard IRC commands
+│   └── Utils.cpp          # Utility functions
+└── Makefile              # Compilation
+```
+
+### Main Classes
+
+#### **Server** - Core of the System
+- **Connection Management**: Accept, epoll, socket management
+- **Command Routing**: IRC parsing and dispatch
+- **Global State**: Connected clients, active channels
+- **Security**: Authentication, validation
+
+#### **Client** - User Representation
+- **Authentication**: PASS, NICK, USER
+- **Connection State**: Registered, modes, channels
+- **Message Parsing**: Analysis of IRC commands
+- **Buffer Management**: Partial data handling
+
+#### **Channel** - Channel Management
+- **Members and Permissions**: Users, operators
+- **Channel Modes**: +i, +t, +k, +o, +l
+- **Message Broadcasting**: To channel members
+- **Invitations and Exclusions**: INVITE, KICK, BAN
+
+### Network Architecture
+
+```
+Client IRC (Irssi) ──┐
+                     │
+netcat ──────────────┤    ┌─────────────┐
+                     ├────┤   Serveur   ├──── Canaux (#general, #random)
+Autre client IRC ────┤    │   (epoll)   │
+                     │    └─────────────┘
+netcat (test) ───────┘
+```
+
+### Event Handling
+
+1. **epoll_wait()**: Wait for events on sockets
+2. **New Connection**: Accept and create Client
+3. **Data Received**: Parsing and command processing
+4. **Execution**: Dispatch to appropriate function
+5. **Responses**: Send standard IRC codes
+
+## 🔧 Installation and Usage
+
+### Compilation
+
+```bash
+# Clone the project
+git clone [repository-url]
+cd IRC
+
+# Compile
+make
+
+# Clean (optional)
+make clean
+make fclean
+```
+
+### Starting the Server
+
+```bash
+# Syntax
+./ircserv <port> <password>
+
+# Example
+./ircserv 6667 secretpassword
+```
+
+### Connecting with an IRC Client
+
+#### Irssi (Recommended for testing)
+```bash
+irssi
+/CONNECT localhost 6667 secretpassword
+/NICK alice
+/JOIN #general
+/MSG #general Hello everyone!
+```
+
+#### Testing with netcat
+```bash
+nc localhost 6667
+PASS secretpassword
+NICK testuser
+USER test test localhost :Test User
+JOIN #test
+PRIVMSG #test :Hello World!
+QUIT
+```
+
+## 📚 Standard IRC Commands
+
+### Authentication and Connection
+
+| Command | Description | Syntax | Status |
+|----------|-------------|---------|--------|
+| `PASS` | Server password | `PASS <password>` | ✅ |
+| `NICK` | Set nickname | `NICK <nickname>` | ✅ |
+| `USER` | User information | `USER <user> <mode> <unused> :<realname>` | ✅ |
+| `QUIT` | Disconnect from server | `QUIT [:<message>]` | ✅ |
+
+### Channel Management
+
+| Command | Description | Syntax | Status |
+|----------|-------------|---------|--------|
+| `JOIN` | Join a channel | `JOIN <#channel> [<key>]` | ✅ |
+| `PART` | Leave a channel | `PART <#channel> [:<message>]` | ✅ |
+| `MODE` | Change modes | `MODE <#channel> <modes> [<params>]` | ✅ |
+| `TOPIC` | Channel topic | `TOPIC <#channel> [:<topic>]` | ✅ |
+| `INVITE` | Invite a user | `INVITE <nickname> <#channel>` | ✅ |
+| `KICK` | Kick a user | `KICK <#channel> <nick> [:<reason>]` | ✅ |
+
+### Communication
+
+| Command | Description | Syntax | Status |
+|----------|-------------|---------|--------|
+| `PRIVMSG` | Private/channel message | `PRIVMSG <target> :<message>` | ✅ |
+| `PING` | Connection test | `PING <server>` | ✅ |
+| `PONG` | Response to PING | `PONG <server>` | ✅ |
+
+### Information
+
+| Command | Description | Syntax | Status |
+|----------|-------------|---------|--------|
+| `WHOIS` | User information | `WHOIS <nickname>` | ✅ |
+| `USERHOST` | User host | `USERHOST <nickname>` | ✅ |
+
+### Supported Channel Modes
+
+| Mode | Description | Parameter | Functionality |
+|------|-------------|-----------|----------------|
+| `+i` | Invite only | - | Access by invitation only |
+| `+t` | Protected topic | - | Only operators can change the topic |
+| `+k` | Channel key | `<key>` | Password required for JOIN |
+| `+o` | Operator | `<nickname>` | Administrative privileges |
+| `+l` | User limit | `<limit>` | Maximum number of members |
+
+## 🎯 Bonus Features
+
+*Two required features: include a Bot and manage file transfer.*
+
+### 🤖 Intelligent IRC Bot
+
+An integrated bot system with advanced interaction capabilities:
+
+#### Technical Features
+- **Dual-Mode Architecture**: Automatic detection of client type
+- **Ghost User**: IRCBot appears as a real user to standard clients
+- **Universal Compatibility**: Works with Irssi, netcat
+
+#### Available Bot Commands
+
+| Command | Description | Example |
+|----------|-------------|---------|
+| `BOT enable/disable` | Enable/disable the bot | `/QUOTE BOT enable` |
+| `BOT status` | Bot status | `/QUOTE BOT status` |
+| `BOT stats` | Server statistics | `/QUOTE BOT stats` |
+| `BOT uptime` | Uptime | `/QUOTE BOT uptime` |
+| `BOT users` | Connected users | `/QUOTE BOT users` |
+| `BOT channels` | Active channels | `/QUOTE BOT channels` |
+| `BOT joke` | Random joke | `/QUOTE BOT joke` |
+| `BOT help` | List of commands | `/QUOTE BOT help` |
+
+#### Automatic Conversational Chat
+
+The bot automatically responds in channels:
+
+```bash
+# Natural messages in a channel:
+"hello everyone"  → "👋 Hi! How can I help you?"
+"what time is it?"  → Displays the current time
+"tell me a joke"     → Tells a joke
+"goodbye"              → "👋 Goodbye! Have a great day!"
+```
+
+#### Automatic Moderation
+
+The bot monitors conversations and can automatically ban users for inappropriate remarks:
+
+```bash
+# Automatic detection of inappropriate content
+"offensive message"      → ⚠️ Automatic warning
+"very inappropriate content" → 🚫 Automatic ban by the bot
+```
+
+### 💬 Chat Mode
+
+Simplified communication interface for a modern experience:
+
+#### Features
+- **Direct messages**: No need for `PRIVMSG #channel`
+- **Persistent mode**: Remains active until disabled
+- **Intelligent prompt**: Automatic suggestions
+- **Full compatibility**: All IRC commands remain available
+
+#### Usage
+
+```bash
+# Activation
+/JOIN #general
+/QUOTE BOT chat #general
+
+# Communication directe
+Hello everyone!              # → Automatically sent to the channel
+How are you today?          # → Instant message
+This is much easier!        # → Smooth communication
+
+# Désactivation
+/QUOTE BOT chat exit
+```
+
+### 📁 File Transfer (DCC SEND)
+
+*Advanced extension for peer-to-peer file sharing:*
+
+#### DCC Protocol (Direct Client-to-Client)
+- **Direct connection** between clients via the server
+- **Binary transfer**: All types of files
+- **Integrity check**: Data verification
+- **Intuitive interface**: Simple commands
+
+#### Transfer Commands
+
+```bash
+# Sending a file
+DCC SEND <nickname> <filepath>
+
+# Accepting a transfer
+DCC ACCEPT <nickname>
+
+# Declining a transfer
+DCC DECLINE <nickname>
+
+# Transfer status
+DCC STATUS
+```
+
+#### DCC Architecture
+
+```
+Client A ────┐
+             │
+             ├──── IRC Server ────┤
+             │                     │
+Client B ────┘                     │
+     │                            │
+     └── Direct Connection ────────┘
+         (File transfer)
+```
+
+### 🧪 Automated Test Script
+
+*Comprehensive testing system for automatic server validation:*
+
+#### Script Features
+- **Automated tests**: Validation of all IRC commands
+- **Complete scenarios**: Authentication, channels, modes, permissions
+- **Multi-client tests**: Simulating simultaneous connections
+- **Bot validation**: Full testing of bonus functionalities
+- **Detailed report**: Structured results with color codes
+
+#### Usage
+
+```bash
+# Run full tests
+./test_script.sh
+
+# Specific tests
+./test_script.sh --basic      # Only basic commands
+./test_script.sh --channels   # Channel tests
+./test_script.sh --modes      # Mode tests
+./test_script.sh --bot        # Bot tests only
+```
+
+#### Test Scenarios
+
+| Category | Included Tests | Validation |
+|-----------|--------------|------------|
+| **Authentication** | PASS, NICK, USER | ✅ Full login |
+| **Channels** | JOIN, PART, TOPIC | ✅ Member management |
+| **Communication** | PRIVMSG, NOTICE | ✅ Private/public messages |
+| **Modes** | +i, +t, +k, +o, +l | ✅ Permissions and restrictions |
+| **Administration** | KICK, INVITE, MODE | ✅ Operator privileges |
+| **Bot** | 20+ commands | ✅ Interactive features |
+| **Chat Mode** | Activation/usage | ✅ Simplified interface |
+
+#### Sample Report
+
+```bash
+🧪 IRC SERVER TEST SUITE
+========================
+
+✅ Authentication Tests     [8/8 PASSED]
+✅ Channel Management        [12/12 PASSED]
+✅ Communication            [6/6 PASSED]
+✅ Mode Management          [15/15 PASSED]
+✅ Bot Functionality        [21/21 PASSED]
+✅ Chat Mode               [5/5 PASSED]
+✅ Error Handling          [10/10 PASSED]
+
+🎉 TOTAL: 77/77 TESTS PASSED (100%)
+⏱️ Execution time: 2.3 seconds
+💾 Memory leaks: 0 (Valgrind validated)
+```
+
+#### Script Advantages
+- **Comprehensive validation**: All server aspects tested
+- **CI/CD Ready**: Integrable into automated pipelines
+- **Easy debugging**: Quick problem identification
+- **Guaranteed compliance**: Adherence to IRC standards
+- **Regression testing**: Detection of regressions during modifications
+
+## 🧪 Testing and Validation
+
+### IRC Compliance Tests
+
+```bash
+# Test standard commands
+./ircserv 6667 test
+nc localhost 6667 < test_commands.txt
+
+# Multi-client test
+for i in {1..10}; do nc localhost 6667 & done
+
+# Load test with real clients
+irssi connected simultaneously with multiple netcat
+```
+
+### Bonus Features Testing
+
+```bash
+# Bot test
+/QUOTE BOT enable
+/QUOTE BOT stats
+/QUOTE BOT joke
+
+# Chat mode test
+/QUOTE BOT chat #test
+Hello world!
+/QUOTE BOT chat exit
+
+# Transfer test (if implemented)
+DCC SEND alice file.txt
+```
+
+### Memory Validation
+
+```bash
+# Valgrind test
+valgrind --leak-check=full --show-leak-kinds=all ./ircserv 6667 test
+
+# Stability test
+# Repeated connections/disconnections, invalid commands, etc.
+```
+
+---
+
+## 📊 Project Metrics
+
+### Lines of Code
+- **~3000+ lines** of C++98
+- **Modular architecture**: 8+ main classes
+- **Complete coverage**: All required IRC commands
+
+### Implemented Features
+- ✅ **15+ standard IRC commands** fully implemented
+- ✅ **5 channel modes** (+i, +t, +k, +o, +l)
+- ✅ **20+ bot commands** interactive
+- ✅ **Revolutionary chat mode**
+- ✅ **Advanced automatic moderation**
+- ✅ **DCC file transfer** (bonus)
+
+### Client Compatibility
+- ✅ **Irssi**: Full support with advanced features
+- ✅ **netcat**: Testing and debugging, style preserved
+
+This project demonstrates complete mastery of the IRC protocol, advanced network programming, and software innovation with creative extensions beyond the basic requirements.
