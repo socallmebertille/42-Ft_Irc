@@ -17,8 +17,6 @@
 
 Un serveur IRC moderne implémenté en C++98, conforme aux RFC avec une architecture robuste et des extensions innovantes.
 
-**[Version Anglaise plus bas](#english-version) / [English Version Below](#english-version)**
-
 ---
 
 ## 📋 Table des matières
